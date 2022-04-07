@@ -1,0 +1,17 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Selendra block crawler for Selendra Chain",
+  "author": "Selendra <info@selendra.org>",
+  "license": "MIT",
+  "main": "src/index.js",
+  "dependencies": {
+    "@polkadot/api": "^7.15.1",
+    "dotenv": "^16.0.0",
+    "mongodb": "^4.5.0",
+    "path": "^0.12.7"
+  },
+  "scripts": {
+    "start": "node src/index.js"
+  }
+}
