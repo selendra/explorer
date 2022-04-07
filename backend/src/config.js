@@ -8,3 +8,6 @@ module.exports.PROVIDER = process.env.PROVIDER;
 // Mongodb
 module.exports.MONGOURI = process.env.MONGO_URI;
 module.exports.DATABASE = process.env.DATABASE;
+
+//sentry
+module.exports.SENTRY = process.env.SENTRY;

@@ -7,6 +7,7 @@
   "main": "src/index.js",
   "dependencies": {
     "@polkadot/api": "^7.15.1",
+    "@sentry/node": "^6.19.6",
     "dotenv": "^16.0.0",
     "mongodb": "^4.5.0",
     "path": "^0.12.7"
