@@ -1,0 +1,20 @@
+[package]
+name = "operation"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+serde = "1.0.136"
+regex = "1.5"
+base64 = "0.13.0"
+log = "0.4.16"
+sp-keyring = "6.0.0"
+mongodb = { version = "2.1.0", default-features = false, features = ["sync"] }
+tokio = { version = "1.8", features = ["rt-multi-thread", "macros", "time"] }
+
+# constants = { path = "../constant" }
+error-handler = { path = "../error" }
+models = { path = "../models"}
+

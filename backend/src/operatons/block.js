@@ -1,6 +1,8 @@
 const utils = require('../utils');
 const constants = require('../config');
+
 const Sentry = require('@sentry/node');
+const { BigNumber } = require('bignumber.js');
 
 Sentry.init({
   dsn: constants.SENTRY,
@@ -34,7 +36,8 @@ async function processEvent(api, blockNumber){
       const blockAuthorIdentity = await api.derive.accounts.info(blockAuthor);
       const blockAuthorName = getDisplayName(blockAuthorIdentity.identity);
 
-      const totalIssuance = await api.query.balances.totalIssuance();
+      const total = await api.query.balances.totalIssuance();
+      let totalIssuance = new BigNumber(total).dividedBy(1e18).toNumber();
 
       const runtimeVersion = await api.rpc.state.getRuntimeVersion(blockHash);
 
@@ -74,19 +77,19 @@ async function processEvent(api, blockNumber){
           parentHash: parentHash.toHuman(),
           extrinsicsRoot: extrinsicsRoot.toHuman(),
           stateRoot: stateRoot.toHuman(),
-          activeEra: activeEra.toHuman(),
-          currentIndex: currentIndex.toHuman(),
-          runtimeVersion: runtimeVersion.toHuman().specVersion,
+          activeEra: parseInt(activeEra),
+          currentIndex: parseInt(currentIndex),
+          runtimeVersion: parseInt(runtimeVersion.specVersion),
           totalEvents: totalEvents,
           totalExtrinsics: totalExtrinsics,
-          totalIssuance: totalIssuance.toHuman(),
+          totalIssuance: totalIssuance,
           timestamp,
         })
       
     } catch (error) {
-      const scope = new Sentry.Scope();
-      scope.setTag('blockNumber', blockNumber);
-      Sentry.captureException(error, scope);
+      // const scope = new Sentry.Scope();
+      // scope.setTag('blockNumber', blockNumber);
+      // Sentry.captureException(error, scope);
       console.log("Error")
     }
 }
