@@ -147,7 +147,7 @@ async function processBlock(api, blockNumber){
 
 async function testInsertBlock() {
   let api = await utils.api.apiProvider();
-  let block_number = 961110;
+  let block_number = 114921;
   await processBlock(api, block_number);
   // await updateFinalized(11112);
 
@@ -156,3 +156,14 @@ async function testInsertBlock() {
 }
 
 testInsertBlock()
+
+// {
+//   "display":"nath",
+//   "email":"nath.selendra@gmail.com",
+//   "judgements":[],
+//   "legal": "nath",
+//   "other":{},
+//   "riot":"@nathselendra:matrix.org",
+//   "twitter": "@LayNathkk",
+//   "web":"https://selendra.org"
+// }

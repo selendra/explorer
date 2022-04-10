@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 dotenv = "0.15.0"
+serde_json = "1.0.79"
 mongodb = { version = "2.1.0", default-features = false, features = ["sync"] }
 
 operation = { path = "modules/operation"}

@@ -46,22 +46,22 @@ async function processAccountsChunk(api, accountId){
 
         try {
             const accountCol = await utils.db.getAccountsCollection();
-            const query = { account_id: accountId };
+            const query = { accountId: accountId };
             const update = { 
                 $set: { 
-                    account_id: accountId,
-                    identity_display: identityDisplay,
-                    identity_display_parent: identityDisplayParent,
-                    identity_detail: JSONIdentity,
-                    available_balance: availableBalance,
-                    free_balance: freeBalance,
-                    locked_balance: lockedBalance,
-                    reserved_balance: reservedBalance,
-                    total_balance: totalBalance,
-                    balances_detail: JSONbalances,
+                    accountId: accountId,
+                    identityDisplay: identityDisplay,
+                    identityDisplayParent: identityDisplayParent,
+                    identityDetail: JSONIdentity,
+                    availableBalance: availableBalance,
+                    freeBalance: freeBalance,
+                    lockedBalance: lockedBalance,
+                    reservedBalance: reservedBalance,
+                    totalBalance: totalBalance,
+                    balancesBetail: JSONbalances,
                     nonce,
                     timestamp,
-                    block_height: block
+                    blockHeight: block
                 }
             };
             const options = { upsert: true };
@@ -102,22 +102,22 @@ async function updateAccountInfo (api, blockNumber, timestamp, address){
 
         try {
             const accountCol = await utils.db.getAccountsCollection();
-            const addressQuery = { account_id: address };
+            const addressQuery = { accountId: address };
             const update = {
                 $set:{
-                    account_id: address,
-                    identity_display: identityDisplay,
-                    identity_display_parent: identityDisplayParent,
-                    identity_detail: JSONIdentity,
-                    available_balance: availableBalance,
-                    free_balance: freeBalance,
-                    locked_balance: lockedBalance,
-                    reserved_balance: reservedBalance,
-                    total_balance: totalBalance,
-                    balances_detail: JSONbalances,
+                    accountId: address,
+                    identityDisplay: identityDisplay,
+                    identityDisplayParent: identityDisplayParent,
+                    identityDetail: JSONIdentity,
+                    availableBalance: availableBalance,
+                    freeBalance: freeBalance,
+                    lockedBalance: lockedBalance,
+                    reservedBalance: reservedBalance,
+                    totalBalance: totalBalance,
+                    balancesBetail: JSONbalances,
                     nonce,
                     timestamp,
-                    block_height: blockNumber
+                    blockHeight: blockNumber
                 }
             };
             const options = { upsert: true };
@@ -167,3 +167,12 @@ module.exports = {
     processAccountsChunk,
     updateAccountsInfo
 }
+
+// async function testIn() {
+//     let api = await utils.api.apiProvider();
+//     let id = "sebpN3SUzHAesR29NcxCBVUo5WhmoLsNZG1RXsiSGBzjtyoh1";
+//     await processAccountsChunk(api, id);
+//     process.exit(0)
+//   }
+  
+//   testIn()

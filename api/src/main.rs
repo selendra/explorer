@@ -3,7 +3,13 @@ use dotenv;
 use std::{path::Path, env};
 use mongodb::sync::Client;
 
-use operation::block::get_blocks;
+use operation::{
+	// block::get_blocks,
+	account::{
+		get_accounts,
+		// get_account_index,
+	}
+};
 use models::page::PageQuery;
 
 fn main() {
@@ -18,7 +24,11 @@ fn main() {
             page_size: 2,
             page_number: 1,
         };
+    // let block = get_blocks(client, &database, search);
 
-    let block = get_blocks(client, &database, search);
-    println!("{:?}", block);
+	// let search = "seaTomr1isWkjhy7iJPmuicMDHZQggTZLiM2hUPGCMTTwicn2";
+	let account = get_accounts(client, &database, search);
+	// let index = get_account_index(client, &database);
+
+    println!("{:?}", account.unwrap()[0]);
 }

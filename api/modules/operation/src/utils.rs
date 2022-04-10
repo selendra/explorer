@@ -20,6 +20,16 @@ pub fn is_hash(data: &str) -> bool {
     }
 }
 
+pub fn is_address(data: &str) -> bool {
+    let hash_regex = Regex::new(r"^(se)?[\a-z]{49}$").unwrap();
+
+    if hash_regex.is_match(&data) {
+        true
+    } else {
+        false
+    }
+}
+
 pub fn is_numberic(data: &str) -> bool {
     let check = data.chars().all(char::is_numeric);
     return check

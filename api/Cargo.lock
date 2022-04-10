@@ -2001,6 +2001,7 @@ dependencies = [
  "models",
  "mongodb",
  "operation",
+ "serde_json",
 ]
 
 [[package]]
