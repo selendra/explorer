@@ -12,8 +12,6 @@ let statusCol;
 let accountsCol;
 let transferCol;
 
-const genesisHeight = 1;
-
 async function initDB() {
   client = await MongoClient.connect(
     constants.MONGOURI,
@@ -28,6 +26,7 @@ async function initDB() {
   chainCol = db.collection('chain');
   eventCol = db.collection('event');
   extrinsicCol = db.collection('extrinsic');
+  runtimeCol = db.collection('runtime');
   statusCol = db.collection('status');
   transferCol = db.collection('transfer')
 
@@ -58,61 +57,43 @@ async function getChainCollection() {
   await tryInit(chainCol);
   return chainCol;
 };
-async function getStatusCollection() {
-  await tryInit(statusCol);
-  return statusCol;
-};
+
 async function getBlockCollection() {
   await tryInit(blockCol);
   return blockCol;
 };
+
 async function getEventCollection() {
   await tryInit(eventCol);
   return eventCol;
 };
+
 async function getExtrinsicCollection() {
   await tryInit(extrinsicCol);
   return extrinsicCol;
 }
+
 async function getAccountsCollection() {
   await tryInit(accountsCol);
   return accountsCol;
 };
+
 async function getTransferColCollection() {
   await tryInit(transferCol)
   return transferCol
-}
-
-
-async function getFirstScanHeight() {
-  const statusCol = await getStatusCollection();
-  const heightInfo = await statusCol.findOne({ name: 'main-scan-height' });
-  if(!heightInfo) {
-    return genesisHeight;
-  } else if(typeof heightInfo.value === 'number') {
-    return heightInfo.value + 1;
-  } else {
-    console.error('The scan height information in the database is wrong!');
-    process.exit(1);
-  }
 };
 
-async function updateScanHeight(height) {
-  const statusCol = await getStatusCollection()
-  await statusCol.findOneAndUpdate(
-    { name: 'main-scan-height' },
-    { $set: { value: height } },
-    { upsert: true }
-  )
+async function getRuntimeColCollection() {
+  await tryInit(runtimeCol)
+  return runtimeCol
 }
 
 module.exports = {
-  getFirstScanHeight,
-  updateScanHeight,
   getChainCollection,
   getBlockCollection,
   getEventCollection,
   getAccountsCollection,
   getExtrinsicCollection,
-  getTransferColCollection
+  getTransferColCollection,
+  getRuntimeColCollection
 }

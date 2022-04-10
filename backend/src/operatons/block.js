@@ -1,8 +1,11 @@
-const utils = require('../utils');
-const constants = require('../config');
-
 const Sentry = require('@sentry/node');
 const { BigNumber } = require('bignumber.js');
+
+const utils = require('../utils');
+const logger = require('../utils/logger');
+const constants = require('../config');
+const { updateAccountsInfo } = require('./account');
+
 
 Sentry.init({
   dsn: constants.SENTRY,
@@ -21,7 +24,43 @@ function getDisplayName(identity) {
     return identity.display || '';
 };
 
-async function processEvent(api, blockNumber){
+async function storeMetadata(api, blockNumber, blockHash, specName, specVersion, timestamp){
+  const metadata = await api.rpc.state.getMetadata(blockHash);
+
+  try {
+    const runtimeCol = await utils.db.getRuntimeColCollection();
+    await runtimeCol.insertOne({
+        blockNumber,
+        specName,
+        specVersion,
+        metadata_version: Object.keys(metadata.toHuman().metadata)[0],
+        magic_number: metadata.magicNumber.toHuman(),
+        metadata: metadata.toHuman().metadata,
+        timestamp,
+    })
+    logger.info(`Got runtime metadata at ${blockHash}!`);
+  } catch (error) {
+    logger.error(`Error fetching runtime metadata at ${blockHash}: ${JSON.stringify(error)}`);
+    const scope = new Sentry.Scope();
+    scope.setTag('blockNumber', blockNumber);
+    Sentry.captureException(error, scope);
+  }
+ 
+};
+
+async function updateFinalized(finalizedBlock){
+  let blockQuery = { blockNumber: finalizedBlock };
+
+  try {
+    const blockCol = await utils.db.getBlockCollection();
+    await blockCol.findOneAndUpdate(blockQuery ,{$set:{"finalized": true}});
+  } catch (error) {
+    Sentry.captureException(error);
+  }
+};
+
+async function processBlock(api, blockNumber){
+  const startTime = new Date().getTime();
     try {
       const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
       const finalized = false;
@@ -66,38 +105,53 @@ async function processEvent(api, blockNumber){
       const totalEvents = events.length;
       const totalExtrinsics = block.extrinsics.length;
 
-      // // call collection
-      const blockCol = await utils.db.getBlockCollection();
-      await blockCol.insertOne({
-          blockNumber,
-          finalized,
-          blockAuthor,
-          blockAuthorName,
-          blockHash: blockHash.toHuman(),
-          parentHash: parentHash.toHuman(),
-          extrinsicsRoot: extrinsicsRoot.toHuman(),
-          stateRoot: stateRoot.toHuman(),
-          activeEra: parseInt(activeEra),
-          currentIndex: parseInt(currentIndex),
-          runtimeVersion: parseInt(runtimeVersion.specVersion),
-          totalEvents: totalEvents,
-          totalExtrinsics: totalExtrinsics,
-          totalIssuance: totalIssuance,
-          timestamp,
-        })
-      
+      try {
+        const blockCol = await utils.db.getBlockCollection();
+        await blockCol.insertOne({
+            blockNumber,
+            finalized,
+            blockAuthor,
+            blockAuthorName,
+            blockHash: blockHash.toHuman(),
+            parentHash: parentHash.toHuman(),
+            extrinsicsRoot: extrinsicsRoot.toHuman(),
+            stateRoot: stateRoot.toHuman(),
+            activeEra: parseInt(activeEra),
+            currentIndex: parseInt(currentIndex),
+            runtimeVersion: parseInt(runtimeVersion.specVersion),
+            totalEvents: totalEvents,
+            totalExtrinsics: totalExtrinsics,
+            totalIssuance: totalIssuance,
+            timestamp,
+          })
+        const endTime = new Date().getTime();
+        logger.info(
+          `Added block #${blockNumber} in ${((endTime - startTime) / 1000)}s`,
+        );
+      } catch (error) {
+          logger.error(`Error adding block #${blockNumber}: ${error}`);
+          const scope = new Sentry.Scope();
+          scope.setTag('blockNumber', blockNumber);
+          Sentry.captureException(error, scope);
+      }
+
+    await updateAccountsInfo(api, blockNumber, timestamp, events);
+
     } catch (error) {
-      // const scope = new Sentry.Scope();
-      // scope.setTag('blockNumber', blockNumber);
-      // Sentry.captureException(error, scope);
-      console.log("Error")
+      logger.error(`Error adding block #${blockNumber}: ${error}`);
+      const scope = new Sentry.Scope();
+      scope.setTag('blockNumber', blockNumber);
+      Sentry.captureException(error, scope);
     }
 }
 
 async function testInsertBlock() {
   let api = await utils.api.apiProvider();
-  let block_number = 11112;
-  await processEvent(api, block_number);
+  let block_number = 961110;
+  await processBlock(api, block_number);
+  // await updateFinalized(11112);
+
+  // await storeMetadata(api, block_number);
   process.exit(0)
 }
 
