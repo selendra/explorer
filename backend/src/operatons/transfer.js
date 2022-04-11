@@ -93,7 +93,7 @@ async function processTransfer(
     try {
         const transferCol = await utils.db.getTransferColCollection()
         await transferCol.insertOne(data)
-        logger.info(
+        logger.debug(
           `Added transfer ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
             hash.toString(),
           )}) ${section} ➡ ${method}`,

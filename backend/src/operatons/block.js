@@ -109,7 +109,7 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
         await blockCol.insertOne(data)
 
         const endTime = new Date().getTime();
-        logger.info(
+        logger.debug(
           `Added block #${blockNumber} in ${((endTime - startTime) / 1000)}s`,
         );
       } catch (error) {

@@ -136,7 +136,7 @@ async function process_staking_reward(
           let stakingCol = await utils.db.getStakinRewardColCollection();
           await stakingCol.insertOne(data);
      
-          logger.info(
+          logger.debug(
             `Added staking reward #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`,
           );
         } catch (error) {
@@ -175,7 +175,7 @@ async function process_staking_slash(
       let slashCol = await utils.db.getStakingSlashColCollection();
       await slashCol.insertOne(data);
 
-      logger.info(
+      logger.debug(
         `Added validator staking slash #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`,
       );
     } catch (error) {
@@ -210,7 +210,7 @@ async function process_staking_slash(
       let slashCol = await utils.db.getStakingSlashColCollection();
       await slashCol.insertOne(data);
 
-      logger.info(
+      logger.debug(
         `Added nominator staking slash #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`,
       );
     } catch (error) {

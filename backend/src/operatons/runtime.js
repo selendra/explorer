@@ -26,7 +26,7 @@ async function storeMetadata(api, blockNumber, blockHash, specName, specVersion,
     try {
       const runtimeCol = await utils.db.getRuntimeColCollection();
       await runtimeCol.insertOne(data)
-      logger.info(`Got runtime metadata at ${blockHash}!`);
+      logger.debug(`Got runtime metadata at ${blockHash}!`);
     } catch (error) {
       logger.error(`Error fetching runtime metadata at ${blockHash}: ${JSON.stringify(error)}`);
       const scope = new Sentry.Scope();

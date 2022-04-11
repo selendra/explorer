@@ -128,7 +128,7 @@ async function processExtrinsic(
   try {
     const extrinsicCol = await utils.db.getExtrinsicCollection();
     await extrinsicCol.insertOne(data)
-    logger.info(
+    logger.debug(
       `Added extrinsic ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
         hash,
       )}) ${section} ➡ ${method}`,
@@ -144,7 +144,7 @@ async function processExtrinsic(
     try {
       const extrinsicCol = await utils.db.getSignedExtrinsicCol();
       await extrinsicCol.insertOne(data);
-      logger.info(
+      logger.debug(
         `Added signed extrinsic ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
           hash,
         )}) ${section} ➡ ${method}`,

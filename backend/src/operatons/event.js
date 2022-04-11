@@ -40,7 +40,7 @@ async function processEvent(
     try {
         let eventCol = await utils.db.getEventCollection();
         await eventCol.insertOne(data);
-        logger.info(
+        logger.debug(
           `Added event #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`,
         );
       } catch (error) {

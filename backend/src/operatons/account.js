@@ -44,28 +44,29 @@ async function processAccountsChunk(api, accountId){
         const JSONbalances = JSON.stringify(balances);
         const nonce = parseInt(balances.accountNonce);
 
+        const query = { accountId: accountId };
+        const update = { 
+            $set: { 
+                accountId: accountId,
+                identityDisplay: identityDisplay,
+                identityDisplayParent: identityDisplayParent,
+                identityDetail: JSONIdentity,
+                availableBalance: availableBalance,
+                freeBalance: freeBalance,
+                lockedBalance: lockedBalance,
+                reservedBalance: reservedBalance,
+                totalBalance: totalBalance,
+                balancesBetail: JSONbalances,
+                nonce,
+                timestamp,
+                blockHeight: block
+            }
+        };
+        const options = { upsert: true };
         try {
             const accountCol = await utils.db.getAccountsCollection();
-            const query = { accountId: accountId };
-            const update = { 
-                $set: { 
-                    accountId: accountId,
-                    identityDisplay: identityDisplay,
-                    identityDisplayParent: identityDisplayParent,
-                    identityDetail: JSONIdentity,
-                    availableBalance: availableBalance,
-                    freeBalance: freeBalance,
-                    lockedBalance: lockedBalance,
-                    reservedBalance: reservedBalance,
-                    totalBalance: totalBalance,
-                    balancesBetail: JSONbalances,
-                    nonce,
-                    timestamp,
-                    blockHeight: block
-                }
-            };
-            const options = { upsert: true };
             await accountCol.updateOne(query, update, options);
+            
           } catch (error) {
               logger.error(`Error adding account: #${accountId}: ${error}`);
               const scope = new Sentry.Scope();
@@ -124,7 +125,7 @@ async function updateAccountInfo (api, blockNumber, timestamp, address){
             const accountCol = await utils.db.getAccountsCollection();
             await accountCol.updateOne(addressQuery, update, options);
 
-            logger.info(`Updated account info for event/s involved address ${address}`);
+            logger.debug(`Updated account info for event/s involved address ${address}`);
           } catch (error) {
               logger.error(`Error update account: #${address}: ${error}`);
               const scope = new Sentry.Scope();

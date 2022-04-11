@@ -25,7 +25,7 @@ async function processLog(blockNumber, log, index, timestamp){
         let logCol = await utils.db.getLogColCollection();
         await logCol.insertOne(data);
 
-        logger.info(`Added log ${blockNumber}-${index}`);
+        logger.debug(`Added log ${blockNumber}-${index}`);
     } catch (error) {
         logger.error(`Error adding log ${blockNumber}-${index}: ${JSON.stringify(error)}`);
         const scope = new Sentry.Scope();
