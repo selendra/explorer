@@ -11,6 +11,7 @@ let runtimeCol;
 let accountsCol;
 let transferCol;
 let signedExtrinsicCol;
+let stakingRewardCol;
 
 async function initDB() {
   client = await MongoClient.connect(
@@ -27,7 +28,8 @@ async function initDB() {
   extrinsicCol = db.collection('extrinsic');
   signedExtrinsicCol = db.collection('signed_extrinsic');
   runtimeCol = db.collection('runtime');
-  transferCol = db.collection('transfer')
+  transferCol = db.collection('transfer');
+  stakingRewardCol = db.collection('staking_reward')
 
   await _createIndexes();
 };
@@ -42,8 +44,7 @@ async function _createIndexes() {
   await signedExtrinsicCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
   await eventCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
   await runtimeCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
-  await accountsCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
-  
+  await accountsCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });  
 };
 
 async function tryInit(col) {
@@ -87,6 +88,11 @@ async function getRuntimeColCollection() {
   return runtimeCol
 }
 
+async function getStakinRewardColCollection() {
+  await tryInit(stakingRewardCol)
+  return stakingRewardCol
+}
+
 module.exports = {
   getBlockCollection,
   getEventCollection,
@@ -94,5 +100,6 @@ module.exports = {
   getExtrinsicCollection,
   getSignedExtrinsicCol,
   getTransferColCollection,
-  getRuntimeColCollection
+  getRuntimeColCollection,
+  getStakinRewardColCollection,
 }

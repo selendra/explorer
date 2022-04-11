@@ -100,27 +100,28 @@ async function updateAccountInfo (api, blockNumber, timestamp, address){
         const JSONbalances = JSON.stringify(balances);
         const nonce = parseInt(balances.accountNonce);
 
+        const addressQuery = { accountId: address };
+        const update = {
+            $set:{
+                accountId: address,
+                identityDisplay: identityDisplay,
+                identityDisplayParent: identityDisplayParent,
+                identityDetail: JSONIdentity,
+                availableBalance: availableBalance,
+                freeBalance: freeBalance,
+                lockedBalance: lockedBalance,
+                reservedBalance: reservedBalance,
+                totalBalance: totalBalance,
+                balancesBetail: JSONbalances,
+                nonce,
+                timestamp,
+                blockHeight: blockNumber
+            }
+        };
+        const options = { upsert: true };
+
         try {
             const accountCol = await utils.db.getAccountsCollection();
-            const addressQuery = { accountId: address };
-            const update = {
-                $set:{
-                    accountId: address,
-                    identityDisplay: identityDisplay,
-                    identityDisplayParent: identityDisplayParent,
-                    identityDetail: JSONIdentity,
-                    availableBalance: availableBalance,
-                    freeBalance: freeBalance,
-                    lockedBalance: lockedBalance,
-                    reservedBalance: reservedBalance,
-                    totalBalance: totalBalance,
-                    balancesBetail: JSONbalances,
-                    nonce,
-                    timestamp,
-                    blockHeight: blockNumber
-                }
-            };
-            const options = { upsert: true };
             await accountCol.updateOne(addressQuery, update, options);
 
             logger.info(`Updated account info for event/s involved address ${address}`);

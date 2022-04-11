@@ -12,18 +12,20 @@ Sentry.init({
 
 async function storeMetadata(api, blockNumber, blockHash, specName, specVersion, timestamp){
     const metadata = await api.rpc.state.getMetadata(blockHash);
+
+    let data = {
+        blockNumber,
+        specName,
+        specVersion,
+        metadata_version: Object.keys(metadata.toHuman().metadata)[0],
+        magic_number: metadata.magicNumber.toHuman(),
+        metadata: metadata.toHuman().metadata,
+        timestamp,
+    };
   
     try {
       const runtimeCol = await utils.db.getRuntimeColCollection();
-      await runtimeCol.insertOne({
-          blockNumber,
-          specName,
-          specVersion,
-          metadata_version: Object.keys(metadata.toHuman().metadata)[0],
-          magic_number: metadata.magicNumber.toHuman(),
-          metadata: metadata.toHuman().metadata,
-          timestamp,
-      })
+      await runtimeCol.insertOne(data)
       logger.info(`Got runtime metadata at ${blockHash}!`);
     } catch (error) {
       logger.error(`Error fetching runtime metadata at ${blockHash}: ${JSON.stringify(error)}`);

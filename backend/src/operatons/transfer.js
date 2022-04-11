@@ -75,22 +75,24 @@ async function processTransfer(
         ? new BigNumber(JSON.stringify(feeInfo.toJSON().partialFee)).dividedBy(1e18).toNumber()
         : null;
 
+    let data = {
+      blockNumber,
+      extrinsicIndex,
+      section,
+      method,
+      hash,
+      source,
+      destination,
+      amount: new BigNumber(amount).dividedBy(1e18).toNumber(),
+      feeAmount,
+      success,
+      errorMessage,
+      timestamp,
+    };
+
     try {
         const transferCol = await utils.db.getTransferColCollection()
-        await transferCol.insertOne({
-            blockNumber,
-            extrinsicIndex,
-            section,
-            method,
-            hash,
-            source,
-            destination,
-            amount: new BigNumber(amount).dividedBy(1e18).toNumber(),
-            feeAmount,
-            success,
-            errorMessage,
-            timestamp,
-        })
+        await transferCol.insertOne(data)
         logger.info(
           `Added transfer ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
             hash.toString(),

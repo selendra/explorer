@@ -107,25 +107,27 @@ async function processExtrinsic(
   let iFeeInfo = !!feeInfo ? JSON.stringify(feeInfo.toJSON()) : null;
   let iFeeDetails = feeDetails = !!feeDetails ? JSON.stringify(feeDetails.toJSON()) : null
 
+  let data = {
+      blockNumber,
+      extrinsicIndex,
+      isSigned,
+      signer,
+      section,
+      method,
+      args,
+      argsDef,
+      hash,
+      doc,
+      feeInfo: iFeeInfo,
+      feeDetails: iFeeDetails,
+      success,
+      errorMessage,
+      timestamp,
+  };
+
   try {
     const extrinsicCol = await utils.db.getExtrinsicCollection();
-    await extrinsicCol.insertOne({
-        blockNumber,
-        extrinsicIndex,
-        isSigned,
-        signer,
-        section,
-        method,
-        args,
-        argsDef,
-        hash,
-        doc,
-        feeInfo: iFeeInfo,
-        feeDetails: iFeeDetails,
-        success,
-        errorMessage,
-        timestamp,
-    })
+    await extrinsicCol.insertOne(data)
     logger.info(
       `Added extrinsic ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
         hash,
@@ -141,23 +143,7 @@ async function processExtrinsic(
   if(isSigned){
     try {
       const extrinsicCol = await utils.db.getSignedExtrinsicCol();
-      await extrinsicCol.insertOne({
-          blockNumber,
-          extrinsicIndex,
-          isSigned,
-          signer,
-          section,
-          method,
-          args,
-          argsDef,
-          hash,
-          doc,
-          feeInfo: iFeeInfo,
-          feeDetails: iFeeDetails,
-          success,
-          errorMessage,
-          timestamp,
-      })
+      await extrinsicCol.insertOne(data);
       logger.info(
         `Added signed extrinsic ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
           hash,

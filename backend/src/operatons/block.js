@@ -4,8 +4,10 @@ const { BigNumber } = require('bignumber.js');
 const utils = require('../utils');
 const logger = require('../utils/logger');
 const constants = require('../config');
-const { processExtrinsics } = require('./extrinsic');
+
 const { updateAccountsInfo } = require('./account');
+const { processEvents } = require('./event');
+const { processExtrinsics } = require('./extrinsic');
 const { storeMetadata } = require('./runtime');
 
 Sentry.init({
@@ -83,25 +85,28 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
       const totalExtrinsics = block.extrinsics.length;
       let totalIssuance = new BigNumber(total).dividedBy(1e18).toNumber();
 
+      let data = {
+          blockNumber,
+          finalized: false,
+          blockAuthor,
+          blockAuthorName,
+          blockHash: blockHash.toHuman(),
+          parentHash: parentHash.toHuman(),
+          extrinsicsRoot: extrinsicsRoot.toHuman(),
+          stateRoot: stateRoot.toHuman(),
+          activeEra: parseInt(activeEra),
+          currentIndex: parseInt(currentIndex),
+          runtimeVersion: parseInt(runtimeVersion.specVersion),
+          totalEvents: totalEvents,
+          totalExtrinsics: totalExtrinsics,
+          totalIssuance: totalIssuance,
+          timestamp,
+      };
+
       try {
         const blockCol = await utils.db.getBlockCollection();
-        await blockCol.insertOne({
-            blockNumber,
-            finalized: false,
-            blockAuthor,
-            blockAuthorName,
-            blockHash: blockHash.toHuman(),
-            parentHash: parentHash.toHuman(),
-            extrinsicsRoot: extrinsicsRoot.toHuman(),
-            stateRoot: stateRoot.toHuman(),
-            activeEra: parseInt(activeEra),
-            currentIndex: parseInt(currentIndex),
-            runtimeVersion: parseInt(runtimeVersion.specVersion),
-            totalEvents: totalEvents,
-            totalExtrinsics: totalExtrinsics,
-            totalIssuance: totalIssuance,
-            timestamp,
-          })
+        await blockCol.insertOne(data)
+
         const endTime = new Date().getTime();
         logger.info(
           `Added block #${blockNumber} in ${((endTime - startTime) / 1000)}s`,
@@ -119,23 +124,34 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
           section === 'system' && method === 'CodeUpdated',
       );
 
-      if (runtimeUpgrade || blockNumber === 114921 ) {
+      if (runtimeUpgrade || blockNumber === 131521) {
         const specName = runtimeVersion.toJSON().specName;
         const specVersion = runtimeVersion.specVersion;
         await storeMetadata(api, blockNumber, blockHash, specName, specVersion, timestamp);
       }
-      
-      // Store block extrinsics
-      await processExtrinsics(
-        api,
-        blockNumber,
-        blockHash,
-        block.extrinsics,
-        events,
-        timestamp,
-      ),
 
-      doUpdateAccountsInfo ? await updateAccountsInfo(api, blockNumber, timestamp, events): false;
+      await Promise.all([
+        // Store block extrinsics
+        processExtrinsics(
+          api,
+          blockNumber,
+          blockHash,
+          block.extrinsics,
+          events,
+          timestamp,
+        ),
+
+        // Store module events
+        processEvents(
+          blockNumber,
+          parseInt(activeEra.toString()),
+          events,
+          block.extrinsics,
+          timestamp,
+        ),
+
+        doUpdateAccountsInfo ? await updateAccountsInfo(api, blockNumber, timestamp, events): false
+      ]);
 
     } catch (error) {
       logger.error(`Error adding block #${blockNumber}: ${error}`);
@@ -147,7 +163,8 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
 
 async function testInsertBlock() {
   let api = await utils.api.apiProvider();
-  let block_number = 114921;
+  // let block_number = 114921;
+  let block_number = 131521;
   await processBlock(api, block_number, true);
   // await updateFinalized(11112);
 
