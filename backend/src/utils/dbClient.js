@@ -4,13 +4,13 @@ const constants = require('../config');
 let client;
 let db;
 
-let chainCol;
 let blockCol;
 let extrinsicCol;
 let eventCol;
-let statusCol;
+let runtimeCol;
 let accountsCol;
 let transferCol;
+let signedExtrinsicCol;
 
 async function initDB() {
   client = await MongoClient.connect(
@@ -23,11 +23,10 @@ async function initDB() {
 
   accountsCol = db.collection('accounts');
   blockCol = db.collection('block');
-  chainCol = db.collection('chain');
   eventCol = db.collection('event');
   extrinsicCol = db.collection('extrinsic');
+  signedExtrinsicCol = db.collection('signed_extrinsic');
   runtimeCol = db.collection('runtime');
-  statusCol = db.collection('status');
   transferCol = db.collection('transfer')
 
   await _createIndexes();
@@ -38,24 +37,19 @@ async function _createIndexes() {
     console.error('Please call initDb first');
     process.exit(1);
   }
-
   await blockCol.createIndex({ 'header.number': -1 });
-  await extrinsicCol.createIndex({
-    'indexer.blockHeight': -1,
-    'indexer.index': -1
-  });
+  await extrinsicCol.createIndex({'indexer.blockHeight': -1,'indexer.index': -1});
+  await signedExtrinsicCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
   await eventCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
+  await runtimeCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
+  await accountsCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
+  
 };
 
 async function tryInit(col) {
   if(!col) {
     await initDB();
   }
-};
-
-async function getChainCollection() {
-  await tryInit(chainCol);
-  return chainCol;
 };
 
 async function getBlockCollection() {
@@ -71,6 +65,11 @@ async function getEventCollection() {
 async function getExtrinsicCollection() {
   await tryInit(extrinsicCol);
   return extrinsicCol;
+}
+
+async function getSignedExtrinsicCol() {
+  await tryInit(signedExtrinsicCol);
+  return signedExtrinsicCol;
 }
 
 async function getAccountsCollection() {
@@ -89,11 +88,11 @@ async function getRuntimeColCollection() {
 }
 
 module.exports = {
-  getChainCollection,
   getBlockCollection,
   getEventCollection,
   getAccountsCollection,
   getExtrinsicCollection,
+  getSignedExtrinsicCol,
   getTransferColCollection,
   getRuntimeColCollection
 }

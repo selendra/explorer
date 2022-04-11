@@ -4,8 +4,8 @@ const { BigNumber } = require('bignumber.js');
 const utils = require('../utils');
 const logger = require('../utils/logger');
 const constants = require('../config');
+const { processExtrinsics } = require('./extrinsic');
 const { updateAccountsInfo } = require('./account');
-
 
 Sentry.init({
   dsn: constants.SENTRY,
@@ -45,7 +45,6 @@ async function storeMetadata(api, blockNumber, blockHash, specName, specVersion,
     scope.setTag('blockNumber', blockNumber);
     Sentry.captureException(error, scope);
   }
- 
 };
 
 async function updateFinalized(finalizedBlock){
@@ -59,33 +58,33 @@ async function updateFinalized(finalizedBlock){
   }
 };
 
-async function processBlock(api, blockNumber){
+async function processBlock(api, blockNumber, doUpdateAccountsInfo){
   const startTime = new Date().getTime();
     try {
       const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
-      const finalized = false;
+      const apiAt = await api.at(blockHash);
 
-      const derivedBlock = await api.derive.chain.getBlock(blockHash);
-      const { block, author, events } = derivedBlock;
+      const [
+        derivedBlock,
+        total,
+        runtimeVersion,
+        activeEra,
+        currentIndex,
+      ] = await Promise.all([
+        api.derive.chain.getBlock(blockHash),
+        apiAt.query.balances.totalIssuance(),
+        api.rpc.state.getRuntimeVersion(blockHash),
+        apiAt.query?.staking.activeEra
+          ? apiAt.query.staking.activeEra().then((res) => res.unwrap().index)
+          : 0,
+        apiAt.query.session.currentIndex(),
+      ]);
       
+      const { block, author, events } = derivedBlock;
+      const blockAuthor = author ? author.toString() : ''; // genesis block doesn't have author
       const { parentHash, extrinsicsRoot, stateRoot } = block.header;
-
-      // genesis block doesn't have author
-      const blockAuthor = author ? author.toString() : '';
       const blockAuthorIdentity = await api.derive.accounts.info(blockAuthor);
       const blockAuthorName = getDisplayName(blockAuthorIdentity.identity);
-
-      const total = await api.query.balances.totalIssuance();
-      let totalIssuance = new BigNumber(total).dividedBy(1e18).toNumber();
-
-      const runtimeVersion = await api.rpc.state.getRuntimeVersion(blockHash);
-
-      const activeEra = 
-          await api.query.staking.activeEra() ? 
-          await api.query.staking.activeEra().then((res) => res.unwrap().index)
-          : 0;
-
-      const currentIndex = await api.query.session.currentIndex();
 
       // genesis block doesn't expose timestamp or any other extrinsic
       const timestamp =
@@ -104,12 +103,13 @@ async function processBlock(api, blockNumber){
       // Totals
       const totalEvents = events.length;
       const totalExtrinsics = block.extrinsics.length;
+      let totalIssuance = new BigNumber(total).dividedBy(1e18).toNumber();
 
       try {
         const blockCol = await utils.db.getBlockCollection();
         await blockCol.insertOne({
             blockNumber,
-            finalized,
+            finalized: false,
             blockAuthor,
             blockAuthorName,
             blockHash: blockHash.toHuman(),
@@ -135,7 +135,29 @@ async function processBlock(api, blockNumber){
           Sentry.captureException(error, scope);
       }
 
-    await updateAccountsInfo(api, blockNumber, timestamp, events);
+      //Runtime upgrade
+      const runtimeUpgrade = events.find(
+        ({ event: { section, method } }) =>
+          section === 'system' && method === 'CodeUpdated',
+      );
+
+      if (runtimeUpgrade || blockNumber === 114921 ) {
+        const specName = runtimeVersion.toJSON().specName;
+        const specVersion = runtimeVersion.specVersion;
+        await storeMetadata(api, blockNumber, blockHash, specName, specVersion, timestamp);
+      }
+      
+      // Store block extrinsics
+      await processExtrinsics(
+        api,
+        blockNumber,
+        blockHash,
+        block.extrinsics,
+        events,
+        timestamp,
+      ),
+
+      doUpdateAccountsInfo ? await updateAccountsInfo(api, blockNumber, timestamp, events): false;
 
     } catch (error) {
       logger.error(`Error adding block #${blockNumber}: ${error}`);
@@ -148,22 +170,11 @@ async function processBlock(api, blockNumber){
 async function testInsertBlock() {
   let api = await utils.api.apiProvider();
   let block_number = 114921;
-  await processBlock(api, block_number);
+  await processBlock(api, block_number, true);
   // await updateFinalized(11112);
 
-  // await storeMetadata(api, block_number);
   process.exit(0)
 }
 
 testInsertBlock()
 
-// {
-//   "display":"nath",
-//   "email":"nath.selendra@gmail.com",
-//   "judgements":[],
-//   "legal": "nath",
-//   "other":{},
-//   "riot":"@nathselendra:matrix.org",
-//   "twitter": "@LayNathkk",
-//   "web":"https://selendra.org"
-// }

@@ -167,12 +167,3 @@ module.exports = {
     processAccountsChunk,
     updateAccountsInfo
 }
-
-// async function testIn() {
-//     let api = await utils.api.apiProvider();
-//     let id = "sebpN3SUzHAesR29NcxCBVUo5WhmoLsNZG1RXsiSGBzjtyoh1";
-//     await processAccountsChunk(api, id);
-//     process.exit(0)
-//   }
-  
-//   testIn()
