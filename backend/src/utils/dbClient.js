@@ -13,6 +13,7 @@ let transferCol;
 let signedExtrinsicCol;
 let stakingRewardCol;
 let stakingSlashCol;
+let logCol;
 
 async function initDB() {
   client = await MongoClient.connect(
@@ -31,7 +32,8 @@ async function initDB() {
   runtimeCol = db.collection('runtime');
   transferCol = db.collection('transfer');
   stakingRewardCol = db.collection('staking_reward');
-  stakingSlashCol = db.collection('staking_slash')
+  stakingSlashCol = db.collection('staking_slash');
+  logCol = db.collection('log')
 
   await _createIndexes();
 };
@@ -47,6 +49,7 @@ async function _createIndexes() {
   await eventCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
   await runtimeCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
   await accountsCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
+  await logCol.createIndex({ 'indexer.blockHeight': -1, index: -1 });
 };
 
 async function tryInit(col) {
@@ -100,6 +103,11 @@ async function getStakingSlashColCollection() {
   return stakingSlashCol
 }
 
+async function getLogColCollection() {
+  await tryInit(logCol)
+  return logCol
+}
+
 module.exports = {
   getBlockCollection,
   getEventCollection,
@@ -110,4 +118,5 @@ module.exports = {
   getRuntimeColCollection,
   getStakinRewardColCollection,
   getStakingSlashColCollection,
+  getLogColCollection,
 }

@@ -9,6 +9,7 @@ const { updateAccountsInfo } = require('./account');
 const { processEvents } = require('./event');
 const { processExtrinsics } = require('./extrinsic');
 const { storeMetadata } = require('./runtime');
+const { processLogs } = require('./log');
 
 Sentry.init({
   dsn: constants.SENTRY,
@@ -138,7 +139,7 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
           blockHash,
           block.extrinsics,
           events,
-          timestamp,
+          timestamp
         ),
 
         // Store module events
@@ -147,7 +148,14 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
           parseInt(activeEra.toString()),
           events,
           block.extrinsics,
-          timestamp,
+          timestamp
+        ),
+
+        // Store block logs
+        processLogs(
+          blockNumber,
+          block.header.digest.logs,
+          timestamp
         ),
 
         doUpdateAccountsInfo ? await updateAccountsInfo(api, blockNumber, timestamp, events): false
