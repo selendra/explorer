@@ -3,7 +3,7 @@ const Sentry = require('@sentry/node');
 const utils = require('../utils');
 const logger = require('../utils/logger');
 const constants = require('../config');
-const { process_staking_reward } = require('./staking');
+const { process_staking_reward, process_staking_slash } = require('./staking');
 
 Sentry.init({
     dsn: constants.SENTRY,
@@ -47,10 +47,30 @@ async function processEvent(
         logger.error(
           `Error adding event #${blockNumber}-${eventIndex}: ${error}`,
         );
+        scope.setTag('events', blockNumber);
         Sentry.captureException(error);
     }
 
-    await process_staking_reward(event, eventIndex, phase, blockNumber, IndexedBlockEvents, IndexedBlockExtrinsics, timestamp);
+    await Promise.all([
+      process_staking_reward(
+        event,
+        eventIndex,
+        phase,
+        blockNumber,
+        IndexedBlockEvents,
+        IndexedBlockExtrinsics,
+        timestamp
+      ),
+
+      process_staking_slash(
+        event,
+        eventIndex,
+        activeEra,
+        blockNumber,
+        IndexedBlockEvents,
+        timestamp,
+      )
+    ])
 }
 
 async function processEvents(

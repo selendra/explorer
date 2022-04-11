@@ -144,12 +144,88 @@ async function process_staking_reward(
             `Error adding staking reward #${blockNumber}-${eventIndex}: ${error}`,
           );
           const scope = new Sentry.Scope();
-          scope.setTag('blockNumber', blockNumber);
+          scope.setTag('staking', blockNumber);
           Sentry.captureException(error, scope);
         }
     }
 }
 
+async function process_staking_slash(
+  event,
+  eventIndex,
+  activeEra,
+  blockNumber,
+  IndexedBlockEvents,
+  timestamp,
+){
+  // Store validator staking slash
+  if (event.section === 'staking' && (event.method === 'Slash' || event.method === 'Slashed')){
+    data = {
+      blockNumber,
+      eventIndex,
+      stakingStatus: "validator",
+      accountId: event.data[0].toString(),
+      validatorStashAddress: event.data[0].toString(),
+      era: activeEra - 1,
+      amount: new BigNumber(event.data[1].toString()).dividedBy(1e18).toNumber(),
+      timestamp,
+    };
+
+    try {
+      let slashCol = await utils.db.getStakingSlashColCollection();
+      await slashCol.insertOne(data);
+
+      logger.info(
+        `Added validator staking slash #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`,
+      );
+    } catch (error) {
+      logger.error(
+        `Error adding validator staking slash #${blockNumber}-${eventIndex}: ${error}`,
+      );
+      scope.setTag('staking', blockNumber);
+      Sentry.captureException(error);
+    }
+  }
+
+  // Store nominator staking slash
+  if (event.section === 'balances' && (event.method === 'Slash' || event.method === 'Slashed')) {
+
+    const validatorStashAddress = getSlashedValidatorAccount(
+      eventIndex,
+      IndexedBlockEvents,
+    );
+
+    data = {
+      blockNumber,
+      eventIndex,
+      stakingStatus: "nominator",
+      accountId: event.data[0].toString(),
+      validatorStashAddress,
+      era: activeEra - 1,
+      amount: new BigNumber(event.data[1].toString()).dividedBy(1e18).toNumber(),
+      timestamp,
+    };
+  
+    try {
+      let slashCol = await utils.db.getStakingSlashColCollection();
+      await slashCol.insertOne(data);
+
+      logger.info(
+        `Added nominator staking slash #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`,
+      );
+    } catch (error) {
+      logger.error(
+        `Error adding nominator staking slash #${blockNumber}-${eventIndex}: ${error}}`,
+      );
+      const scope = new Sentry.Scope();
+      scope.setTag('staking', blockNumber);
+      Sentry.captureException(error, scope);
+    }
+  }
+  
+}
+
 module.exports = {
-    process_staking_reward
+    process_staking_reward,
+    process_staking_slash
 }
