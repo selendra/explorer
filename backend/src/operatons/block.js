@@ -86,7 +86,10 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
       const totalExtrinsics = block.extrinsics.length;
       let totalIssuance = new BigNumber(total).dividedBy(1e18).toNumber();
 
-      let data = {
+      const query = { blockNumber: blockNumber };
+      const options = { upsert: true };
+      const data = {
+        $set: { 
           blockNumber,
           finalized: false,
           blockAuthor,
@@ -102,14 +105,15 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
           totalExtrinsics: totalExtrinsics,
           totalIssuance: totalIssuance,
           timestamp,
+        }
       };
 
       try {
         const blockCol = await utils.db.getBlockCollection();
-        await blockCol.insertOne(data)
+        await blockCol.updateOne(query, data, options);
 
         const endTime = new Date().getTime();
-        logger.debug(
+        logger.info(
           `Added block #${blockNumber} in ${((endTime - startTime) / 1000)}s`,
         );
       } catch (error) {
@@ -169,4 +173,46 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
     }
 }
 
+async function healthCheck(blockNumber) {
+  const startTime = new Date().getTime();
+  logger.info('Starting health check');
+  
+  let query = { blockNumber: blockNumber };
 
+  const blockCol = await utils.db.getBlockCollection();
+  const eventCol = await utils.db.getEventCollection();
+  const extrinsicCol = await utils.db.getExtrinsicCollection();
+
+  try {
+    let blockdb = await blockCol.findOne(query);
+    let eventdb = await eventCol.find(query).toArray();
+    let extrinsicdb = await extrinsicCol.find(query).toArray();
+  
+    if (blockdb.totalEvents !== eventdb.length || blockdb.totalExtrinsics !== extrinsicdb.length) {
+      await blockCol.deleteMany(query);
+      await eventCol.deleteMany(query);
+      await extrinsicCol.deleteMany(query);
+    } else {
+      logger.info(`Block have no duplicate field`);
+    }    
+  } catch (error) {
+      logger.info(`Block number not exit`);
+  }
+  
+  const endTime = new Date().getTime();
+  logger.debug(`Health check finished in ${((endTime - startTime) / 1000)}s`);
+}
+
+
+async function testInsertBlock() {
+  let api = await utils.api.apiProvider();
+  let block_number = 114921;
+  // let block_number = 131521;
+  await healthCheck(block_number);
+  await processBlock(api, block_number, true);
+  // // await updateFinalized(11112);
+
+  process.exit(0)
+}
+
+testInsertBlock()

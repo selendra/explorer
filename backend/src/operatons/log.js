@@ -18,12 +18,16 @@ async function processLog(blockNumber, log, index, timestamp){
         : Object.values(log.toHuman());
 
     const data = {
-        blockNumber, index, type, engine, logData, timestamp
+        $set: { 
+            blockNumber, index, type, engine, logData, timestamp
+        }
     };
+    const query = { blockNumber: blockNumber, logData: logData };
+    const options = { upsert: true };
 
     try {
         let logCol = await utils.db.getLogColCollection();
-        await logCol.insertOne(data);
+        await logCol.updateOne(query, data, options);
 
         logger.debug(`Added log ${blockNumber}-${index}`);
     } catch (error) {
