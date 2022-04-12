@@ -17,10 +17,10 @@ const config = backendConfig.crawlers.find(
 const { chunkSize } = config;
 
 async function crawler(delayedStart){
-    // if (delayedStart && config.startDelay) {
-    //   logger.debug(`Delaying active accounts crawler start for ${config.startDelay / 1000}s`);
-    //   await utils.wait(config.startDelay);
-    // }
+    if (delayedStart && config.startDelay) {
+      logger.debug(`Delaying active accounts crawler start for ${config.startDelay / 1000}s`);
+      await utils.wait(config.startDelay);
+    }
   
     logger.debug('Running active accounts crawler...');
 
