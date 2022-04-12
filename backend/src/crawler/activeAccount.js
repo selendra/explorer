@@ -29,7 +29,7 @@ async function crawler(delayedStart){
     let synced = await utils.api.isNodeSynced(api);
     while (!synced) {
       await wait(10000);
-      synced = await isNodeSynced(api, loggerOptions);
+      synced = await utils.api.isNodeSynced(api, loggerOptions);
     }
   
     const startTime = new Date().getTime();

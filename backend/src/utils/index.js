@@ -13,3 +13,11 @@ module.exports.shortHash = (hash) =>
 module.exports.wait = async (ms) => new Promise((resolve) => {
   return setTimeout(resolve, ms);
 });
+
+// Return a reverse ordered array filled from range
+module.exports.reverseRange = (start, stop, step) =>
+  Array.from({ length: (stop - start) / step + 1 }, (_, i) => stop - i * step);
+
+// Return filled array from range
+module.exports.range = (start, stop, step) =>
+  Array.from({ length: (stop - start) / step + 1 }, (_, i) => start + i * step);

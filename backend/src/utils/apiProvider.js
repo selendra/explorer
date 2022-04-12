@@ -2,12 +2,6 @@ const { ApiPromise, WsProvider } = require('@polkadot/api');
 const { backendConfig } = require('../config');
 const logger = require('./logger');
 
-module.exports.apiProvider = async () => {
-    const wsProvider = new WsProvider(backendConfig.wsProviderUrl);
-    const api = await ApiPromise.create({ provider: wsProvider });
-    return api
-}
-
 module.exports.getAPI = async (apiCustomTypes="")=> {
     let api;
     logger.info(`Connecting to ${backendConfig.wsProviderUrl}`);

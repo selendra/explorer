@@ -39,7 +39,37 @@ async function updateFinalized(finalizedBlock){
   }
 };
 
-async function processBlock(api, blockNumber, doUpdateAccountsInfo){
+async function healthCheck(blockNumber) {
+  const startTime = new Date().getTime();
+  logger.info('Starting health check');
+  
+  const query = { blockNumber: blockNumber };
+
+  const blockCol = await utils.db.getBlockCollection();
+  const eventCol = await utils.db.getEventCollection();
+  const extrinsicCol = await utils.db.getExtrinsicCollection();
+
+  try {
+    let blockdb = await blockCol.findOne(query);
+    let eventdb = await eventCol.find(query).toArray();
+    let extrinsicdb = await extrinsicCol.find(query).toArray();
+  
+    if (blockdb.totalEvents !== eventdb.length || blockdb.totalExtrinsics !== extrinsicdb.length) {
+      await blockCol.deleteMany(query);
+      await eventCol.deleteMany(query);
+      await extrinsicCol.deleteMany(query);
+    } else {
+      logger.info(`Block have no duplicate field`);
+    }    
+  } catch (error) {
+      logger.info(`Block data not exit`);
+  }
+  
+  const endTime = new Date().getTime();
+  logger.debug(`Health check finished in ${((endTime - startTime) / 1000)}s`);
+}
+
+async function harvestBlock(api, blockNumber, doUpdateAccountsInfo){
   const startTime = new Date().getTime();
     try {
       const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
@@ -173,46 +203,113 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
     }
 }
 
-async function healthCheck(blockNumber) {
-  const startTime = new Date().getTime();
-  logger.info('Starting health check');
-  
-  let query = { blockNumber: blockNumber };
+async function harvestBlocks(config, api, startBlock, endBlock){
+  const blocks = utils.range(startBlock, endBlock, 1);
 
-  const blockCol = await utils.db.getBlockCollection();
-  const eventCol = await utils.db.getEventCollection();
-  const extrinsicCol = await utils.db.getExtrinsicCollection();
+  const chunks = utils.chunker(blocks, config.chunkSize);
+  logger.info(`Processing chunks of ${config.chunkSize} blocks`);
 
-  try {
-    let blockdb = await blockCol.findOne(query);
-    let eventdb = await eventCol.find(query).toArray();
-    let extrinsicdb = await extrinsicCol.find(query).toArray();
+  const chunkProcessingTimes = [];
+  let maxTimeMs = 0;
+  let minTimeMs = 1000000;
+  let avgTimeMs = 0;
+  let avgBlocksPerSecond = 0;
+
+  // dont update accounts info for addresses found on block events data
+  const doUpdateAccountsInfo = false;
   
-    if (blockdb.totalEvents !== eventdb.length || blockdb.totalExtrinsics !== extrinsicdb.length) {
-      await blockCol.deleteMany(query);
-      await eventCol.deleteMany(query);
-      await extrinsicCol.deleteMany(query);
-    } else {
-      logger.info(`Block have no duplicate field`);
-    }    
-  } catch (error) {
-      logger.info(`Block number not exit`);
+  for (const chunk of chunks) {
+    const chunkStartTime = Date.now();
+
+    await Promise.all(
+      chunk.map((blockNumber) =>
+        harvestBlock(api, blockNumber, doUpdateAccountsInfo),
+      ),
+    );
+    const chunkEndTime = new Date().getTime();
+
+    // Cook some stats
+    const chunkProcessingTimeMs = chunkEndTime - chunkStartTime;
+    if (chunkProcessingTimeMs < minTimeMs) {
+      minTimeMs = chunkProcessingTimeMs;
+    }
+    if (chunkProcessingTimeMs > maxTimeMs) {
+      maxTimeMs = chunkProcessingTimeMs;
+    }
+    chunkProcessingTimes.push(chunkProcessingTimeMs);
+    avgTimeMs =
+      chunkProcessingTimes.reduce(
+        (sum, chunkProcessingTime) => sum + chunkProcessingTime,
+        0,
+      ) / chunkProcessingTimes.length;
+    avgBlocksPerSecond = 1 / (avgTimeMs / 1000 / config.chunkSize);
+    const currentBlocksPerSecond =
+      1 / (chunkProcessingTimeMs / 1000 / config.chunkSize);
+    const completed = ((chunks.indexOf(chunk) + 1) * 100) / chunks.length;
+
+    logger.info(
+      `Processed chunk ${chunks.indexOf(chunk) + 1}/${
+        chunks.length
+      } [${completed.toFixed(2)}%] ` +
+        `in ${(chunkProcessingTimeMs / 1000).toFixed(2,
+        )}s ` +
+        `min/max/avg: ${(minTimeMs / 1000).toFixed(2)}/${(maxTimeMs / 1000
+        ).toFixed(2)}/${(avgTimeMs / 1000).toFixed(2)} ` +
+        `cur/avg bps: ${currentBlocksPerSecond.toFixed(2
+        )}/${avgBlocksPerSecond.toFixed(2)}`,
+    );
   }
-  
-  const endTime = new Date().getTime();
-  logger.debug(`Health check finished in ${((endTime - startTime) / 1000)}s`);
+};
+
+async function harvestBlocksSeq(api, startBlock, endBlock){
+  const blocks = utils.range(startBlock, endBlock, 1);
+  const blockProcessingTimes = [];
+  let maxTimeMs = 0;
+  let minTimeMs = 1000000;
+  let avgTimeMs = 0;
+
+  // dont update accounts info for addresses found on block events data
+  const doUpdateAccountsInfo = false;
+
+  for (const blockNumber of blocks) {
+    const blockStartTime = Date.now();
+    await harvestBlock(api, blockNumber, doUpdateAccountsInfo);
+    await healthCheck(blockNumber);
+    const blockEndTime = new Date().getTime();
+
+    // Cook some stats
+    const blockProcessingTimeMs = blockEndTime - blockStartTime;
+    if (blockProcessingTimeMs < minTimeMs) {
+      minTimeMs = blockProcessingTimeMs;
+    }
+    if (blockProcessingTimeMs > maxTimeMs) {
+      maxTimeMs = blockProcessingTimeMs;
+    }
+    blockProcessingTimes.push(blockProcessingTimeMs);
+    avgTimeMs =
+      blockProcessingTimes.reduce(
+        (sum, blockProcessingTime) => sum + blockProcessingTime,
+        0,
+      ) / blockProcessingTimes.length;
+    const completed = ((blocks.indexOf(blockNumber) + 1) * 100) / blocks.length;
+
+    logger.info(
+      `Processed block #${blockNumber} ${blocks.indexOf(blockNumber) + 1}/${
+        blocks.length
+      } [${completed.toFixed(2)}%] in ${(
+        blockProcessingTimeMs / 1000
+      ).toFixed(2)}s min/max/avg: ${(
+        minTimeMs / 1000
+      ).toFixed(2)}/${(maxTimeMs / 1000).toFixed(
+        2,
+      )}/${(avgTimeMs / 1000).toFixed(2)}`,
+    );
+  }
+};
+
+module.exports = {
+  healthCheck,
+  harvestBlocks,
+  harvestBlock,
+  harvestBlocksSeq,
 }
-
-
-async function testInsertBlock() {
-  let api = await utils.api.apiProvider();
-  let block_number = 114921;
-  // let block_number = 131521;
-  await healthCheck(block_number);
-  await processBlock(api, block_number, true);
-  // // await updateFinalized(11112);
-
-  process.exit(0)
-}
-
-testInsertBlock()

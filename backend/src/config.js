@@ -12,26 +12,26 @@ module.exports.backendConfig = {
     },
     sentryDSN: process.env.SENTRY_DSN || '',
     crawlers: [
-      // {
-      //   name: 'blockListener',
-      //   enabled: !process.env.BLOCK_LISTENER_DISABLE,
-      //   crawler: './built/crawlers/blockListener.js',
-      //   statsPrecision: parseInt(process.env.BACKEND_STATS_PRECISION, 10) || 2,
-      // },
-      // {
-      //   name: 'blockHarvester',
-      //   enabled: !process.env.BLOCK_HARVESTER_DISABLE,
-      //   crawler: './built/crawlers/blockHarvester.js',
-      //   apiCustomTypes: process.env.API_CUSTOM_TYPES || '',
-      //   startDelay:
-      //     parseInt(process.env.BLOCK_HARVESTER_START_DELAY_MS, 10) || 10 * 1000,
-      //   mode: process.env.BLOCK_HARVESTER_MODE || 'chunks',
-      //   chunkSize: parseInt(process.env.BLOCK_HARVESTER_CHUNK_SIZE, 10) || 10,
-      //   statsPrecision: parseInt(process.env.BACKEND_STATS_PRECISION, 10) || 2,
-      //   pollingTime:
-      //     parseInt(process.env.BLOCK_LISTENER_POLLING_TIME_MS, 10) ||
-      //     60 * 60 * 1000,
-      // },
+      {
+        name: 'blockListener',
+        enabled: !process.env.BLOCK_LISTENER_DISABLE,
+        crawler: './built/crawlers/blockListener.js',
+        statsPrecision: parseInt(process.env.BACKEND_STATS_PRECISION, 10) || 2,
+      },
+      {
+        name: 'blockHarvester',
+        enabled: !process.env.BLOCK_HARVESTER_DISABLE,
+        crawler: './built/crawlers/blockHarvester.js',
+        apiCustomTypes: process.env.API_CUSTOM_TYPES || '',
+        startDelay:
+          parseInt(process.env.BLOCK_HARVESTER_START_DELAY_MS, 10) || 8 * 1000,
+        mode: process.env.BLOCK_HARVESTER_MODE || 'chunks',
+        chunkSize: parseInt(process.env.BLOCK_HARVESTER_CHUNK_SIZE, 10) || 10,
+        statsPrecision: parseInt(process.env.BACKEND_STATS_PRECISION, 10) || 2,
+        pollingTime:
+          parseInt(process.env.BLOCK_LISTENER_POLLING_TIME_MS, 10) ||
+          60 * 60 * 1000,
+      },
       // {
       //   name: 'ranking',
       //   enabled: !process.env.RANKING_DISABLE,
