@@ -4,19 +4,19 @@ var _ = require('lodash');
 
 const utils = require('../utils');
 const logger = require('../utils/logger');
-const constants = require('../config');
+const { backendConfig } = require('../config');
 
 Sentry.init({
-    dsn: constants.SENTRY,
+    dsn: backendConfig.sentryDSN,
     tracesSampleRate: 1.0,
 });
 
 function getAccountIdFromArgs(account){
-    account.map(({ args }) => args).map(([e]) => e.toHuman());
+    return account.map(({ args }) => args).map(([e]) => e.toHuman());
 }
 
 async function fetchAccountIds(api){
-    getAccountIdFromArgs(await api.query.system.account.keys());
+    return getAccountIdFromArgs(await api.query.system.account.keys());
 }
 
 async function processAccountsChunk(api, accountId){
@@ -167,5 +167,6 @@ async function updateAccountsInfo(api, blockNumber, timestamp, blockEvents) {
 
 module.exports = {
     processAccountsChunk,
-    updateAccountsInfo
+    updateAccountsInfo,
+    fetchAccountIds,
 }

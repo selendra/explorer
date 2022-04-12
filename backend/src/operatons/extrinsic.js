@@ -2,11 +2,11 @@ const Sentry = require('@sentry/node');
 
 const utils = require('../utils');
 const logger = require('../utils/logger');
-const constants = require('../config');
+const { backendConfig } = require('../config');
 const { processTransfer } = require('./transfer');
 
 Sentry.init({
-  dsn: constants.SENTRY,
+  dsn: backendConfig.sentryDSN,
   tracesSampleRate: 1.0,
 });
 

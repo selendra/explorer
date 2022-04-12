@@ -2,11 +2,11 @@ const Sentry = require('@sentry/node');
 
 const utils = require('../utils');
 const logger = require('../utils/logger');
-const constants = require('../config');
+const { backendConfig } = require('../config');
 const { process_staking_reward, process_staking_slash } = require('./stakinfg_event');
 
 Sentry.init({
-    dsn: constants.SENTRY,
+    dsn: backendConfig.sentryDSN,
     tracesSampleRate: 1.0,
 });
 

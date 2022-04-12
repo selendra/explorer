@@ -1,5 +1,5 @@
 const { MongoClient } = require('mongodb');
-const constants = require('../config');
+const { backendConfig } = require('../config');
 
 let client;
 let db;
@@ -17,12 +17,12 @@ let logCol;
 
 async function initDB() {
   client = await MongoClient.connect(
-    constants.MONGOURI,
+    backendConfig.MongodbConnParams.url,
     { 
       useUnifiedTopology: true 
     }
   );
-  db = client.db(constants.DATABASE);
+  db = client.db(backendConfig.MongodbConnParams.db);
 
   accountsCol = db.collection('accounts');
   blockCol = db.collection('block');

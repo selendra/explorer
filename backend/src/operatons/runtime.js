@@ -1,14 +1,13 @@
 const Sentry = require('@sentry/node');
 
-const constants = require('../config');
+const { backendConfig } = require('../config');
 const utils = require('../utils');
 const logger = require('../utils/logger');
 
 Sentry.init({
-    dsn: constants.SENTRY,
+    dsn: backendConfig.sentryDSN,
     tracesSampleRate: 1.0,
   });
-  
 
 async function storeMetadata(api, blockNumber, blockHash, specName, specVersion, timestamp){
     const metadata = await api.rpc.state.getMetadata(blockHash);

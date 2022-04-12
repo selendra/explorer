@@ -7,6 +7,9 @@ module.exports.chunker = (a, n) =>
     a.slice(i * n, i * n + n),
   );
 
-
 module.exports.shortHash = (hash) =>
   `${hash.substring(0, 6)}…${hash.substring(hash.length - 4, hash.length)}`;
+
+module.exports.wait = async (ms) => new Promise((resolve) => {
+  return setTimeout(resolve, ms);
+});

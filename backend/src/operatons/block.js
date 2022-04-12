@@ -3,7 +3,7 @@ const { BigNumber } = require('bignumber.js');
 
 const utils = require('../utils');
 const logger = require('../utils/logger');
-const constants = require('../config');
+const { backendConfig } = require('../config');
 
 const { updateAccountsInfo } = require('./account');
 const { processEvents } = require('./event');
@@ -12,7 +12,7 @@ const { storeMetadata } = require('./runtime');
 const { processLogs } = require('./log');
 
 Sentry.init({
-  dsn: constants.SENTRY,
+  dsn: backendConfig.sentryDSN,
   tracesSampleRate: 1.0,
 });
 
@@ -125,7 +125,7 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
           section === 'system' && method === 'CodeUpdated',
       );
 
-      if (runtimeUpgrade || blockNumber === 131521) {
+      if (runtimeUpgrade) {
         const specName = runtimeVersion.toJSON().specName;
         const specVersion = runtimeVersion.specVersion;
         await storeMetadata(api, blockNumber, blockHash, specName, specVersion, timestamp);
@@ -169,15 +169,4 @@ async function processBlock(api, blockNumber, doUpdateAccountsInfo){
     }
 }
 
-async function testInsertBlock() {
-  let api = await utils.api.apiProvider();
-  // let block_number = 114921;
-  let block_number = 131521;
-  await processBlock(api, block_number, true);
-  // await updateFinalized(11112);
-
-  process.exit(0)
-}
-
-testInsertBlock()
 
