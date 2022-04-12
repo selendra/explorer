@@ -223,7 +223,6 @@ async function harvestBlocks(config, api, startBlock, endBlock){
 
     await Promise.all(
       chunk.map((blockNumber) =>
-        healthCheck(blockNumber),
         harvestBlock(api, blockNumber, doUpdateAccountsInfo),
       ),
     );
