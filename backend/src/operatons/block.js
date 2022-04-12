@@ -223,6 +223,7 @@ async function harvestBlocks(config, api, startBlock, endBlock){
 
     await Promise.all(
       chunk.map((blockNumber) =>
+        healthCheck(blockNumber),
         harvestBlock(api, blockNumber, doUpdateAccountsInfo),
       ),
     );
@@ -273,8 +274,8 @@ async function harvestBlocksSeq(api, startBlock, endBlock){
 
   for (const blockNumber of blocks) {
     const blockStartTime = Date.now();
-    await harvestBlock(api, blockNumber, doUpdateAccountsInfo);
     await healthCheck(blockNumber);
+    await harvestBlock(api, blockNumber, doUpdateAccountsInfo); 
     const blockEndTime = new Date().getTime();
 
     // Cook some stats
