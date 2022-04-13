@@ -28,26 +28,47 @@ function getDisplayName(identity) {
     return identity.display || '';
 };
 
-async function updateFinalized(finalizedBlock){
-  let blockQuery = { blockNumber: finalizedBlock };
+async function updateFinalizedBlock(client, api, finalizedBlock){
+
+  const blockHash = await api.rpc.chain.getBlockHash(finalizedBlock);
+  const extendedHeader = await api.derive.chain.getHeader(blockHash);
+  const { parentHash, extrinsicsRoot, stateRoot } = extendedHeader;
+  const blockAuthorIdentity = await api.derive.accounts.info(
+      extendedHeader.author,
+  );
+  const blockAuthorName = getDisplayName(blockAuthorIdentity.identity);
+
+  const blockQuery = { blockNumber: finalizedBlock };
+  const update = {
+    $set:{
+      blockNumber: finalizedBlock,
+      blockAuthor: extendedHeader.author.toString(),
+      blockAuthorName,
+      blockHash: blockHash.toString(),
+      parentHash: parentHash.toString(),
+      extrinsicsRoot: extrinsicsRoot.toString(),
+      stateRoot: stateRoot.toString(),
+      finalized: true
+    }
+  };
 
   try {
-    const blockCol = await utils.db.getBlockCollection();
-    await blockCol.findOneAndUpdate(blockQuery ,{$set:{"finalized": true}});
+    const blockCol = await utils.db.getBlockCollection(client);
+    await blockCol.findOneAndUpdate(blockQuery ,update);
   } catch (error) {
     Sentry.captureException(error);
   }
 };
 
-async function healthCheck(blockNumber) {
+async function healthCheck(client, blockNumber) {
   const startTime = new Date().getTime();
   logger.info('Starting health check');
   
   const query = { blockNumber: blockNumber };
 
-  const blockCol = await utils.db.getBlockCollection();
-  const eventCol = await utils.db.getEventCollection();
-  const extrinsicCol = await utils.db.getExtrinsicCollection();
+  const blockCol = await utils.db.getBlockCollection(client);
+  const eventCol = await utils.db.getEventCollection(client);
+  const extrinsicCol = await utils.db.getExtrinsicCollection(client);
 
   try {
     let blockdb = await blockCol.findOne(query);
@@ -69,7 +90,7 @@ async function healthCheck(blockNumber) {
   logger.debug(`Health check finished in ${((endTime - startTime) / 1000)}s`);
 }
 
-async function harvestBlock(api, blockNumber, doUpdateAccountsInfo){
+async function harvestBlock(client, api, blockNumber, finalizedBlock, doUpdateAccountsInfo){
   const startTime = new Date().getTime();
     try {
       const blockHash = await api.rpc.chain.getBlockHash(blockNumber);
@@ -121,7 +142,7 @@ async function harvestBlock(api, blockNumber, doUpdateAccountsInfo){
       const data = {
         $set: { 
           blockNumber,
-          finalized: false,
+          finalized: finalizedBlock,
           blockAuthor,
           blockAuthorName,
           blockHash: blockHash.toHuman(),
@@ -139,7 +160,7 @@ async function harvestBlock(api, blockNumber, doUpdateAccountsInfo){
       };
 
       try {
-        const blockCol = await utils.db.getBlockCollection();
+        const blockCol = await utils.db.getBlockCollection(client);
         await blockCol.updateOne(query, data, options);
 
         const endTime = new Date().getTime();
@@ -162,13 +183,15 @@ async function harvestBlock(api, blockNumber, doUpdateAccountsInfo){
       if (runtimeUpgrade) {
         const specName = runtimeVersion.toJSON().specName;
         const specVersion = runtimeVersion.specVersion;
-        await storeMetadata(api, blockNumber, blockHash, specName, specVersion, timestamp);
+        await storeMetadata(client, api, blockNumber, blockHash, specName, specVersion, timestamp);
       }
 
       await Promise.all([
         // Store block extrinsics
         processExtrinsics(
+          client,
           api,
+          apiAt,
           blockNumber,
           blockHash,
           block.extrinsics,
@@ -178,6 +201,7 @@ async function harvestBlock(api, blockNumber, doUpdateAccountsInfo){
 
         // Store module events
         processEvents(
+          client,
           blockNumber,
           parseInt(activeEra.toString()),
           events,
@@ -187,12 +211,13 @@ async function harvestBlock(api, blockNumber, doUpdateAccountsInfo){
 
         // Store block logs
         processLogs(
+          client,
           blockNumber,
           block.header.digest.logs,
           timestamp
         ),
 
-        doUpdateAccountsInfo ? await updateAccountsInfo(api, blockNumber, timestamp, events): false
+        doUpdateAccountsInfo ? await updateAccountsInfo(client, api, blockNumber, timestamp, events): false
       ]);
 
     } catch (error) {
@@ -203,7 +228,7 @@ async function harvestBlock(api, blockNumber, doUpdateAccountsInfo){
     }
 }
 
-async function harvestBlocks(config, api, startBlock, endBlock){
+async function harvestBlocks(client, config, api, startBlock, endBlock){
   const blocks = utils.range(startBlock, endBlock, 1);
 
   const chunks = utils.chunker(blocks, config.chunkSize);
@@ -217,13 +242,14 @@ async function harvestBlocks(config, api, startBlock, endBlock){
 
   // dont update accounts info for addresses found on block events data
   const doUpdateAccountsInfo = false;
+  const finalizedBlock = true;
   
   for (const chunk of chunks) {
     const chunkStartTime = Date.now();
 
     await Promise.all(
       chunk.map((blockNumber) =>
-        harvestBlock(api, blockNumber, doUpdateAccountsInfo),
+        harvestBlock(client, api, blockNumber, finalizedBlock, doUpdateAccountsInfo),
       ),
     );
     const chunkEndTime = new Date().getTime();
@@ -261,7 +287,7 @@ async function harvestBlocks(config, api, startBlock, endBlock){
   }
 };
 
-async function harvestBlocksSeq(api, startBlock, endBlock){
+async function harvestBlocksSeq(client, api, startBlock, endBlock){
   const blocks = utils.range(startBlock, endBlock, 1);
   const blockProcessingTimes = [];
   let maxTimeMs = 0;
@@ -270,11 +296,12 @@ async function harvestBlocksSeq(api, startBlock, endBlock){
 
   // dont update accounts info for addresses found on block events data
   const doUpdateAccountsInfo = false;
+  const finalizedBlock = true;
 
   for (const blockNumber of blocks) {
     const blockStartTime = Date.now();
-    await healthCheck(blockNumber);
-    await harvestBlock(api, blockNumber, doUpdateAccountsInfo); 
+    await healthCheck(client, blockNumber);
+    await harvestBlock(client, api, blockNumber, finalizedBlock, doUpdateAccountsInfo); 
     const blockEndTime = new Date().getTime();
 
     // Cook some stats
@@ -312,4 +339,6 @@ module.exports = {
   harvestBlocks,
   harvestBlock,
   harvestBlocksSeq,
+  storeMetadata,
+  updateFinalizedBlock,
 }

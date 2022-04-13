@@ -19,7 +19,7 @@ async function fetchAccountIds(api){
     return getAccountIdFromArgs(await api.query.system.account.keys());
 }
 
-async function processAccountsChunk(api, accountId){
+async function processAccountsChunk(client, api, accountId){
     try {
         const timestamp = Math.floor(parseInt(Date.now().toString(), 10) / 1000);
         const [block, identity, balances] = await Promise.all([
@@ -64,7 +64,7 @@ async function processAccountsChunk(api, accountId){
         };
         const options = { upsert: true };
         try {
-            const accountCol = await utils.db.getAccountsCollection();
+            const accountCol = await utils.db.getAccountsCollection(client);
             await accountCol.updateOne(query, update, options);
             
           } catch (error) {
@@ -81,7 +81,7 @@ async function processAccountsChunk(api, accountId){
     }
 }
 
-async function updateAccountInfo (api, blockNumber, timestamp, address){
+async function updateAccountInfo (client, api, blockNumber, timestamp, address){
     try {
         const [balances, { identity }] = await Promise.all([
             api.derive.balances.all(address),
@@ -122,7 +122,7 @@ async function updateAccountInfo (api, blockNumber, timestamp, address){
         const options = { upsert: true };
 
         try {
-            const accountCol = await utils.db.getAccountsCollection();
+            const accountCol = await utils.db.getAccountsCollection(client);
             await accountCol.updateOne(addressQuery, update, options);
 
             logger.debug(`Updated account info for event/s involved address ${address}`);
@@ -140,7 +140,7 @@ async function updateAccountInfo (api, blockNumber, timestamp, address){
     }
 }
 
-async function updateAccountsInfo(api, blockNumber, timestamp, blockEvents) {
+async function updateAccountsInfo(client, api, blockNumber, timestamp, blockEvents) {
     const startTime = new Date().getTime();
     const involvedAddresses = [];
 
@@ -155,7 +155,7 @@ async function updateAccountsInfo(api, blockNumber, timestamp, blockEvents) {
     const uniqueAddresses = _.uniq(involvedAddresses);
     await Promise.all(
       uniqueAddresses.map((address) =>
-        updateAccountInfo(api, blockNumber, timestamp, address),
+        updateAccountInfo(client, api, blockNumber, timestamp, address),
       ),
     );
 

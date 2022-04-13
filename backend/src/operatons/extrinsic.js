@@ -68,9 +68,8 @@ async function getExtrinsicFeeDetails(api, hexExtrinsic, blockHash){
 };
 
 async function processExtrinsic(
-      api, blockNumber, blockHash, indexedExtrinsic, blockEvents, timestamp
+    client, api, apiAt, blockNumber, blockHash, indexedExtrinsic, blockEvents, timestamp
 ){
-  const apiAt = await api.at(blockHash);
 
   const [extrinsicIndex, extrinsic] = indexedExtrinsic;
   const { isSigned } = extrinsic;
@@ -126,7 +125,7 @@ async function processExtrinsic(
   };
 
   try {
-    const extrinsicCol = await utils.db.getExtrinsicCollection();
+    const extrinsicCol = await utils.db.getExtrinsicCollection(client);
     await extrinsicCol.insertOne(data)
     logger.debug(
       `Added extrinsic ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
@@ -166,6 +165,7 @@ async function processExtrinsic(
   ) {
     // Store transfer
     await processTransfer(
+      client,
       blockNumber,
       extrinsicIndex,
       blockEvents,
@@ -182,7 +182,7 @@ async function processExtrinsic(
   }
 }
 
-async function processExtrinsics(api, blockNumber, blockHash, extrinsics, blockEvents, timestamp){
+async function processExtrinsics(client, api, apiAt, blockNumber, blockHash, extrinsics, blockEvents, timestamp){
   const startTime = new Date().getTime();
   const indexedExtrinsics = extrinsics.map(
     (extrinsic, index) => [index, extrinsic],
@@ -193,7 +193,9 @@ async function processExtrinsics(api, blockNumber, blockHash, extrinsics, blockE
     await Promise.all(
       chunk.map((indexedExtrinsic) =>
         processExtrinsic(
+          client,
           api,
+          apiAt,
           blockNumber,
           blockHash,
           indexedExtrinsic,

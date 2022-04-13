@@ -29,6 +29,7 @@ async function getTransferAllAmount(blockNumber, index, blockEvents){
 };
 
 async function processTransfer(
+    client,
     blockNumber,
     extrinsicIndex,
     blockEvents,
@@ -96,7 +97,7 @@ async function processTransfer(
     const options = { upsert: true };
 
     try {
-        const transferCol = await utils.db.getTransferColCollection();
+        const transferCol = await utils.db.getTransferColCollection(client);
         await transferCol.updateOne(query, data, options);
 
         logger.debug(

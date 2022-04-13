@@ -14,6 +14,7 @@ Sentry.init({
 const chunkSize = 20;
 
 async function processEvent(
+    client,
     blockNumber,
     activeEra,
     indexedEvent,
@@ -38,7 +39,7 @@ async function processEvent(
     };
 
     try {
-        let eventCol = await utils.db.getEventCollection();
+        let eventCol = await utils.db.getEventCollection(client);
         await eventCol.insertOne(data);
         logger.debug(
           `Added event #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`,
@@ -53,6 +54,7 @@ async function processEvent(
 
     await Promise.all([
       process_staking_reward(
+        client,
         event,
         eventIndex,
         phase,
@@ -63,6 +65,7 @@ async function processEvent(
       ),
 
       process_staking_slash(
+        client,
         event,
         eventIndex,
         activeEra,
@@ -74,6 +77,7 @@ async function processEvent(
 }
 
 async function processEvents(
+    client,
     blockNumber,
     activeEra,
     blockEvents,
@@ -92,6 +96,7 @@ async function processEvents(
       await Promise.all(
         chunk.map((indexedEvent) =>
           processEvent(
+            client,
             blockNumber,
             activeEra,
             indexedEvent,

@@ -9,7 +9,7 @@ Sentry.init({
     tracesSampleRate: 1.0,
 });
 
-async function processLog(blockNumber, log, index, timestamp){
+async function processLog(client, blockNumber, log, index, timestamp){
     const { type } = log;
     // this can change in the future...
     const [[engine, logData]] =
@@ -26,7 +26,7 @@ async function processLog(blockNumber, log, index, timestamp){
     const options = { upsert: true };
 
     try {
-        let logCol = await utils.db.getLogColCollection();
+        let logCol = await utils.db.getLogColCollection(client);
         await logCol.updateOne(query, data, options);
 
         logger.debug(`Added log ${blockNumber}-${index}`);
@@ -38,11 +38,11 @@ async function processLog(blockNumber, log, index, timestamp){
     }
 };
 
-async function processLogs(blockNumber, logs, timestamp){
+async function processLogs(client, blockNumber, logs, timestamp){
     const startTime = new Date().getTime();
     await Promise.all(
       logs.map((log, index) =>
-        processLog(blockNumber, log, index, timestamp),
+        processLog(client, blockNumber, log, index, timestamp),
       ),
     );
     // Log execution time

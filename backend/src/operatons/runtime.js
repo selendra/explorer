@@ -9,7 +9,7 @@ Sentry.init({
     tracesSampleRate: 1.0,
   });
 
-async function storeMetadata(api, blockNumber, blockHash, specName, specVersion, timestamp){
+async function storeMetadata(client, api, blockNumber, blockHash, specName, specVersion, timestamp){
     const metadata = await api.rpc.state.getMetadata(blockHash);
 
     let data = {
@@ -23,7 +23,7 @@ async function storeMetadata(api, blockNumber, blockHash, specName, specVersion,
     };
   
     try {
-      const runtimeCol = await utils.db.getRuntimeColCollection();
+      const runtimeCol = await utils.db.getRuntimeColCollection(client);
       await runtimeCol.insertOne(data)
       logger.debug(`Got runtime metadata at ${blockHash}!`);
     } catch (error) {

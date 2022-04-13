@@ -10,6 +10,19 @@ module.exports.backendConfig = {
       url: process.env.MONGO_URI || "mongodb://localhost:27017",
       db: process.env.DATABASE || 'TestDadabase',
     },
+    MongoDbCol: {
+      account: "accounts",
+      block: "blocks",
+      event: "events",
+      extrinsic: "extrinsics",
+      log: "logs",
+      runtime: "runtimes",
+      signedExtrinsic: "signed_extrinsic",
+      stakingReward: "staking_reward",
+      stakingSlash: "staking_slash",
+      transfer: "transfer"
+    
+    },
     sentryDSN: process.env.SENTRY_DSN || '',
     crawlers: [
       {
@@ -25,7 +38,7 @@ module.exports.backendConfig = {
         apiCustomTypes: process.env.API_CUSTOM_TYPES || '',
         startDelay:
           parseInt(process.env.BLOCK_HARVESTER_START_DELAY_MS, 10) || 8 * 1000,
-        mode: process.env.BLOCK_HARVESTER_MODE || 'chunks',
+        mode: process.env.BLOCK_HARVESTER_MODE || 'seq',
         chunkSize: parseInt(process.env.BLOCK_HARVESTER_CHUNK_SIZE, 10) || 10,
         statsPrecision: parseInt(process.env.BACKEND_STATS_PRECISION, 10) || 2,
         pollingTime:

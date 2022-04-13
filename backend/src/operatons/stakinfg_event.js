@@ -11,6 +11,7 @@ Sentry.init({
 });
 
 async function process_staking_reward(
+    client,
     event,
     eventIndex,
     phase,
@@ -133,7 +134,7 @@ async function process_staking_reward(
           };
         }
         try {
-          let stakingCol = await utils.db.getStakinRewardColCollection();
+          const stakingCol = await utils.db.getStakinRewardColCollection(client);
           await stakingCol.insertOne(data);
      
           logger.debug(
@@ -151,6 +152,7 @@ async function process_staking_reward(
 }
 
 async function process_staking_slash(
+  client,
   event,
   eventIndex,
   activeEra,
@@ -172,7 +174,7 @@ async function process_staking_slash(
     };
 
     try {
-      let slashCol = await utils.db.getStakingSlashColCollection();
+      let slashCol = await utils.db.getStakingSlashColCollection(client);
       await slashCol.insertOne(data);
 
       logger.debug(
@@ -207,7 +209,7 @@ async function process_staking_slash(
     };
   
     try {
-      let slashCol = await utils.db.getStakingSlashColCollection();
+      let slashCol = await utils.db.getStakingSlashColCollection(client);
       await slashCol.insertOne(data);
 
       logger.debug(
