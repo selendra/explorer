@@ -3,7 +3,14 @@ const Sentry = require('@sentry/node');
 const { backendConfig } = require('../config');
 const utils = require('../utils');
 const logger = require('../utils/logger');
-const { harvestBlock, harvestBlocks, harvestBlocksSeq, updateFinalizedBlock, storeMetadata, healthCheck } = require("../operatons/block")
+const { 
+    harvestBlock,
+    harvestBlocks,
+    harvestBlocksSeq,
+    updateFinalizedBlock,
+    storeMetadata,
+    healthCheck 
+} = require("../operatons/block")
 
 Sentry.init({
     dsn: backendConfig.sentryDSN,
