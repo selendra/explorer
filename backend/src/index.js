@@ -1,11 +1,11 @@
 
 const Sentry = require('@sentry/node');
-const { spawn } = require('child_process');
+// const { spawn } = require('child_process');
+const { exec } = require('child_process');
 
 const logger = require('./utils/logger');
 const utils = require('./utils');
 const { backendConfig } = require('./config');
-
 
 Sentry.init({
     dsn: backendConfig.sentryDSN,
@@ -13,7 +13,7 @@ Sentry.init({
 });
 
 async function runCrawler(crawler){
-    const child = spawn('node', [`${crawler}`]);
+    const child = exec(`node ${crawler}`);
     child.stdout.pipe(process.stdout);
     child.stderr.pipe(process.stderr);
 
@@ -34,13 +34,14 @@ async function runCrawler(crawler){
 
 async function runCrawlers(){
     logger.info('Starting backend, waiting 10s...');
-    await wait(10000);
+    // await utils.wait(10000);
   
-    console.log("hello")
+    logger.debug('Running crawlers');
+    await Promise.all(
+      backendConfig.crawlers
+        .filter(({ enabled }) => enabled)
+        .map(({ crawler }) => runCrawler(crawler)),
+    );
 };
   
-runCrawlers().catch((error) => {
-    logger.debug(`Error while trying to run crawlers: ${error}`);
-    Sentry.captureException(error);
-    process.exit(-1);
-});
+runCrawlers()
