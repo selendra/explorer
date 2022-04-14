@@ -1,9 +1,9 @@
-const Sentry = require('@sentry/node');
+const Sentry = require("@sentry/node");
 
-const utils = require('../utils');
-const logger = require('../utils/logger');
-const { backendConfig } = require('../config');
-const { processTransfer } = require('./transfer');
+const utils = require("../utils");
+const logger = require("../utils/logger");
+const { backendConfig } = require("../config");
+const { processTransfer } = require("./transfer");
 
 Sentry.init({
   dsn: backendConfig.sentryDSN,
@@ -13,12 +13,17 @@ Sentry.init({
 // extrinsics chunk size
 const chunkSize = 20;
 
-function getExtrinsicSuccessOrErrorMessage(apiAt, index, blockEvents, blockNumber){
+function getExtrinsicSuccessOrErrorMessage(
+  apiAt,
+  index,
+  blockEvents,
+  blockNumber
+) {
   let extrinsicSuccess = false;
-  let extrinsicErrorMessage = '';
+  let extrinsicErrorMessage = "";
   blockEvents
     .filter(
-      ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(index),
+      ({ phase }) => phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(index)
     )
     .forEach(({ event }) => {
       if (apiAt.events.system.ExtrinsicSuccess.is(event)) {
@@ -32,7 +37,7 @@ function getExtrinsicSuccessOrErrorMessage(apiAt, index, blockEvents, blockNumbe
             extrinsicErrorMessage = `${decoded.name}: ${decoded.docs}`;
           } catch (error) {
             const scope = new Sentry.Scope();
-            scope.setTag('blockNumber', blockNumber);
+            scope.setTag("blockNumber", blockNumber);
             Sentry.captureException(error, scope);
           }
         } else {
@@ -41,39 +46,44 @@ function getExtrinsicSuccessOrErrorMessage(apiAt, index, blockEvents, blockNumbe
       }
     });
   return [extrinsicSuccess, extrinsicErrorMessage];
-};
+}
 
-async function getExtrinsicFeeInfo(api, hexExtrinsic, blockHash){
-    try {
-      const feeInfo = await api.rpc.payment.queryInfo(hexExtrinsic, blockHash);
-      return feeInfo;
-    } catch (error) {
-      logger.info(`Error getting extrinsic fee info: ${error}`);
-    }
-    return null;
-};
+async function getExtrinsicFeeInfo(api, hexExtrinsic, blockHash) {
+  try {
+    const feeInfo = await api.rpc.payment.queryInfo(hexExtrinsic, blockHash);
+    return feeInfo;
+  } catch (error) {
+    logger.info(`Error getting extrinsic fee info: ${error}`);
+  }
+  return null;
+}
 
-async function getExtrinsicFeeDetails(api, hexExtrinsic, blockHash){
+async function getExtrinsicFeeDetails(api, hexExtrinsic, blockHash) {
   try {
     const feeDetails = await api.rpc.payment.queryFeeDetails(
       hexExtrinsic,
-      blockHash,
+      blockHash
     );
     return feeDetails;
   } catch (error) {
-    logger.info(`Error getting extrinsic fee details: ${error}`,
-    );
+    logger.info(`Error getting extrinsic fee details: ${error}`);
   }
   return null;
-};
+}
 
 async function processExtrinsic(
-    client, api, apiAt, blockNumber, blockHash, indexedExtrinsic, blockEvents, timestamp
-){
-
+  client,
+  api,
+  apiAt,
+  blockNumber,
+  blockHash,
+  indexedExtrinsic,
+  blockEvents,
+  timestamp
+) {
   const [extrinsicIndex, extrinsic] = indexedExtrinsic;
   const { isSigned } = extrinsic;
-  const signer = isSigned ? extrinsic.signer.toString() : '';
+  const signer = isSigned ? extrinsic.signer.toString() : "";
 
   const section = extrinsic.method.section;
   const method = extrinsic.method.method;
@@ -85,17 +95,13 @@ async function processExtrinsic(
     apiAt,
     extrinsicIndex,
     blockEvents,
-    blockNumber,
+    blockNumber
   );
 
   let feeInfo = null;
   let feeDetails = null;
   if (isSigned) {
-    feeInfo = await getExtrinsicFeeInfo(
-      api,
-      extrinsic.toHex(),
-      blockHash,
-    );
+    feeInfo = await getExtrinsicFeeInfo(api, extrinsic.toHex(), blockHash);
     feeDetails = await getExtrinsicFeeDetails(
       api,
       extrinsic.toHex(),
@@ -104,64 +110,74 @@ async function processExtrinsic(
   }
 
   let iFeeInfo = !!feeInfo ? JSON.stringify(feeInfo.toJSON()) : null;
-  let iFeeDetails = feeDetails = !!feeDetails ? JSON.stringify(feeDetails.toJSON()) : null
+  let iFeeDetails = (feeDetails = !!feeDetails
+    ? JSON.stringify(feeDetails.toJSON())
+    : null);
 
   let data = {
-      blockNumber,
-      extrinsicIndex,
-      isSigned,
-      signer,
-      section,
-      method,
-      args,
-      argsDef,
-      hash,
-      doc,
-      feeInfo: iFeeInfo,
-      feeDetails: iFeeDetails,
-      success,
-      errorMessage,
-      timestamp,
+    blockNumber,
+    extrinsicIndex,
+    isSigned,
+    signer,
+    section,
+    method,
+    args,
+    argsDef,
+    hash,
+    doc,
+    feeInfo: iFeeInfo,
+    feeDetails: iFeeDetails,
+    success,
+    errorMessage,
+    timestamp,
   };
 
   try {
     const extrinsicCol = await utils.db.getExtrinsicCollection(client);
-    await extrinsicCol.insertOne(data)
+    await extrinsicCol.insertOne(data);
     logger.debug(
       `Added extrinsic ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
-        hash,
-      )}) ${section} ➡ ${method}`,
+        hash
+      )}) ${section} ➡ ${method}`
     );
   } catch (error) {
-    logger.error(`Error adding extrinsic ${blockNumber}-${extrinsicIndex}: ${JSON.stringify(error,)}`);
+    logger.error(
+      `Error adding extrinsic ${blockNumber}-${extrinsicIndex}: ${JSON.stringify(
+        error
+      )}`
+    );
     const scope = new Sentry.Scope();
-    scope.setTag('blockNumber', blockNumber);
+    scope.setTag("blockNumber", blockNumber);
     Sentry.captureException(error, scope);
   }
 
-  if(isSigned){
+  if (isSigned) {
     try {
-      const extrinsicCol = await utils.db.getSignedExtrinsicCol();
+      const extrinsicCol = await utils.db.getSignedExtrinsicCol(client);
       await extrinsicCol.insertOne(data);
       logger.debug(
         `Added signed extrinsic ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
-          hash,
-        )}) ${section} ➡ ${method}`,
+          hash
+        )}) ${section} ➡ ${method}`
       );
     } catch (error) {
-      logger.error(`Error adding signed extrinsic ${blockNumber}-${extrinsicIndex}: ${JSON.stringify(error,)}`);
+      logger.error(
+        `Error adding signed extrinsic ${blockNumber}-${extrinsicIndex}: ${JSON.stringify(
+          error
+        )}`
+      );
       const scope = new Sentry.Scope();
-      scope.setTag('blockNumber', blockNumber);
+      scope.setTag("blockNumber", blockNumber);
       Sentry.captureException(error, scope);
     }
   }
 
   if (
-    section === 'balances' &&
-    (method === 'forceTransfer' ||
-      method === 'transfer' ||
-      method === 'transferAll' ||
-      method === 'transferKeepAlive')
+    section === "balances" &&
+    (method === "forceTransfer" ||
+      method === "transfer" ||
+      method === "transferAll" ||
+      method === "transferKeepAlive")
   ) {
     // Store transfer
     await processTransfer(
@@ -177,16 +193,26 @@ async function processExtrinsic(
       feeInfo,
       success,
       errorMessage,
-      timestamp,
+      timestamp
     );
   }
 }
 
-async function processExtrinsics(client, api, apiAt, blockNumber, blockHash, extrinsics, blockEvents, timestamp){
+async function processExtrinsics(
+  client,
+  api,
+  apiAt,
+  blockNumber,
+  blockHash,
+  extrinsics,
+  blockEvents,
+  timestamp
+) {
   const startTime = new Date().getTime();
-  const indexedExtrinsics = extrinsics.map(
-    (extrinsic, index) => [index, extrinsic],
-  );
+  const indexedExtrinsics = extrinsics.map((extrinsic, index) => [
+    index,
+    extrinsic,
+  ]);
 
   const chunks = utils.chunker(indexedExtrinsics, chunkSize);
   for (const chunk of chunks) {
@@ -200,18 +226,22 @@ async function processExtrinsics(client, api, apiAt, blockNumber, blockHash, ext
           blockHash,
           indexedExtrinsic,
           blockEvents,
-          timestamp,
-        ),
-      ),
+          timestamp
+        )
+      )
     );
   }
   // Log execution time
   const endTime = new Date().getTime();
-  logger.info(`Added ${extrinsics.length} extrinsics in ${((endTime - startTime) / 1000).toFixed(3)}s`,
+  logger.info(
+    `Added ${extrinsics.length} extrinsics in ${(
+      (endTime - startTime) /
+      1000
+    ).toFixed(3)}s`
   );
 }
 
 module.exports = {
   processExtrinsic,
-  processExtrinsics
-}
+  processExtrinsics,
+};

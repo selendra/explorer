@@ -1,12 +1,12 @@
-const Sentry = require('@sentry/node');
+const Sentry = require("@sentry/node");
 
-const utils = require('../utils');
-const logger = require('../utils/logger');
-const { backendConfig } = require('../config');
+const utils = require("../utils");
+const logger = require("../utils/logger");
+const { backendConfig } = require("../config");
 
 Sentry.init({
-    dsn: backendConfig.sentryDSN,
-    tracesSampleRate: 1.0,
+  dsn: backendConfig.sentryDSN,
+  tracesSampleRate: 1.0,
 });
 
 // function isVerifiedIdentity(identity){
@@ -17,7 +17,7 @@ Sentry.init({
 //       .filter(([, judgement]) => !judgement.isFeePaid)
 //       .some(([, judgement]) => judgement.isKnownGood || judgement.isReasonable);
 // };
-  
+
 // function getName(identity){
 //     if (
 //       identity.displayParent &&
@@ -162,7 +162,7 @@ Sentry.init({
 //         clusterMembers: 0,
 //       };
 //     }
-  
+
 //     const clusterMembers = validators.filter(
 //       ({ identity }) =>
 //         identity.displayParent === validatorIdentity.displayParent,
@@ -188,13 +188,13 @@ Sentry.init({
 //   return '0';
 // };
 
-async function insertEraValidatorStats(client, validator, activeEra){
+async function insertEraValidatorStats(client, validator, activeEra) {
   const data = {
     $set: {
       stashAddress: validator.stashAddress,
       era: activeEra,
       validaorRankScore: validator.totalRating,
-    }
+    },
   };
   const query = { stashAddress: validator.stashAddress, era: activeEra };
   const options = { upsert: true };
@@ -209,12 +209,17 @@ async function insertEraValidatorStats(client, validator, activeEra){
           stashAddress: validator.stashAddress,
           era: commissionHistoryItem.era,
           commission: commissionHistoryItem.commission,
-        }
+        },
       };
-      const query = { stashAddress: validator.stashAddress, era: commissionHistoryItem.era };
+      const query = {
+        stashAddress: validator.stashAddress,
+        era: commissionHistoryItem.era,
+      };
       const options = { upsert: true };
-    
-      const eraCommissionCol = await utils.db.getEraCommissionColCollection(client);
+
+      const eraCommissionCol = await utils.db.getEraCommissionColCollection(
+        client
+      );
       await eraCommissionCol.updateOne(query, data, options);
     }
   }
@@ -228,11 +233,14 @@ async function insertEraValidatorStats(client, validator, activeEra){
           stashAddress: validator.stashAddress,
           era: perfHistoryItem.era,
           relativePerformance: perfHistoryItem.relativePerformance,
-        }
+        },
       };
-      const query = { stashAddress: validator.stashAddress, era: perfHistoryItem.era };
+      const query = {
+        stashAddress: validator.stashAddress,
+        era: perfHistoryItem.era,
+      };
       const options = { upsert: true };
-    
+
       const eraRPCol = await utils.db.getEraRPColCollection(client);
       await eraRPCol.updateOne(query, data, options);
     }
@@ -244,11 +252,14 @@ async function insertEraValidatorStats(client, validator, activeEra){
           stashAddress: validator.stashAddress,
           era: stakefHistoryItem.era,
           selfStake: stakefHistoryItem.selfe,
-        }
+        },
       };
-      const query = { stashAddress: validator.stashAddress, era: stakefHistoryItem.era };
+      const query = {
+        stashAddress: validator.stashAddress,
+        era: stakefHistoryItem.era,
+      };
       const options = { upsert: true };
-    
+
       const eraSSCol = await utils.db.getEraSelfStakeColCollection(client);
       await eraSSCol.updateOne(query, data, options);
     }
@@ -260,17 +271,32 @@ async function insertEraValidatorStats(client, validator, activeEra){
           stashAddress: validator.stashAddress,
           era: eraPointsHistoryItem.era,
           points: eraPointsHistoryItem.points,
-        }
+        },
       };
-      const query = { stashAddress: validator.stashAddress, era: eraPointsHistoryItem.era };
+      const query = {
+        stashAddress: validator.stashAddress,
+        era: eraPointsHistoryItem.era,
+      };
       const options = { upsert: true };
-    
+
       const eraEraPointsCol = await utils.db.getEraPointsColCollection(client);
       await eraEraPointsCol.updateOne(query, data, options);
     }
   }
-};
+}
 
+async function getAddressCreation(client, address) {
+  const query = { method: "NewAccount" };
+  const eventCol = await utils.db.getEventCollection(client);
+  let result = await eventCol.find(query).toArray();
+  for (let i = 0; i < result.length; i++) {
+    if (address === JSON.parse(result[i].data)[0]) {
+      return result[i].blockNumber;
+    }
+  }
+  // if not found we assume it was created in genesis block
+  return 0;
+}
 
 // async function insertEraValidatorStatsAvg(client, eraIndex, loggerOptionss){
 //   const era = new BigNumber(eraIndex.toString()).toString(10);
@@ -327,5 +353,6 @@ async function insertEraValidatorStats(client, validator, activeEra){
 // };
 
 module.exports = {
-  insertEraValidatorStats
-}
+  insertEraValidatorStats,
+  getAddressCreation,
+};

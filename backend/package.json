@@ -11,6 +11,7 @@
     "@sentry/node": "^6.19.6",
     "bignumber.js": "^9.0.2",
     "dotenv": "^16.0.0",
+    "js-beautify": "^1.14.3",
     "lodash": "^4.17.21",
     "mongodb": "^4.5.0",
     "path": "^0.12.7",

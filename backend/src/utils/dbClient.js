@@ -1,40 +1,36 @@
-const { MongoClient } = require('mongodb');
-const { backendConfig } = require('../config');
-const logger = require('./logger');
+const { MongoClient } = require("mongodb");
+const { backendConfig } = require("../config");
+const logger = require("./logger");
 
 async function mongodbConnect() {
   try {
-    const client = new MongoClient(
-      backendConfig.MongodbConnParams.url,
-        { 
-          useUnifiedTopology: true 
-        }
-    );
+    const client = new MongoClient(backendConfig.MongodbConnParams.url, {
+      useUnifiedTopology: true,
+    });
     await client.connect();
     logger.info(`Connecting to Mongodb success`);
-    return client
+    return client;
   } catch (error) {
     logger.error(`Connecting to mongodb fail: ${error}`);
   }
-  
 }
 
 async function initDB(client) {
   let db = await client.db(backendConfig.MongodbConnParams.db);
-  return db
+  return db;
 }
 
 async function getBlockCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.block);
-  return collection
-};
+  return collection;
+}
 
 async function getEventCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.event);
   return collection;
-};
+}
 
 async function getExtrinsicCollection(client) {
   const db = await initDB(client);
@@ -52,13 +48,13 @@ async function getAccountsCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.account);
   return collection;
-};
+}
 
 async function getTransferColCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.transfer);
   return collection;
-};
+}
 
 async function getRuntimeColCollection(client) {
   const db = await initDB(client);
@@ -104,7 +100,9 @@ async function getEraVRCColCollection(client) {
 
 async function getEraRPColCollection(client) {
   const db = await initDB(client);
-  const collection = db.collection(backendConfig.MongoDbCol.eraRelativePerformance);
+  const collection = db.collection(
+    backendConfig.MongoDbCol.eraRelativePerformance
+  );
   return collection;
 }
 
@@ -137,5 +135,5 @@ module.exports = {
   getEraVRCColCollection,
   getEraRPColCollection,
   getEraSelfStakeColCollection,
-  getEraPointsColCollection
-}
+  getEraPointsColCollection,
+};
