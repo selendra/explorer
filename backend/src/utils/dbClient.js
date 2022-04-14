@@ -84,6 +84,42 @@ async function getLogColCollection(client) {
   return collection;
 }
 
+async function getValidatorColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.validator);
+  return collection;
+}
+
+async function getEraCommissionColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.eraCommission);
+  return collection;
+}
+
+async function getEraVRCColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.eraValidatorScore);
+  return collection;
+}
+
+async function getEraRPColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.eraRelativePerformance);
+  return collection;
+}
+
+async function getEraSelfStakeColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.eraSelfStake);
+  return collection;
+}
+
+async function getEraPointsColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.eraPoints);
+  return collection;
+}
+
 module.exports = {
   mongodbConnect,
   getBlockCollection,
@@ -96,4 +132,10 @@ module.exports = {
   getStakinRewardColCollection,
   getStakingSlashColCollection,
   getLogColCollection,
+  getValidatorColCollection,
+  getEraCommissionColCollection,
+  getEraVRCColCollection,
+  getEraRPColCollection,
+  getEraSelfStakeColCollection,
+  getEraPointsColCollection
 }

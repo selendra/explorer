@@ -1,6 +1,6 @@
 const Sentry = require('@sentry/node');
 const { BigNumber } = require('bignumber.js');
-var _ = require('lodash');
+const _ = require('lodash');
 
 const utils = require('../utils');
 const logger = require('../utils/logger');
