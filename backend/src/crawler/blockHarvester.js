@@ -37,7 +37,7 @@ async function crawler() {
 
   let synced = await utils.api.isNodeSynced(api);
   while (!synced) {
-    await wait(10000);
+    await utils.wait(10000);
     synced = await utils.api.isNodeSynced(api);
   }
   const blockCol = await utils.db.getBlockCollection(client);
