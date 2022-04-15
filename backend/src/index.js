@@ -22,12 +22,12 @@ async function runCrawler(crawler) {
   child.on("close", (code) => {
     logger.error(`Crawler closed with code ${code}`);
     // attempt to restart crawler
-    // runCrawler(crawler);
+    runCrawler(crawler);
   });
   child.on("exit", (code) => {
     logger.error(`Crawler exited with code ${code}`);
     // attempt to restart crawler
-    // runCrawler(crawler);
+    runCrawler(crawler);
   });
 }
 

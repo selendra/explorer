@@ -7,6 +7,12 @@ const logger = require("../utils/logger");
 const {
   insertEraValidatorStats,
   getAddressCreation,
+  parseIdentity,
+  getClusterInfo,
+  getCommissionHistory,
+  getCommissionRating,
+  getPayoutRating,
+  insertEraValidatorStatsAvg,
 } = require("../operatons/staking");
 
 Sentry.init({
@@ -381,7 +387,7 @@ async function crawler(delayedStart) {
         }
 
         // era points and frecuency of payouts
-        const eraPointsHistoryItem = [];
+        const eraPointsHistory = [];
         const payoutHistory = [];
         const performanceHistory = [];
         const stakeHistory = [];
@@ -426,9 +432,7 @@ async function crawler(delayedStart) {
             });
             eraPerformance =
               (points * (1 - commission / 100)) /
-              eraTotalStake
-                .div(new BigNumber(10).pow(config.tokenDecimals))
-                .toNumber();
+              eraTotalStake.div(new BigNumber(10).pow(18)).toNumber();
             performanceHistory.push({
               era: new BigNumber(era.toString()).toString(10),
               performance: eraPerformance,
@@ -515,7 +519,6 @@ async function crawler(delayedStart) {
           stashParentCreatedAtBlock,
           addressCreationRating,
           controllerAddress,
-          thousandValidator,
           partOfCluster,
           clusterName,
           clusterMembers,
@@ -564,23 +567,163 @@ async function crawler(delayedStart) {
         };
       });
 
-    // // We want to store era stats only when there's a new consolidated era in chain history
-    // if (parseInt(activeEra, 10) -1 > 10) {
-    //     logger.debug('Storing era stats in db...');
-    //     await Promise.all(
-    //         ranking.map((validator) =>
-    //             insertEraValidatorStats(client, validator, activeEra, loggerOptions),
-    //         ),
-    //     );
-    //     // logger.debug(loggerOptions, 'Storing era stats averages in db...');
-    //     // await Promise.all(
-    //     //     eraIndexes.map((eraIndex) =>
-    //     //         insertEraValidatorStatsAvg(client, eraIndex, loggerOptions),
-    //     //     ),
-    //     // );
+    // populate minMaxEraPerformance
+    eraIndexes.forEach((eraIndex) => {
+      const era = new BigNumber(eraIndex.toString()).toString(10);
+      const eraPerformances = ranking.map(
+        ({ performanceHistory }) =>
+          performanceHistory.find((performance) => performance.era === era)
+            .performance
+      );
+      minMaxEraPerformance.push({
+        era,
+        min: Math.min(...eraPerformances),
+        max: Math.max(...eraPerformances),
+      });
+    });
+
+    // find largest cluster size
+    const largestCluster = Math.max(
+      ...Array.from(ranking, (o) => o.clusterMembers)
+    );
+    logger.debug(`LARGEST cluster size is ${largestCluster}`);
+    logger.debug(
+      `SMALL cluster size is between 2 and ${Math.round(largestCluster / 3)}`
+    );
+    logger.debug(
+      `MEDIUM cluster size is between ${Math.round(largestCluster / 3)} and ${
+        Math.round(largestCluster / 3) * 2
+      }`
+    );
+    logger.debug(
+      `LARGE cluster size is between ${Math.round(
+        (largestCluster / 3) * 2
+      )} and ${largestCluster}`
+    );
+    // find Pareto-dominated validators
+    logger.debug("Finding dominated validators");
+    const dominatedStart = new Date().getTime();
+    ranking = ranking.map((validator) => {
+      // populate relativePerformanceHistory
+      const relativePerformanceHistory = [];
+      validator.performanceHistory.forEach((performance) => {
+        const eraMinPerformance = minMaxEraPerformance.find(
+          ({ era }) => era === performance.era
+        ).min;
+        const eraMaxPerformance = minMaxEraPerformance.find(
+          ({ era }) => era === performance.era
+        ).max;
+        const relativePerformance = (
+          (performance.performance - eraMinPerformance) /
+          (eraMaxPerformance - eraMinPerformance)
+        ).toFixed(6);
+        relativePerformanceHistory.push({
+          era: performance.era,
+          relativePerformance: parseFloat(relativePerformance),
+        });
+      });
+      // dominated validator logic
+      let dominated = false;
+      for (const opponent of ranking) {
+        if (
+          opponent !== validator &&
+          parseFloat(opponent.relativePerformance) >=
+            parseFloat(validator.relativePerformance) &&
+          opponent.selfStake.gte(validator.selfStake) &&
+          opponent.activeEras >= validator.activeEras &&
+          opponent.totalRating >= validator.totalRating
+        ) {
+          dominated = true;
+          break;
+        }
+      }
+      return {
+        ...validator,
+        relativePerformanceHistory,
+        dominated,
+      };
+    });
+    const dominatedEnd = new Date().getTime();
+    logger.debug(
+      `Found ${
+        ranking.filter(({ dominated }) => dominated).length
+      } dominated validators in ${(
+        (dominatedEnd - dominatedStart) /
+        1000
+      ).toFixed(3)}s`
+    );
+
+    // cluster categorization
+    logger.debug("Random selection of validators based on cluster size");
+    let validatorsToHide = [];
+    for (const cluster of clusters) {
+      const clusterMembers = ranking.filter(
+        ({ clusterName }) => clusterName === cluster
+      );
+      const clusterSize = clusterMembers[0].clusterMembers;
+      // EXTRASMALL: 2 - Show all (2)
+      let show = 2;
+      if (clusterSize > 50) {
+        // EXTRALARGE: 51-150 - Show 20% val. (up to 30)
+        show = Math.floor(clusterSize * 0.2);
+      } else if (clusterSize > 20) {
+        // LARGE: 21-50 - Show 40% val. (up to 20)
+        show = Math.floor(clusterSize * 0.4);
+      } else if (clusterSize > 10) {
+        // MEDIUM: 11-20 - Show 60% val. (up to 12)
+        show = Math.floor(clusterSize * 0.6);
+      } else if (clusterSize > 2) {
+        // SMALL: 3-10 - Show 80% val. (up to 8)
+        show = Math.floor(clusterSize * 0.8);
+      }
+      const hide = clusterSize - show;
+      // randomly select 'hide' number of validators
+      // from cluster and set 'showClusterMember' prop to false
+      const rankingPositions = clusterMembers.map(
+        (validator) => validator.rank
+      );
+      validatorsToHide = validatorsToHide.concat(
+        utils.getRandom(rankingPositions, hide)
+      );
+    }
+    ranking = ranking.map((validator) => {
+      const modValidator = validator;
+      if (validatorsToHide.includes(validator.rank)) {
+        modValidator.showClusterMember = false;
+      }
+      return modValidator;
+    });
+    logger.debug(`Finished, ${validatorsToHide.length} validators hided!`);
+
+    // We want to store era stats only when there's a new consolidated era in chain history
+    // if (parseInt(activeEra, 10) - 1 > parseInt(lastEraInDb, 10)) {
+    logger.debug("Storing era stats in db...");
+    await Promise.all(
+      ranking.map((validator) =>
+        insertEraValidatorStats(client, validator, activeEra)
+      )
+    );
+    logger.debug("Storing era stats averages in db...");
+    await Promise.all(
+      eraIndexes.map((eraIndex) => insertEraValidatorStatsAvg(client, eraIndex))
+    );
     // } else {
-    //     logger.debug('Updating era averages is not needed!');
+    //   logger.debug("Updating era averages is not needed!");
     // }
+
+    logger.debug(`Storing ${ranking.length} validators in db...`);
+
+    // await Promise.all(
+    //   ranking.map((validator) =>
+    //     insertRankingValidator(client, validator, blockHeight, startTime)
+    //   )
+    // );
+
+    // logger.debug("Cleaning old data");
+    // await dbQuery(
+    //   client,
+    //   `DELETE FROM ranking WHERE block_height != '${blockHeight}';`,
+    // );
 
     logger.info(`Crawler end`);
   } catch (error) {

@@ -15,6 +15,11 @@ module.exports.wait = async (ms) =>
     return setTimeout(resolve, ms);
   });
 
+module.exports.getRandom = (arr, n) => {
+  const shuffled = [...arr].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, n);
+};
+
 // Return a reverse ordered array filled from range
 module.exports.reverseRange = (start, stop, step) =>
   Array.from({ length: (stop - start) / step + 1 }, (_, i) => stop - i * step);

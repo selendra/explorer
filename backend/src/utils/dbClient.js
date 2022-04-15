@@ -117,6 +117,40 @@ async function getEraPointsColCollection(client) {
   const collection = db.collection(backendConfig.MongoDbCol.eraPoints);
   return collection;
 }
+//
+async function getEraCommissionAvgColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.eraCommissionAvg);
+  return collection;
+}
+
+async function getEraVRCAvgColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(
+    backendConfig.MongoDbCol.eraValidatorScoreAvg
+  );
+  return collection;
+}
+
+async function getEraRPAvgColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(
+    backendConfig.MongoDbCol.eraRelativePerformanceAvg
+  );
+  return collection;
+}
+
+async function getEraSelfStakeAvgColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.eraSelfStakeAvg);
+  return collection;
+}
+
+async function getEraPointsAvgColCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.eraPointsAvg);
+  return collection;
+}
 
 module.exports = {
   mongodbConnect,
@@ -136,4 +170,9 @@ module.exports = {
   getEraRPColCollection,
   getEraSelfStakeColCollection,
   getEraPointsColCollection,
+  getEraCommissionAvgColCollection,
+  getEraVRCAvgColCollection,
+  getEraRPAvgColCollection,
+  getEraSelfStakeAvgColCollection,
+  getEraPointsAvgColCollection,
 };

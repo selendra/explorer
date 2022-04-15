@@ -25,15 +25,20 @@ module.exports.backendConfig = {
     eraValidatorScore: "era_valiator_score",
     eraRelativePerformance: "era_relative_performance",
     eraSelfStake: "era_self_stake",
-    eraPoints: "era_points ",
+    eraPoints: "era_points",
     eraCommission: "era_commission",
+    eraValidatorScoreAvg: "era_valiator_score_avg",
+    eraRelativePerformanceAvg: "era_relative_performance_avg",
+    eraSelfStakeAvg: "era_self_stake_avg",
+    eraPointsAvg: "era_points_avg",
+    eraCommissionAvg: "era_commission_avg",
   },
   sentryDSN: process.env.SENTRY_DSN || "",
   crawlers: [
     {
       name: "blockHarvester",
       enabled: !process.env.BLOCK_HARVESTER_DISABLE,
-      crawler: "crawler/blockHarvester.js",
+      crawler: "src/crawler/blockHarvester.js",
       apiCustomTypes: process.env.API_CUSTOM_TYPES || "",
       mode: process.env.BLOCK_HARVESTER_MODE || "seq",
       chunkSize: parseInt(process.env.BLOCK_HARVESTER_CHUNK_SIZE, 10) || 10,
@@ -41,7 +46,7 @@ module.exports.backendConfig = {
     {
       name: "activeAccounts",
       enabled: !process.env.ACTIVE_ACCOUNTS_DISABLE,
-      crawler: "crawler/activeAccount.js",
+      crawler: "src/crawler/activeAccount.js",
       startDelay:
         parseInt(process.env.ACTIVE_ACCOUNTS_START_DELAY_MS, 10) || 6 * 1000,
       chunkSize: parseInt(process.env.ACTIVE_ACCOUNTS_CHUNK_SIZE, 10) || 100,
