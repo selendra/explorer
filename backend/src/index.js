@@ -21,19 +21,14 @@ async function runCrawler(crawler) {
   });
   child.on("close", (code) => {
     logger.error(`Crawler closed with code ${code}`);
-    // attempt to restart crawler
-    runCrawler(crawler);
   });
   child.on("exit", (code) => {
     logger.error(`Crawler exited with code ${code}`);
-    // attempt to restart crawler
-    runCrawler(crawler);
   });
 }
 
 async function runCrawlers() {
   logger.info("Starting backend, waiting 10s...");
-  // await utils.wait(10000);
 
   logger.debug("Running crawlers");
   await Promise.all(
