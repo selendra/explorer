@@ -6,7 +6,7 @@ const { backendConfig } = require("../config");
 const {
   process_staking_reward,
   process_staking_slash,
-} = require("./stakinfg_event");
+} = require("./staking_event");
 
 Sentry.init({
   dsn: backendConfig.sentryDSN,
