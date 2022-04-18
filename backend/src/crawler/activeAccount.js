@@ -59,17 +59,19 @@ async function crawler(delayedStart) {
     );
   }
 
-  logger.debug("Disconnecting from DB");
-  await client.close().catch((error) => {
-    logger.error(`DB disconnect error: ${JSON.stringify(error)}`);
-    Sentry.captureException(error);
-  });
-
   logger.debug("Disconnecting from API");
-  await api.disconnect().catch((error) => {
-    logger.error(`API disconnect error: ${JSON.stringify(error)}`);
-    Sentry.captureException(error);
-  });
+  await api
+    .disconnect()
+    .catch((error) =>
+      logger.error(`API disconnect error: ${JSON.stringify(error)}`)
+    );
+
+  logger.debug("Disconnecting from DB");
+  await client
+    .close()
+    .catch((error) =>
+      logger.error(`DB disconnect error: ${JSON.stringify(error)}`)
+    );
 
   const endTime = new Date().getTime();
   logger.info(

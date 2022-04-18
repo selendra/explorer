@@ -13,6 +13,10 @@ const {
   getCommissionRating,
   getPayoutRating,
   insertEraValidatorStatsAvg,
+  getLastEraInDb,
+  insertRankingValidator,
+  removeRanking,
+  addNewFeaturedValidator,
 } = require("../operatons/staking");
 
 Sentry.init({
@@ -30,7 +34,7 @@ async function crawler(delayedStart) {
     await utils.wait(config.startDelay);
   }
 
-  logger.debug("Starting staking ranking crawler...");
+  logger.info("Starting staking ranking crawler...");
   const startTime = new Date().getTime();
 
   const api = await utils.api.getAPI();
@@ -62,6 +66,9 @@ async function crawler(delayedStart) {
   //
 
   try {
+    const lastEraInDb = await getLastEraInDb(client);
+    logger.debug(`Last era in DB is ${lastEraInDb}`);
+
     // chain data
     logger.debug("Fetching chain data ...");
     const withActive = false;
@@ -696,39 +703,90 @@ async function crawler(delayedStart) {
     logger.debug(`Finished, ${validatorsToHide.length} validators hided!`);
 
     // We want to store era stats only when there's a new consolidated era in chain history
-    // if (parseInt(activeEra, 10) - 1 > parseInt(lastEraInDb, 10)) {
-    logger.debug("Storing era stats in db...");
-    await Promise.all(
-      ranking.map((validator) =>
-        insertEraValidatorStats(client, validator, activeEra)
-      )
-    );
-    logger.debug("Storing era stats averages in db...");
-    await Promise.all(
-      eraIndexes.map((eraIndex) => insertEraValidatorStatsAvg(client, eraIndex))
-    );
-    // } else {
-    //   logger.debug("Updating era averages is not needed!");
-    // }
+    if (parseInt(activeEra, 10) - 1 > parseInt(lastEraInDb, 10)) {
+      logger.debug("Storing era stats in db...");
+      await Promise.all(
+        ranking.map((validator) =>
+          insertEraValidatorStats(client, validator, activeEra)
+        )
+      );
+      logger.debug("Storing era stats averages in db...");
+      await Promise.all(
+        eraIndexes.map((eraIndex) =>
+          insertEraValidatorStatsAvg(client, eraIndex)
+        )
+      );
+    } else {
+      logger.debug("Updating era averages is not needed!");
+    }
 
     logger.debug(`Storing ${ranking.length} validators in db...`);
 
-    // await Promise.all(
-    //   ranking.map((validator) =>
-    //     insertRankingValidator(client, validator, blockHeight, startTime)
-    //   )
-    // );
+    await Promise.all(
+      ranking.map((validator) =>
+        insertRankingValidator(client, validator, blockHeight, startTime)
+      )
+    );
 
-    // logger.debug("Cleaning old data");
-    // await dbQuery(
-    //   client,
-    //   `DELETE FROM ranking WHERE block_height != '${blockHeight}';`,
-    // );
+    logger.debug("Cleaning old data");
+    await removeRanking(client, blockHeight);
 
-    logger.info(`Crawler end`);
+    // get candidates that meet the rules
+    const featuredCol = await utils.db.getFeatureColCollection(client);
+    const res = await featuredCol
+      .find({})
+      .sort({ timestamp: -1 })
+      .limit(1)
+      .toArray();
+
+    if (res.length === 0) {
+      await addNewFeaturedValidator(client, ranking);
+    } else {
+      const currentFeatured = res[0];
+      const currentTimestamp = new Date().getTime();
+      if (
+        currentTimestamp - currentFeatured.timestamp >
+        config.featuredTimespan
+      ) {
+        // timespan passed, let's add a new featured validator
+        await addNewFeaturedValidator(client, ranking);
+      }
+    }
+
+    logger.debug("Disconnecting from API");
+    await api
+      .disconnect()
+      .catch((error) =>
+        logger.error(`API disconnect error: ${JSON.stringify(error)}`)
+      );
+
+    logger.debug("Disconnecting from DB");
+    await client
+      .close()
+      .catch((error) =>
+        logger.error(`DB disconnect error: ${JSON.stringify(error)}`)
+      );
+
+    const endTime = new Date().getTime();
+    const dataProcessingTime = endTime - dataCollectionEndTime;
+    logger.info(
+      `Added ${ranking.length} validators in ${(
+        (dataCollectionTime + dataProcessingTime) /
+        1000
+      ).toFixed(3)}s`
+    );
+    logger.info(
+      `Next execution in ${(config.pollingTime / 60000).toFixed(0)}m...`
+    );
   } catch (error) {
-    logger.error(`Crawler error: ${error}`);
+    logger.error(`General error in ranking crawler: ${JSON.stringify(error)}`);
+    Sentry.captureException(error);
   }
+  setTimeout(() => crawler(false), config.pollingTime);
 }
 
-crawler(false);
+crawler(true).catch((error) => {
+  logger.error(`Crawler error: ${error}`);
+  Sentry.captureException(error);
+  process.exit(-1);
+});

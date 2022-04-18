@@ -9,6 +9,7 @@ module.exports.backendConfig = {
   MongodbConnParams: {
     url: process.env.MONGO_URI || "mongodb://localhost:27017",
     db: process.env.DATABASE || "TestDadabase",
+    vdb: process.env.VALIDATEDATABASE || "TestValidatorDadabase",
   },
   MongoDbCol: {
     account: "accounts",
@@ -22,6 +23,8 @@ module.exports.backendConfig = {
     stakingSlash: "staking_slash",
     transfer: "transfer",
     validator: "valaidator_status",
+    validatorFeature: "valaidator_feature",
+    validatorRanking: "valaidator_ranking",
     eraValidatorScore: "era_valiator_score",
     eraRelativePerformance: "era_relative_performance",
     eraSelfStake: "era_self_stake",
@@ -57,10 +60,10 @@ module.exports.backendConfig = {
     {
       name: "ranking",
       enabled: !process.env.RANKING_DISABLE,
-      crawler: "crawler/stakingRank.js",
+      crawler: "src/crawler/stakingRank.js",
       startDelay: parseInt(process.env.RANKING_START_DELAY_MS, 10) || 1 * 1000,
       pollingTime:
-        parseInt(process.env.RANKING_POLLING_TIME_MS, 10) || 5 * 60 * 1000,
+        parseInt(process.env.RANKING_POLLING_TIME_MS, 10) || 60 * 60 * 1000,
       historySize: 84,
       erasPerDay: 2,
       featuredTimespan: 60 * 60 * 24 * 7 * 2 * 1000, // 2 weeks

@@ -4,6 +4,12 @@ const utils = require("../utils");
 const logger = require("../utils/logger");
 const { backendConfig } = require("../config");
 const { BigNumber } = require("bignumber.js");
+const {
+  insertCommisonAvg,
+  insertSelfStakAvg,
+  insertAvgPerformance,
+  insertAvgPoint,
+} = require("./staking_avg.js");
 
 Sentry.init({
   dsn: backendConfig.sentryDSN,
@@ -174,20 +180,6 @@ function getClusterInfo(hasSubIdentity, validators, validatorIdentity) {
   };
 }
 
-// async function getLastEraInDb(client) {
-//   // era_points_avg, era_relative_performance_avg, era_self_stake_avg
-//   const query = "SELECT era FROM era_commission_avg ORDER BY era DESC LIMIT 1";
-//   const res = await dbQuery(client, query, loggerOptions);
-//   if (res) {
-//     if (res.rows.length > 0) {
-//       if (res.rows[0].era) {
-//         return res.rows[0].era;
-//       }
-//     }
-//   }
-//   return "0";
-// }
-
 async function insertEraValidatorStats(client, validator, activeEra) {
   const data = {
     $set: {
@@ -207,13 +199,13 @@ async function insertEraValidatorStats(client, validator, activeEra) {
       const data = {
         $set: {
           stashAddress: validator.stashAddress,
-          era: commissionHistoryItem.era,
+          era: parseInt(commissionHistoryItem.era),
           commission: parseFloat(commissionHistoryItem.commission),
         },
       };
       const query = {
         stashAddress: validator.stashAddress,
-        era: commissionHistoryItem.era,
+        era: parseInt(commissionHistoryItem.era),
       };
       const options = { upsert: true };
 
@@ -231,13 +223,13 @@ async function insertEraValidatorStats(client, validator, activeEra) {
       const data = {
         $set: {
           stashAddress: validator.stashAddress,
-          era: perfHistoryItem.era,
+          era: parseInt(perfHistoryItem.era),
           relativePerformance: perfHistoryItem.relativePerformance,
         },
       };
       const query = {
         stashAddress: validator.stashAddress,
-        era: perfHistoryItem.era,
+        era: parseInt(perfHistoryItem.era),
       };
       const options = { upsert: true };
 
@@ -250,13 +242,15 @@ async function insertEraValidatorStats(client, validator, activeEra) {
       const data = {
         $set: {
           stashAddress: validator.stashAddress,
-          era: stakefHistoryItem.era,
-          selfStake: stakefHistoryItem.self,
+          era: parseInt(stakefHistoryItem.era),
+          selfStake: new BigNumber(stakefHistoryItem.self)
+            .dividedBy(1e18)
+            .toNumber(),
         },
       };
       const query = {
         stashAddress: validator.stashAddress,
-        era: stakefHistoryItem.era,
+        era: parseInt(stakefHistoryItem.era),
       };
       const options = { upsert: true };
 
@@ -269,13 +263,13 @@ async function insertEraValidatorStats(client, validator, activeEra) {
       const data = {
         $set: {
           stashAddress: validator.stashAddress,
-          era: eraPointsHistoryItem.era,
+          era: parseInt(eraPointsHistoryItem.era),
           points: eraPointsHistoryItem.points,
         },
       };
       const query = {
         stashAddress: validator.stashAddress,
-        era: eraPointsHistoryItem.era,
+        era: parseInt(eraPointsHistoryItem.era),
       };
       const options = { upsert: true };
 
@@ -298,52 +292,17 @@ async function getAddressCreation(client, address) {
   return 0;
 }
 
-async function insertCommisonAvg(client, era) {
-  const queryAvg = [
-    {
-      $match: {
-        era: era,
-      },
-    },
-    {
-      $group: {
-        _id: "$_id",
-        avgCommission: { $avg: "$commission" },
-      },
-    },
-  ];
-
+async function getLastEraInDb(client) {
   const eraCommissionCol = await utils.db.getEraCommissionColCollection(client);
-  let res = await eraCommissionCol.aggregate(queryAvg).toArray();
-
-  let averages = 0;
-  for (let i = 0; i < res.length; i++) {
-    let commission = res[i].avgCommission;
-    averages = averages + commission;
+  let res = await eraCommissionCol
+    .find({})
+    .sort({ _id: -1 })
+    .limit(1)
+    .toArray();
+  if (res.length > 0) {
+    return res[0].era;
   }
-
-  const data = {
-    $set: {
-      era: era,
-      avgCommission: averages / res.length,
-    },
-  };
-
-  const query = {
-    era: era,
-  };
-
-  const options = { upsert: true };
-
-  const eraCommissionAvgCol = await utils.db.getEraCommissionAvgColCollection(
-    client
-  );
-  await eraCommissionAvgCol.updateOne(query, data, options);
-}
-
-async function insertEraValidatorStatsAvg(client, eraIndex) {
-  const era = new BigNumber(eraIndex.toString()).toNumber();
-  await insertCommisonAvg(client, era);
+  return 0;
 }
 
 async function insertRankingValidator(
@@ -353,56 +312,125 @@ async function insertRankingValidator(
   startTime
 ) {
   const data = {
-    blockHeight: blockHeight,
-    rank: validator.rank,
-    active: validator.active,
-    activeRating: validator.activeRating,
-    name: validator.name,
-    identity: JSON.stringify(validator.identity),
-    hasSubIdentity: validator.hasSubIdentity,
-    subAccountsRating: validator.subAccountsRating,
-    verifiedIdentity: validator.verifiedIdentity,
-    identityRating: validator.identityRating,
-    stashAddress: validator.stashAddress,
-    stashAddressCreationBlock: validator.stashCreatedAtBlock,
-    stashParentAddressCreationBlock: validator.stashParentCreatedAtBlock,
-    addressCreationCating: validator.addressCreationRating,
-    controllerAddress: validator.controllerAddress,
-    partOfCluster: validator.partOfCluster,
-    clusterName: validator.clusterName,
-    clusterMembers: validator.clusterMembers,
-    show_clusterMember: validator.showClusterMember,
-    nominators: validator.nominators,
-    nominatorsRating: validator.nominatorsRating,
-    nominations: JSON.stringify(validator.nominations),
-    commission: validator.commission,
-    commissionHistory: JSON.stringify(validator.commissionHistory),
-    commissionRating: validator.commissionRating,
-    activeEras: validator.activeEras,
-    eraPointsHistory: JSON.stringify(validator.eraPointsHistory),
-    eraPointsPercent: validator.eraPointsPercent,
-    eraPointsRating: validator.eraPointsRating,
-    performance: validator.performance,
-    performanceHistory: JSON.stringify(validator.performanceHistory),
-    relativePerformance: validator.relativePerformance,
-    relativePerformanceHistory: validator.relativePerformance,
-    slashed: validator.slashed,
-    slash_rating: validator.slashRating,
-    slashes: JSON.stringify(validator.slashes),
-    councilBacking: validator.councilBacking,
-    activeInGovernance: validator.activeInGovernance,
-    governanceRating: validator.governanceRating,
-    payoutHistory: JSON.stringify(validator.payoutHistory),
-    payoutRating: validator.payoutRating,
-    selfStake: validator.selfStake.toString(10),
-    otherStake: validator.otherStake.toString(10),
-    totalStake: validator.totalStake.toString(10),
-    stakeHistory: JSON.stringify(validator.stakeHistory),
-    totalRating: validator.totalRating,
-    dominated: validator.dominated,
-    timestamp: startTime,
+    $set: {
+      blockHeight: blockHeight,
+      rank: validator.rank,
+      active: validator.active,
+      activeRating: validator.activeRating,
+      name: validator.name,
+      identity: JSON.stringify(validator.identity),
+      hasSubIdentity: validator.hasSubIdentity,
+      subAccountsRating: validator.subAccountsRating,
+      verifiedIdentity: validator.verifiedIdentity,
+      identityRating: validator.identityRating,
+      stashAddress: validator.stashAddress,
+      stashAddressCreationBlock: validator.stashCreatedAtBlock,
+      stashParentAddressCreationBlock: validator.stashParentCreatedAtBlock,
+      addressCreationCating: validator.addressCreationRating,
+      controllerAddress: validator.controllerAddress,
+      partOfCluster: validator.partOfCluster,
+      clusterName: validator.clusterName,
+      clusterMembers: validator.clusterMembers,
+      show_clusterMember: validator.showClusterMember,
+      nominators: validator.nominators,
+      nominatorsRating: validator.nominatorsRating,
+      nominations: JSON.stringify(validator.nominations),
+      commission: parseFloat(validator.commission),
+      commissionHistory: JSON.stringify(validator.commissionHistory),
+      commissionRating: validator.commissionRating,
+      activeEras: validator.activeEras,
+      eraPointsHistory: JSON.stringify(validator.eraPointsHistory),
+      eraPointsPercent: validator.eraPointsPercent,
+      eraPointsRating: validator.eraPointsRating,
+      performance: validator.performance,
+      performanceHistory: JSON.stringify(validator.performanceHistory),
+      relativePerformance: parseFloat(validator.relativePerformance),
+      relativePerformanceHistory: parseFloat(validator.relativePerformance),
+      slashed: validator.slashed,
+      slash_rating: validator.slashRating,
+      slashes: JSON.stringify(validator.slashes),
+      councilBacking: validator.councilBacking,
+      activeInGovernance: validator.activeInGovernance,
+      governanceRating: validator.governanceRating,
+      payoutHistory: JSON.stringify(validator.payoutHistory),
+      payoutRating: validator.payoutRating,
+      selfStake: new BigNumber(validator.selfStake).dividedBy(1e18).toNumber(),
+      otherStake: new BigNumber(validator.otherStake)
+        .dividedBy(1e18)
+        .toNumber(),
+      totalStake: new BigNumber(validator.totalStake)
+        .dividedBy(1e18)
+        .toNumber(),
+      stakeHistory: JSON.stringify(validator.stakeHistory),
+      totalRating: validator.totalRating,
+      dominated: validator.dominated,
+      timestamp: startTime,
+    },
   };
-  await dbParamQuery(client, sql, data, loggerOptions);
+  const query = {
+    blockHeight: blockHeight,
+    stashAddress: validator.stashAddress,
+  };
+  const options = { upsert: true };
+
+  const validatorRanking = await utils.db.getValidatorRankingColCollection(
+    client
+  );
+  await validatorRanking.updateOne(query, data, options);
+}
+
+async function removeRanking(client, blockHeight) {
+  const query = { blockHeight: { $ne: blockHeight } };
+
+  const validatorRanking = await utils.db.getValidatorRankingColCollection(
+    client
+  );
+  await validatorRanking.deleteMany(query);
+}
+
+async function insertEraValidatorStatsAvg(client, eraIndex) {
+  const era = new BigNumber(eraIndex.toString()).toNumber();
+  await insertCommisonAvg(client, era);
+  await insertSelfStakAvg(client, era);
+  await insertAvgPerformance(client, era);
+  await insertAvgPoint(client, era);
+}
+
+async function addNewFeaturedValidator(client, ranking) {
+  // get previously featured
+  const alreadyFeatured = [];
+
+  // get candidates that meet the rules
+  const featuredCol = await utils.db.getFeatureColCollection(client);
+
+  const res = await featuredCol.find({}).toArray();
+  res.forEach((validator) => alreadyFeatured.push(validator.stashAddress));
+
+  const featuredCandidates = ranking
+    .filter(
+      (validator) =>
+        validator.commission <= 10 &&
+        validator.selfStake.div(10 ** 18).gte(2999) &&
+        !validator.active &&
+        !alreadyFeatured.includes(validator.stashAddress)
+    )
+    .map(({ rank }) => rank);
+  // get random featured validator of the week
+  const shuffled = [...featuredCandidates].sort(() => 0.5 - Math.random());
+  const randomRank = shuffled[0];
+  const featured = ranking.find((validator) => validator.rank === randomRank);
+
+  const data = {
+    stashAddress: featured.stashAddress,
+    name: featured.name,
+    timestamp: new Date().getTime(),
+  };
+
+  await featuredCol.insertOne(data);
+
+  logger.debug(
+    `New featured validator added: ${featured.name} ${featured.stashAddress}`
+  );
 }
 
 module.exports = {
@@ -414,4 +442,8 @@ module.exports = {
   getCommissionRating,
   getPayoutRating,
   insertEraValidatorStatsAvg,
+  getLastEraInDb,
+  insertRankingValidator,
+  removeRanking,
+  addNewFeaturedValidator,
 };

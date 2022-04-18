@@ -20,6 +20,11 @@ async function initDB(client) {
   return db;
 }
 
+async function initVDB(client) {
+  let db = await client.db(backendConfig.MongodbConnParams.vdb);
+  return db;
+}
+
 async function getBlockCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.block);
@@ -81,25 +86,31 @@ async function getLogColCollection(client) {
 }
 
 async function getValidatorColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.validator);
   return collection;
 }
 
+async function getValidatorRankingColCollection(client) {
+  const db = await initVDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.validatorRanking);
+  return collection;
+}
+
 async function getEraCommissionColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.eraCommission);
   return collection;
 }
 
 async function getEraVRCColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.eraValidatorScore);
   return collection;
 }
 
 async function getEraRPColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(
     backendConfig.MongoDbCol.eraRelativePerformance
   );
@@ -107,25 +118,25 @@ async function getEraRPColCollection(client) {
 }
 
 async function getEraSelfStakeColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.eraSelfStake);
   return collection;
 }
 
 async function getEraPointsColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.eraPoints);
   return collection;
 }
 //
 async function getEraCommissionAvgColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.eraCommissionAvg);
   return collection;
 }
 
 async function getEraVRCAvgColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(
     backendConfig.MongoDbCol.eraValidatorScoreAvg
   );
@@ -133,7 +144,7 @@ async function getEraVRCAvgColCollection(client) {
 }
 
 async function getEraRPAvgColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(
     backendConfig.MongoDbCol.eraRelativePerformanceAvg
   );
@@ -141,14 +152,20 @@ async function getEraRPAvgColCollection(client) {
 }
 
 async function getEraSelfStakeAvgColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.eraSelfStakeAvg);
   return collection;
 }
 
 async function getEraPointsAvgColCollection(client) {
-  const db = await initDB(client);
+  const db = await initVDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.eraPointsAvg);
+  return collection;
+}
+
+async function getFeatureColCollection(client) {
+  const db = await initVDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.validatorFeature);
   return collection;
 }
 
@@ -175,4 +192,6 @@ module.exports = {
   getEraRPAvgColCollection,
   getEraSelfStakeAvgColCollection,
   getEraPointsAvgColCollection,
+  getValidatorRankingColCollection,
+  getFeatureColCollection,
 };
