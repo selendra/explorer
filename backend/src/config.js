@@ -63,8 +63,7 @@ module.exports.backendConfig = {
       crawler: "src/crawler/stakingRank.js",
       startDelay: parseInt(process.env.RANKING_START_DELAY_MS, 10) || 1 * 1000,
       pollingTime:
-        parseInt(process.env.RANKING_POLLING_TIME_MS, 10) ||
-        12 * 60 * 60 * 1000, // 12 hours
+        parseInt(process.env.RANKING_POLLING_TIME_MS, 10) || 30 * 60 * 1000, // 30 Minutes
       historySize: 84,
       erasPerDay: 2,
       featuredTimespan: 60 * 60 * 24 * 7 * 2 * 1000, // 2 weeks
