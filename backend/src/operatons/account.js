@@ -68,7 +68,7 @@ async function processAccountsChunk(client, api, accountId) {
         lockedBalance: lockedBalance,
         reservedBalance: reservedBalance,
         totalBalance: totalBalance,
-        balancesBetail: JSONbalances,
+        balancesDetail: JSONbalances,
         nonce,
         timestamp,
         blockHeight: block,
