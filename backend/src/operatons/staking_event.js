@@ -178,21 +178,28 @@ async function process_staking_slash(
     (event.method === "Slash" || event.method === "Slashed")
   ) {
     data = {
-      blockNumber,
-      eventIndex,
-      stakingStatus: "validator",
-      accountId: event.data[0].toString(),
-      validatorStashAddress: event.data[0].toString(),
-      era: activeEra - 1,
-      amount: new BigNumber(event.data[1].toString())
-        .dividedBy(1e18)
-        .toNumber(),
-      timestamp,
+      $set: {
+        blockNumber,
+        eventIndex,
+        stakingStatus: "validator",
+        accountId: event.data[0].toString(),
+        validatorStashAddress: event.data[0].toString(),
+        era: activeEra - 1,
+        amount: new BigNumber(event.data[1].toString())
+          .dividedBy(1e18)
+          .toNumber(),
+        timestamp,
+      },
     };
+    const query = {
+      blockNumber: blockNumber,
+      eventIndex: eventIndex,
+    };
+    const options = { upsert: true };
 
     try {
       let slashCol = await utils.db.getStakingSlashColCollection(client);
-      await slashCol.insertOne(data);
+      await slashCol.updateOne(query, data, options);
 
       logger.debug(
         `Added validator staking slash #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`
