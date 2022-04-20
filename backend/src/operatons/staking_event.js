@@ -246,6 +246,10 @@ async function process_staking_slash(
       let slashCol = await utils.db.getStakingSlashColCollection(client);
       await slashCol.updateOne(query, data, options);
 
+      Sentry.captureMessage(
+        `validator with address have been slash ${validatorStashAddress} inculde nominator`
+      );
+
       logger.debug(
         `Added nominator staking slash #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`
       );
