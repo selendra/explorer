@@ -18,7 +18,9 @@ function getSlashedValidatorAccount(index, IndexedBlockEvents) {
       event.section === "staking" &&
       (event.method === "Slash" || event.method === "Slashed")
     ) {
-      return (validatorAccountId = event.data[0].toString());
+      return (validatorAccountId = utils.ss58.ss58Format(
+        event.data[0].toString()
+      ));
     }
   }
   return validatorAccountId;
@@ -240,7 +242,7 @@ async function process_staking_slash(
         blockNumber,
         eventIndex,
         accountId: utils.ss58.ss58Format(event.data[0].toString()),
-        validatorStashAddress: utils.ss58.ss58Format(validatorStashAddress),
+        validatorStashAddress: validatorStashAddress,
         era: activeEra - 1,
         amount: new BigNumber(event.data[1].toString())
           .dividedBy(1e18)
