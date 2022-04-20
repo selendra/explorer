@@ -59,39 +59,6 @@ async function updateFinalizedBlock(client, api, finalizedBlock) {
   }
 }
 
-async function healthCheck(client, blockNumber) {
-  const startTime = new Date().getTime();
-  logger.info("Starting health check");
-
-  const query = { blockNumber: blockNumber };
-
-  const blockCol = await utils.db.getBlockCollection(client);
-  const eventCol = await utils.db.getEventCollection(client);
-  const extrinsicCol = await utils.db.getExtrinsicCollection(client);
-
-  try {
-    let blockdb = await blockCol.findOne(query);
-    let eventdb = await eventCol.find(query).toArray();
-    let extrinsicdb = await extrinsicCol.find(query).toArray();
-
-    if (
-      blockdb.totalEvents !== eventdb.length ||
-      blockdb.totalExtrinsics !== extrinsicdb.length
-    ) {
-      await blockCol.deleteMany(query);
-      await eventCol.deleteMany(query);
-      await extrinsicCol.deleteMany(query);
-    } else {
-      logger.info(`Block have no duplicate field`);
-    }
-  } catch (error) {
-    logger.info(`Block data not exit`);
-  }
-
-  const endTime = new Date().getTime();
-  logger.debug(`Health check finished in ${(endTime - startTime) / 1000}s`);
-}
-
 async function harvestBlock(
   client,
   api,
@@ -314,7 +281,6 @@ async function harvestBlocksSeq(client, api, startBlock, endBlock) {
 
   for (const blockNumber of blocks) {
     const blockStartTime = Date.now();
-    await healthCheck(client, blockNumber);
     await harvestBlock(
       client,
       api,
@@ -353,7 +319,6 @@ async function harvestBlocksSeq(client, api, startBlock, endBlock) {
 }
 
 module.exports = {
-  healthCheck,
   harvestBlocks,
   harvestBlock,
   harvestBlocksSeq,

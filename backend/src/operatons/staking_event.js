@@ -112,34 +112,42 @@ async function process_staking_reward(
       }
     }
 
+    const query = { blockNumber: blockNumber, eventIndex: eventIndex };
+    const options = { upsert: true };
     let data = {};
 
     if (validator && era) {
       data = {
-        blockNumber,
-        eventIndex,
-        accountId: event.data[0].toString(),
-        validatorStashAddress: validator.toString(),
-        era: era.toNumber(),
-        amount: new BigNumber(event.data[1].toString())
-          .dividedBy(1e18)
-          .toNumber(),
-        timestamp,
+        $set: {
+          blockNumber,
+          eventIndex,
+          accountId: event.data[0].toString(),
+          validatorStashAddress: validator.toString(),
+          era: era.toNumber(),
+          amount: new BigNumber(event.data[1].toString())
+            .dividedBy(1e18)
+            .toNumber(),
+          timestamp,
+        },
       };
     } else {
       data = {
-        blockNumber,
-        eventIndex,
-        accountId: event.data[0].toString(),
-        amount: new BigNumber(event.data[1].toString())
-          .dividedBy(1e18)
-          .toNumber(),
-        timestamp,
+        $set: {
+          blockNumber,
+          eventIndex,
+          accountId: event.data[0].toString(),
+          validatorStashAddress: "",
+          era: era.toNumber(),
+          amount: new BigNumber(event.data[1].toString())
+            .dividedBy(1e18)
+            .toNumber(),
+          timestamp,
+        },
       };
     }
     try {
       const stakingCol = await utils.db.getStakinRewardColCollection(client);
-      await stakingCol.insertOne(data);
+      await stakingCol.updateOne(query, data, options);
 
       logger.debug(
         `Added staking reward #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`

@@ -114,27 +114,31 @@ async function processExtrinsic(
     ? JSON.stringify(feeDetails.toJSON())
     : null);
 
-  let data = {
-    blockNumber,
-    extrinsicIndex,
-    isSigned,
-    signer,
-    section,
-    method,
-    args,
-    argsDef,
-    hash,
-    doc,
-    feeInfo: iFeeInfo,
-    feeDetails: iFeeDetails,
-    success,
-    errorMessage,
-    timestamp,
+  const query = { blockNumber: blockNumber, hash: hash };
+  const options = { upsert: true };
+  const data = {
+    $set: {
+      blockNumber,
+      extrinsicIndex,
+      isSigned,
+      signer,
+      section,
+      method,
+      args,
+      argsDef,
+      hash,
+      doc,
+      feeInfo: iFeeInfo,
+      feeDetails: iFeeDetails,
+      success,
+      errorMessage,
+      timestamp,
+    },
   };
 
   try {
     const extrinsicCol = await utils.db.getExtrinsicCollection(client);
-    await extrinsicCol.insertOne(data);
+    await extrinsicCol.updateOne(query, data, options);
     logger.debug(
       `Added extrinsic ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
         hash
@@ -154,7 +158,7 @@ async function processExtrinsic(
   if (isSigned) {
     try {
       const extrinsicCol = await utils.db.getSignedExtrinsicCol(client);
-      await extrinsicCol.insertOne(data);
+      await extrinsicCol.updateOne(query, data, options);
       logger.debug(
         `Added signed extrinsic ${blockNumber}-${extrinsicIndex} (${utils.shortHash(
           hash

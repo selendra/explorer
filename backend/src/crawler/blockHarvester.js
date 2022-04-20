@@ -9,7 +9,6 @@ const {
   harvestBlocksSeq,
   updateFinalizedBlock,
   storeMetadata,
-  healthCheck,
 } = require("../operatons/block");
 
 Sentry.init({
@@ -87,11 +86,9 @@ async function crawler() {
       saveBlock = await blockCol.countDocuments({});
       if (saveBlock < blockNumber) {
         for (let i = saveBlock; i <= blockNumber; i++) {
-          await healthCheck(client, i);
           await harvestBlock(client, api, i, false, doUpdateAccountsInfo);
         }
       } else {
-        await healthCheck(client, blockNumber);
         await harvestBlock(
           client,
           api,

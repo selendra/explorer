@@ -785,7 +785,7 @@ async function crawler(delayedStart) {
   setTimeout(() => crawler(false), config.pollingTime);
 }
 
-crawler(true).catch((error) => {
+crawler(false).catch((error) => {
   logger.error(`Crawler error: ${error}`);
   Sentry.captureException(error);
   process.exit(-1);
