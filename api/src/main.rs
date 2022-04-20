@@ -62,8 +62,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(
                 Cors::default()
-                    .allowed_origin("https://scan-api.selendra.org:8080")
-                    .allowed_origin_fn(|origin, _req_head| origin.as_bytes().starts_with(b"http://localhost"))
+                    .allow_any_origin()
                     .allowed_methods(vec!["GET"])
                     .max_age(3600),
             )
