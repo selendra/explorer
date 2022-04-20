@@ -86,7 +86,7 @@ async function processTransfer(
       method,
       hash,
       source,
-      destination,
+      destination: utils.ss58.ss58Format(destination),
       amount: new BigNumber(amount).dividedBy(1e18).toNumber(),
       feeAmount,
       success,
