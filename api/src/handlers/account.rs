@@ -269,9 +269,9 @@ async fn get_account_slash(client: web::Data<Client>, param: web::Path<(String, 
     let address = param.0.clone();
     let page_number = param.1.clone().saturating_sub(1);
 
-    // if !(is_address(&address)) {
-    //     return HttpResponse::NotFound().body(format!("Invalid address {} type", address));
-    // };
+    if !(is_address(&address)) {
+        return HttpResponse::NotFound().body(format!("Invalid address {} type", address));
+    };
 
     let collection: Collection<AccountSlash> = client.database(DATABASE).collection(SLASH);
     let filter = doc! { "accountId": &address };
