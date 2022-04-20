@@ -67,7 +67,6 @@ pub struct AccountSlash {
     pub stakingStatus: String,
     pub blockNumber: u64,
     pub eventIndex: u16,
-    pub validatorStashAddress: String,
     pub amount: f32,
     pub era: i32,
     pub timestamp: f64,

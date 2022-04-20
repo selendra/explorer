@@ -83,7 +83,7 @@ async function harvestBlock(
       ]);
 
     const { block, author, events } = derivedBlock;
-    const blockAuthor = author ? author.toString() : ""; // genesis block doesn't have author
+    const blockAuthor = author ? utils.ss58.ss58Format(author.toString()) : ""; // genesis block doesn't have author
     const { parentHash, extrinsicsRoot, stateRoot } = block.header;
     const blockAuthorIdentity = await api.derive.accounts.info(blockAuthor);
     const blockAuthorName = getDisplayName(blockAuthorIdentity.identity);

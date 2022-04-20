@@ -83,7 +83,9 @@ async function processExtrinsic(
 ) {
   const [extrinsicIndex, extrinsic] = indexedExtrinsic;
   const { isSigned } = extrinsic;
-  const signer = isSigned ? extrinsic.signer.toString() : "";
+  const signer = isSigned
+    ? utils.ss58.ss58Format(extrinsic.signer.toString())
+    : "";
 
   const section = extrinsic.method.section;
   const method = extrinsic.method.method;

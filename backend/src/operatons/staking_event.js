@@ -10,6 +10,20 @@ Sentry.init({
   tracesSampleRate: 1.0,
 });
 
+function getSlashedValidatorAccount(index, IndexedBlockEvents) {
+  let validatorAccountId = "";
+  for (let i = index; i >= 0; i--) {
+    const { event } = IndexedBlockEvents[i][1];
+    if (
+      event.section === "staking" &&
+      (event.method === "Slash" || event.method === "Slashed")
+    ) {
+      return (validatorAccountId = event.data[0].toString());
+    }
+  }
+  return validatorAccountId;
+}
+
 async function process_staking_reward(
   client,
   event,
@@ -121,8 +135,8 @@ async function process_staking_reward(
         $set: {
           blockNumber,
           eventIndex,
-          accountId: event.data[0].toString(),
-          validatorStashAddress: validator.toString(),
+          accountId: utils.ss58.ss58Format(event.data[0].toString()),
+          validatorStashAddress: utils.ss58.ss58Format(validator.toString()),
           era: era.toNumber(),
           amount: new BigNumber(event.data[1].toString())
             .dividedBy(1e18)
@@ -135,7 +149,7 @@ async function process_staking_reward(
         $set: {
           blockNumber,
           eventIndex,
-          accountId: event.data[0].toString(),
+          accountId: utils.ss58.ss58Format(event.data[0].toString()),
           validatorStashAddress: "",
           era: 0,
           amount: new BigNumber(event.data[1].toString())
@@ -181,9 +195,8 @@ async function process_staking_slash(
       $set: {
         blockNumber,
         eventIndex,
-        stakingStatus: "validator",
-        accountId: event.data[0].toString(),
-        validatorStashAddress: event.data[0].toString(),
+        accountId: utils.ss58.ss58Format(event.data[0].toString()),
+        validatorStashAddress: utils.ss58.ss58Format(event.data[0].toString()),
         era: activeEra - 1,
         amount: new BigNumber(event.data[1].toString())
           .dividedBy(1e18)
@@ -195,11 +208,10 @@ async function process_staking_slash(
       blockNumber: blockNumber,
       eventIndex: eventIndex,
     };
-    const options = { upsert: true };
 
     try {
       let slashCol = await utils.db.getStakingSlashColCollection(client);
-      await slashCol.updateOne(query, data, options);
+      await slashCol.updateOne(query, data, { upsert: true });
 
       logger.debug(
         `Added validator staking slash #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`
@@ -227,9 +239,8 @@ async function process_staking_slash(
       $set: {
         blockNumber,
         eventIndex,
-        stakingStatus: "nominator",
-        accountId: event.data[0].toString(),
-        validatorStashAddress,
+        accountId: utils.ss58.ss58Format(event.data[0].toString()),
+        validatorStashAddress: utils.ss58.ss58Format(validatorStashAddress),
         era: activeEra - 1,
         amount: new BigNumber(event.data[1].toString())
           .dividedBy(1e18)
@@ -244,7 +255,7 @@ async function process_staking_slash(
 
     try {
       let slashCol = await utils.db.getStakingSlashColCollection(client);
-      await slashCol.updateOne(query, data, options);
+      await slashCol.updateOne(query, data, { upsert: true });
 
       Sentry.captureMessage(
         `validator with address have been slash ${validatorStashAddress} inculde nominator`
@@ -262,23 +273,6 @@ async function process_staking_slash(
       Sentry.captureException(error, scope);
     }
   }
-}
-
-async function process_tmp_slash() {
-  const client = await utils.db.mongodbConnect();
-  data = {
-    blockNumber: 0,
-    eventIndex: 0,
-    stakingStatus: "validator",
-    accountId: "",
-    validatorStashAddress: "",
-    era: 0,
-    amount: 0,
-    timestamp: 0,
-  };
-
-  let slashCol = await utils.db.getStakingSlashColCollection(client);
-  await slashCol.insertOne(data);
 }
 
 module.exports = {

@@ -1,5 +1,6 @@
 module.exports.db = require("./dbClient");
 module.exports.api = require("./apiProvider");
+module.exports.ss58 = require("./covert_ss58");
 
 // Return array chunks of n size
 module.exports.chunker = (a, n) =>
