@@ -19,3 +19,11 @@ pub struct Block {
     pub totalIssuance: f64,
     pub timestamp: f64,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BlockPage {
+    pub total_block: u64,
+    pub at_page: u64,
+    pub total_page: u64,
+    pub blocks: Vec<Block>,
+}

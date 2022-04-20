@@ -3,7 +3,8 @@ extern crate dotenv_codegen;
 
 mod handlers;
 mod models;
-use handlers::block::{get_block, get_blocks};
+mod utils;
+use handlers::{account::*, block::*};
 
 use actix_web::{web, App, HttpServer};
 use mongodb::sync::Client;
@@ -14,6 +15,7 @@ pub const BLOCK: &str = "blocks";
 pub const EVENT: &str = "event";
 pub const EXTRINSIC: &str = "extrinsic";
 pub const TRANSFER: &str = "transfer";
+pub const SIGNEDEXTRINSIC: &str = "signed_extrinsic";
 
 // database
 pub const MOGOURI: &str = dotenv!("MONGO_URI");
@@ -24,6 +26,9 @@ pub const VALIDATORDATABASE: &str = dotenv!("VALIDATEDATABASE");
 const HOST: &str = "127.0.0.1";
 const PORT: u16 = 8080;
 
+// Page Size
+const PAGESIZE: u64 = 10;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let client = Client::with_uri_str(MOGOURI).expect("failed to connect");
@@ -33,6 +38,10 @@ async fn main() -> std::io::Result<()> {
             .app_data(web::Data::new(client.clone()))
             .service(get_block)
             .service(get_blocks)
+            .service(get_account)
+            .service(get_account_detail)
+            .service(get_accounts)
+            .service(get_account_extrinisic)
     })
     .bind((HOST, PORT))?
     .run()

@@ -1,4 +1,7 @@
-use crate::{models::block::Block, BLOCK, DATABASE};
+use crate::{
+    models::block::{Block, BlockPage},
+    BLOCK, DATABASE, PAGESIZE,
+};
 
 use actix_web::{get, web, HttpResponse};
 use mongodb::{
@@ -7,7 +10,6 @@ use mongodb::{
     sync::{Client, Collection},
 };
 
-/// Gets the user with the supplied block number.
 #[get("/block/{block_number}")]
 async fn get_block(client: web::Data<Client>, block_number: web::Path<u32>) -> HttpResponse {
     let block_number = block_number.into_inner();
@@ -26,8 +28,15 @@ async fn get_blocks(client: web::Data<Client>, page_number: web::Path<u64>) -> H
     let collection: Collection<Block> = client.database(DATABASE).collection(BLOCK);
     let filter = doc! {};
     let collection_count = collection.count_documents(filter.clone(), None).unwrap();
-    let page_size: u64 = 10;
-    let page: u64 = collection_count - (page_size * page_number);
+
+    let page_size: u64 = PAGESIZE;
+    let mut page = page_size * page_number;
+
+    if collection_count > page {
+        page = collection_count - page;
+    } else {
+        page = 0;
+    }
 
     let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
 
@@ -47,5 +56,17 @@ async fn get_blocks(client: web::Data<Client>, page_number: web::Path<u64>) -> H
         Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
     }
 
-    return HttpResponse::Ok().json(block_vec);
+    let mut total_page = collection_count / PAGESIZE;
+    if collection_count % PAGESIZE != 0 {
+        total_page = total_page + 1;
+    }
+
+    let account_page = BlockPage {
+        total_block: collection_count,
+        blocks: block_vec,
+        at_page: page_number,
+        total_page,
+    };
+
+    return HttpResponse::Ok().json(account_page);
 }
