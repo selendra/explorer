@@ -42,6 +42,18 @@ pub struct AccountTransfer {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct AccountRewards {
+    pub blockNumber: u64,
+    pub extrinsicIndex: u16,
+    pub destination: String,
+    pub amount: f32,
+    pub feeAmount: f32,
+    pub success: bool,
+    pub hash: String,
+    pub timestamp: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AccountPage {
     pub total_account: u64,
     pub at_page: u64,
@@ -55,4 +67,12 @@ pub struct AccountExtrinsicPage {
     pub at_page: u64,
     pub total_page: u64,
     pub extriniscs: Vec<AccountExtrinsic>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AccountTransferPage {
+    pub total_transfer: u64,
+    pub at_page: u64,
+    pub total_page: u64,
+    pub transfers: Vec<AccountTransfer>,
 }

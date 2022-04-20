@@ -36,7 +36,7 @@ module.exports.backendConfig = {
     eraPointsAvg: "era_points_avg",
     eraCommissionAvg: "era_commission_avg",
   },
-  sentryDSN: process.env.SENTRY_DSN || "",
+  sentryDSN: process.env.SENTRY || "",
   crawlers: [
     {
       name: "blockHarvester",

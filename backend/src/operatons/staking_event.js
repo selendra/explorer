@@ -137,7 +137,7 @@ async function process_staking_reward(
           eventIndex,
           accountId: event.data[0].toString(),
           validatorStashAddress: "",
-          era: era.toNumber(),
+          era: 0,
           amount: new BigNumber(event.data[1].toString())
             .dividedBy(1e18)
             .toNumber(),
@@ -224,21 +224,27 @@ async function process_staking_slash(
     );
 
     data = {
-      blockNumber,
-      eventIndex,
-      stakingStatus: "nominator",
-      accountId: event.data[0].toString(),
-      validatorStashAddress,
-      era: activeEra - 1,
-      amount: new BigNumber(event.data[1].toString())
-        .dividedBy(1e18)
-        .toNumber(),
-      timestamp,
+      $set: {
+        blockNumber,
+        eventIndex,
+        stakingStatus: "nominator",
+        accountId: event.data[0].toString(),
+        validatorStashAddress,
+        era: activeEra - 1,
+        amount: new BigNumber(event.data[1].toString())
+          .dividedBy(1e18)
+          .toNumber(),
+        timestamp,
+      },
+    };
+    const query = {
+      blockNumber: blockNumber,
+      eventIndex: eventIndex,
     };
 
     try {
       let slashCol = await utils.db.getStakingSlashColCollection(client);
-      await slashCol.insertOne(data);
+      await slashCol.updateOne(query, data, options);
 
       logger.debug(
         `Added nominator staking slash #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`
@@ -252,6 +258,23 @@ async function process_staking_slash(
       Sentry.captureException(error, scope);
     }
   }
+}
+
+async function process_tmp_slash() {
+  const client = await utils.db.mongodbConnect();
+  data = {
+    blockNumber: 0,
+    eventIndex: 0,
+    stakingStatus: "validator",
+    accountId: "",
+    validatorStashAddress: "",
+    era: 0,
+    amount: 0,
+    timestamp: 0,
+  };
+
+  let slashCol = await utils.db.getStakingSlashColCollection(client);
+  await slashCol.insertOne(data);
 }
 
 module.exports = {

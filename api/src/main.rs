@@ -42,6 +42,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_account_detail)
             .service(get_accounts)
             .service(get_account_extrinisic)
+            .service(get_account_transfer)
     })
     .bind((HOST, PORT))?
     .run()
