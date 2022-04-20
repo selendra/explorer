@@ -20,10 +20,10 @@ async function runCrawler(crawler) {
     logger.error(`Crawler error: ${error}`);
   });
   child.on("close", (code) => {
-    logger.error(`Crawler closed with code ${code}`);
+    logger.error(`Crawler closed ${crawler} with code ${code}`);
   });
   child.on("exit", (code) => {
-    logger.error(`Crawler exited with code ${code}`);
+    logger.error(`Crawler exited ${crawler} with code ${code}`);
   });
 }
 
