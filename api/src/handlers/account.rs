@@ -9,7 +9,7 @@ use mongodb::{
     sync::{Client, Collection},
 };
 
-#[get("/account/{address}")]
+#[get("/{address}")]
 async fn get_account(client: web::Data<Client>, address: web::Path<String>) -> HttpResponse {
     let address = address.into_inner();
     if !(is_address(&address)) {
@@ -24,7 +24,7 @@ async fn get_account(client: web::Data<Client>, address: web::Path<String>) -> H
     }
 }
 
-#[get("/account/detail/{address}")]
+#[get("/detail/{address}")]
 async fn get_account_detail(client: web::Data<Client>, address: web::Path<String>) -> HttpResponse {
     let address = address.into_inner();
     if !(is_address(&address)) {
@@ -39,7 +39,7 @@ async fn get_account_detail(client: web::Data<Client>, address: web::Path<String
     }
 }
 
-#[get("/accounts/{page_number}")]
+#[get("/all/{page_number}")]
 async fn get_accounts(client: web::Data<Client>, page_number: web::Path<u64>) -> HttpResponse {
     let page_number = page_number.into_inner().saturating_sub(1);
 
@@ -87,7 +87,7 @@ async fn get_accounts(client: web::Data<Client>, page_number: web::Path<u64>) ->
     return HttpResponse::Ok().json(account_page);
 }
 
-#[get("/account/extrinsics/{address}/{page_number}")]
+#[get("/extrinsics/{address}/{page_number}")]
 async fn get_account_extrinisic(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
     let address = param.0.clone();
     let page_number = param.1.clone().saturating_sub(1);
@@ -140,7 +140,7 @@ async fn get_account_extrinisic(client: web::Data<Client>, param: web::Path<(Str
     return HttpResponse::Ok().json(account_page);
 }
 
-#[get("/account/transfer/{address}/{page_number}")]
+#[get("/transfer/{address}/{page_number}")]
 async fn get_account_transfer(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
     let address = param.0.clone();
     let page_number = param.1.clone().saturating_sub(1);
@@ -193,7 +193,7 @@ async fn get_account_transfer(client: web::Data<Client>, param: web::Path<(Strin
     return HttpResponse::Ok().json(account_page);
 }
 
-#[get("/account/reward/{address}/{page_number}")]
+#[get("/reward/{address}/{page_number}")]
 async fn get_account_reward(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
     let address = param.0.clone();
     let page_number = param.1.clone().saturating_sub(1);
@@ -264,7 +264,7 @@ async fn get_account_reward(client: web::Data<Client>, param: web::Path<(String,
     return HttpResponse::Ok().json(account_page);
 }
 
-#[get("/account/slash/{address}/{page_number}")]
+#[get("/slash/{address}/{page_number}")]
 async fn get_account_slash(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
     let address = param.0.clone();
     let page_number = param.1.clone().saturating_sub(1);

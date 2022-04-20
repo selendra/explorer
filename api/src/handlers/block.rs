@@ -10,7 +10,7 @@ use mongodb::{
     sync::{Client, Collection},
 };
 
-#[get("/block/{block_number}")]
+#[get("/{block_number}")]
 async fn get_block(client: web::Data<Client>, block_number: web::Path<u32>) -> HttpResponse {
     let block_number = block_number.into_inner();
     let collection: Collection<Block> = client.database(DATABASE).collection(BLOCK);
@@ -21,7 +21,7 @@ async fn get_block(client: web::Data<Client>, block_number: web::Path<u32>) -> H
     }
 }
 
-#[get("/blocks/{page_number}")]
+#[get("/all/{page_number}")]
 async fn get_blocks(client: web::Data<Client>, page_number: web::Path<u64>) -> HttpResponse {
     let page_number = page_number.into_inner();
 

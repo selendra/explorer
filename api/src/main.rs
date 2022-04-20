@@ -47,18 +47,22 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_BACKTRACE", "1");
 
     HttpServer::new(move || {
-        App::new()
-            .wrap(sentry_actix::Sentry::new())
-            .app_data(web::Data::new(client.clone()))
-            .service(get_block)
-            .service(get_blocks)
+        let account_controller = actix_web::web::scope("/account")
             .service(get_account)
             .service(get_account_detail)
             .service(get_accounts)
             .service(get_account_extrinisic)
             .service(get_account_transfer)
             .service(get_account_reward)
-            .service(get_account_slash)
+            .service(get_account_slash);
+
+        let block_controller = actix_web::web::scope("/block").service(get_block).service(get_blocks);
+
+        App::new()
+            .wrap(sentry_actix::Sentry::new())
+            .app_data(web::Data::new(client.clone()))
+            .service(block_controller)
+            .service(account_controller)
     })
     .bind((HOST, PORT))?
     .run()
