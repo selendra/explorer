@@ -14,8 +14,10 @@ pub const ACCOUNT: &str = "accounts";
 pub const BLOCK: &str = "blocks";
 pub const EVENT: &str = "event";
 pub const EXTRINSIC: &str = "extrinsic";
-pub const TRANSFER: &str = "transfer";
+pub const REWARD: &str = "staking_reward";
+pub const SLASH: &str = "staking_slash";
 pub const SIGNEDEXTRINSIC: &str = "signed_extrinsic";
+pub const TRANSFER: &str = "transfer";
 
 // database
 pub const MOGOURI: &str = dotenv!("MONGO_URI");
@@ -29,12 +31,24 @@ const PORT: u16 = 8080;
 // Page Size
 const PAGESIZE: u64 = 10;
 
+// Sentry
+pub const SENTRY: &str = dotenv!("SENTRY");
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let client = Client::with_uri_str(MOGOURI).expect("failed to connect");
+    let _guard = sentry::init((
+        SENTRY,
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            ..Default::default()
+        },
+    ));
+    std::env::set_var("RUST_BACKTRACE", "1");
 
     HttpServer::new(move || {
         App::new()
+            .wrap(sentry_actix::Sentry::new())
             .app_data(web::Data::new(client.clone()))
             .service(get_block)
             .service(get_blocks)
@@ -43,6 +57,8 @@ async fn main() -> std::io::Result<()> {
             .service(get_accounts)
             .service(get_account_extrinisic)
             .service(get_account_transfer)
+            .service(get_account_reward)
+            .service(get_account_slash)
     })
     .bind((HOST, PORT))?
     .run()

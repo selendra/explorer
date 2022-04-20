@@ -6,7 +6,9 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-# mongodb = "2.1.0"
+sentry = "0.25.0"
+sentry-actix = "0.25.0"
+
 mongodb = { version = "2.1.0", default-features = false, features = ["sync"] }
 actix-web = "4.0.1"
 serde = "1.0.136"

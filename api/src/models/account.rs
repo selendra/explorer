@@ -42,14 +42,34 @@ pub struct AccountTransfer {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AccountRewards {
+pub struct AccountRewardsQuery {
     pub blockNumber: u64,
-    pub extrinsicIndex: u16,
-    pub destination: String,
+    pub eventIndex: u16,
     pub amount: f32,
-    pub feeAmount: f32,
-    pub success: bool,
-    pub hash: String,
+    pub era: u16,
+    pub validatorStashAddress: String,
+    pub timestamp: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AccountRewards {
+    pub status: String,
+    pub blockNumber: u64,
+    pub eventIndex: u16,
+    pub validatorStashAddress: String,
+    pub amount: f32,
+    pub era: i32,
+    pub timestamp: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AccountSlash {
+    pub stakingStatus: String,
+    pub blockNumber: u64,
+    pub eventIndex: u16,
+    pub validatorStashAddress: String,
+    pub amount: f32,
+    pub era: i32,
     pub timestamp: f64,
 }
 
@@ -75,4 +95,20 @@ pub struct AccountTransferPage {
     pub at_page: u64,
     pub total_page: u64,
     pub transfers: Vec<AccountTransfer>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AccountRewardPage {
+    pub total_list_rewards: u64,
+    pub at_page: u64,
+    pub total_page: u64,
+    pub reward_list: Vec<AccountRewards>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct AccountSlashPage {
+    pub total_list_slash: u64,
+    pub at_page: u64,
+    pub total_page: u64,
+    pub slash_list: Vec<AccountSlash>,
 }
