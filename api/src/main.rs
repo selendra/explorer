@@ -6,6 +6,7 @@ mod models;
 mod utils;
 use handlers::{account::*, block::*};
 
+use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
 use mongodb::sync::Client;
 
@@ -59,6 +60,13 @@ async fn main() -> std::io::Result<()> {
         let block_controller = actix_web::web::scope("/block").service(get_block).service(get_blocks);
 
         App::new()
+            .wrap(
+                Cors::default()
+                    .allowed_origin("https://scan-api.selendra.org:8080")
+                    .allowed_origin_fn(|origin, _req_head| origin.as_bytes().starts_with(b"http://localhost"))
+                    .allowed_methods(vec!["GET"])
+                    .max_age(3600),
+            )
             .wrap(sentry_actix::Sentry::new())
             .app_data(web::Data::new(client.clone()))
             .service(block_controller)
