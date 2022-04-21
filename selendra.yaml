@@ -265,7 +265,7 @@ paths:
             $ref: '#/definitions/Error'
   /extrinsic/{module}/{page_number}:
     get:
-      summary: Get all extrinsics with detail by module and page nubmer
+      summary: Get all extrinsics with detail by module and page nubmer modules 
       operationId: ExtrinsicsByModule
       tags:
         - extrinsic
@@ -275,6 +275,50 @@ paths:
           required: true
           description: Use address to retrieve all extrinsic with specific module
           type: string
+          enum: 
+            [
+              authoritydiscovery, 
+              authorship,
+              babe,
+              bagslist,
+              balances,
+              bounties,
+              configuration,
+              council,
+              democracy,
+              dmp,
+              electionprovidermultiphase,
+              grandpa,
+              historical,
+              hrmp,
+              identity,
+              imonline,
+              indices,
+              initializer,
+              multisig,
+              parainherent,
+              paras,
+              parasdisputes,
+              phragmenElection,
+              preimage,
+              proxy,
+              recovery,
+              registrar,
+              scheduler,
+              session,
+              slots,
+              staking,
+              system,
+              technicalCommittee,
+              technicalMembership,
+              timestamp,
+              tips,
+              treasury,
+              ump,
+              utility,
+              vesting,
+              xcmPallet,
+            ]
         - name: page_number
           in: path
           required: true
