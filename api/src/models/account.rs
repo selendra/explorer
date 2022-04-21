@@ -54,7 +54,6 @@ pub struct AccountReward {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AccountSlash {
-    pub stakingStatus: String,
     pub blockNumber: u64,
     pub eventIndex: u16,
     pub amount: f32,

@@ -1,0 +1,333 @@
+swagger: "2.0"
+info:
+  version: 0.1.0
+  title: Selendra scan swagger
+  license:
+    name: MIT
+host: scan-api.selendra.org
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /block/{block_number}:
+    get:
+      summary: Get block detail by block number
+      operationId: BlockByBlockNumer
+      tags:
+        - block
+      parameters:
+        - name: block_number
+          in: path
+          required: true
+          description: Use block number to retrieve block detail
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Block'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /block/all/{page_number}:
+    get:
+      summary: Get all block detail by page number
+      operationId: BlocksByPageNumber
+      tags:
+        - block
+      parameters:
+        - name: page_number
+          in: path
+          required: true
+          description: Use page number to retrieve all blocks
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Blocks'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /account/{address}:
+    get:
+      summary: Get account detail by address
+      operationId: AccountByAddress
+      tags:
+        - account
+      parameters:
+        - name: address
+          in: path
+          required: true
+          description: Use address to retrieve account detail
+          type: string
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Account'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /account/all/{page_number}:
+    get:
+      summary: Get all accounts with detail by page address
+      operationId: AccountsByPage
+      tags:
+        - account
+      parameters:
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all accounts with detail
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Accounts'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /account/extrinsics/{address}/{page_number}:
+    get:
+      summary: Get all accounts with detail by page address
+      operationId: AccountExtrinsicsByAddress
+      tags:
+        - account
+      parameters:
+        - name: address
+          in: path
+          required: true
+          description: Use address to retrieve all extrinsics
+          type: string
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all extrinsics in account
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Extrinsics'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /account/transfer/{address}/{page_number}:
+    get:
+      summary: Get all accounts with detail by page address
+      operationId: AccountTransferByAddress
+      tags:
+        - account
+      parameters:
+        - name: address
+          in: path
+          required: true
+          description: Use address to retrieve all transfers
+          type: string
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all transfers in account
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Transfers'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  Block:
+    type: "object"
+    properties:
+      blockNumber:
+        type: integer
+        format: int64
+      finalized:
+        type: boolean
+      blockAuthor:
+        type: string
+      blockAuthorName:
+        type: string
+      blockHash:
+        type: string
+      parentHash:
+        type: string
+      extrinsicsRoot:
+        type: string
+      stateRoot:
+        type: string
+      activeEra:
+        type: integer
+        format: int64
+      currentIndex:
+        type: integer
+        format: int64
+      runtimeVersion:
+        type: integer
+        format: int16
+      totalEvents:
+        type: integer
+        format: int16
+      totalExtrinsics:
+        type: integer
+        format: int16
+      totalIssuance:
+        type: integer
+        format: int64
+      timestamp:
+        type: integer
+        format: int64
+  Blocks:
+     type: "object"
+     properties:
+      total_block:
+        type: integer
+        format: int64
+      at_page:
+        type: integer
+        format: int64
+      total_page:
+        type: integer
+        format: int64
+      blocks:
+        type: array
+        items:
+          $ref: '#/definitions/Block'
+  Account:
+     type: "object"
+     properties:
+      accountId:
+        type: string
+      identityDisplay:
+        type: string
+      totalBalance:
+        type: integer
+        format: int64
+      availableBalance:
+        type: integer
+        format: int64
+      freeBalance:
+        type: integer
+        format: int64
+      lockedBalance:
+        type: integer
+        format: int64
+      reservedBalance:
+        type: integer
+        format: int64
+      timestamp:
+        type: integer
+        format: int64
+  Accounts:
+     type: "object"
+     properties:
+      total_account:
+        type: integer
+        format: int64
+      at_page:
+        type: integer
+        format: int64
+      total_page:
+        type: integer
+        format: int64
+      accounts:
+        type: array
+        items:
+         $ref: '#/definitions/Account'
+  Extrinsic:
+     type: "object"
+     properties:
+      blockNumber:
+        type: integer
+        format: int64
+      extrinsicIndex:
+        type: integer
+        format: int16
+      success:
+        type: boolean
+      section:
+        type: string
+      method:
+        type: string
+      hash:
+        type: string
+      timestamp:
+        type: integer
+        format: int64
+  Extrinsics:
+     type: "object"
+     properties:
+      total_extriniscs:
+        type: integer
+        format: int64
+      at_page:
+        type: integer
+        format: int64
+      total_page:
+        type: integer
+        format: int64
+      extriniscs:
+        type: array
+        items:
+         $ref: '#/definitions/Extrinsic'
+  Transfer:
+     type: "object"
+     properties:
+      blockNumber:
+        type: integer
+        format: int64
+      extrinsicIndex:
+        type: integer
+        format: int16
+      destination:
+        type: string
+      amount:
+        type: integer
+        format: int64
+      feeAmount:
+        type: integer
+        format: int32
+      success:
+        type: boolean
+      hash:
+        type: string
+      timestamp:
+        type: integer
+        format: int64
+  Transfers:
+     type: "object"
+     properties:
+      total_transfer:
+        type: integer
+        format: int64
+      at_page:
+        type: integer
+        format: int64
+      total_page:
+        type: integer
+        format: int64
+      transfers:
+        type: array
+        items:
+         $ref: '#/definitions/Transfer'
+  Error:
+    type: "object"
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
