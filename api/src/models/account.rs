@@ -42,23 +42,12 @@ pub struct AccountTransfer {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AccountRewardsQuery {
+pub struct AccountReward {
     pub blockNumber: u64,
     pub eventIndex: u16,
     pub amount: f32,
     pub era: u16,
     pub validatorStashAddress: String,
-    pub timestamp: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AccountRewards {
-    pub status: String,
-    pub blockNumber: u64,
-    pub eventIndex: u16,
-    pub validatorStashAddress: String,
-    pub amount: f32,
-    pub era: i32,
     pub timestamp: f64,
 }
 
@@ -101,7 +90,7 @@ pub struct AccountRewardPage {
     pub total_list_rewards: u64,
     pub at_page: u64,
     pub total_page: u64,
-    pub reward_list: Vec<AccountRewards>,
+    pub reward_list: Vec<AccountReward>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

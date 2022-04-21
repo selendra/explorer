@@ -202,7 +202,7 @@ async fn get_account_reward(client: web::Data<Client>, param: web::Path<(String,
         return HttpResponse::NotFound().body(format!("Invalid address {} type", address));
     };
 
-    let collection: Collection<AccountRewardsQuery> = client.database(DATABASE).collection(REWARD);
+    let collection: Collection<AccountReward> = client.database(DATABASE).collection(REWARD);
     let filter = doc! { "accountId": &address };
     let collection_count = collection.count_documents(filter.clone(), None).unwrap();
 
@@ -215,32 +215,14 @@ async fn get_account_reward(client: web::Data<Client>, param: web::Path<(String,
 
     let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
 
-    let mut account_vec: Vec<AccountRewards> = Vec::new();
+    let mut account_vec: Vec<AccountReward> = Vec::new();
 
     match collection.find(filter, find_options) {
         Ok(mut cursor) => {
             while let Some(doc) = cursor.next() {
                 match doc {
                     Ok(db) => {
-                        let mut status = "validator";
-                        let mut era: i32 = -1;
-
-                        if db.validatorStashAddress == "" {
-                            status = "norminator";
-                        } else {
-                            era = db.era as i32;
-                        }
-
-                        let reward = AccountRewards {
-                            status: status.to_string(),
-                            blockNumber: db.blockNumber,
-                            eventIndex: db.eventIndex,
-                            validatorStashAddress: db.validatorStashAddress,
-                            amount: db.amount,
-                            era,
-                            timestamp: db.timestamp,
-                        };
-                        account_vec.push(reward);
+                        account_vec.push(db);
                     }
                     Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
                 }
