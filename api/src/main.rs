@@ -7,7 +7,7 @@ mod utils;
 use handlers::{account::*, block::*};
 
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer};
+use actix_web::{middleware::Logger, web, App, HttpServer};
 use mongodb::sync::Client;
 
 // Collection name
@@ -45,7 +45,10 @@ async fn main() -> std::io::Result<()> {
             ..Default::default()
         },
     ));
-    std::env::set_var("RUST_BACKTRACE", "1");
+    std::env::set_var("RUST_LOG", "actix_web=info");
+
+    // access logs are printed with the INFO level so ensure it is enabled by default
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("info"));
 
     HttpServer::new(move || {
         let account_controller = actix_web::web::scope("/account")
@@ -60,6 +63,7 @@ async fn main() -> std::io::Result<()> {
         let block_controller = actix_web::web::scope("/block").service(get_block).service(get_blocks);
 
         App::new()
+            .wrap(Logger::new("%a %{User-Agent}i"))
             .wrap(
                 Cors::default()
                     .allow_any_origin()
