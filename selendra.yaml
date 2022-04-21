@@ -148,6 +148,58 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/Error'
+  /account/reward/{address}/{page_number}:
+    get:
+      summary: Get all accounts with detail by page address
+      operationId: AccountRewardByAddress
+      tags:
+        - account
+      parameters:
+        - name: address
+          in: path
+          required: true
+          description: Use address to retrieve all rewards
+          type: string
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all rewards in account
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Rewards'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /account/slash/{address}/{page_number}:
+    get:
+      summary: Get all accounts with detail by page address
+      operationId: AccountSlashByAddress
+      tags:
+        - account
+      parameters:
+        - name: address
+          in: path
+          required: true
+          description: Use address to retrieve all slashs
+          type: string
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all slashs in account
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Slashs'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
 definitions:
   Block:
     type: "object"
@@ -323,6 +375,76 @@ definitions:
         type: array
         items:
          $ref: '#/definitions/Transfer'
+  Reward:
+     type: "object"
+     properties:
+      blockNumber:
+        type: integer
+        format: int64
+      eventIndex:
+        type: integer
+        format: int16
+      amount:
+        type: integer
+        format: int64
+      era:
+        type: integer
+        format: int16
+      validatorStashAddress:
+        type: string
+      timestamp:
+        type: integer
+        format: int64
+  Rewards:
+     type: "object"
+     properties:
+      total_list_rewards:
+        type: integer
+        format: int64
+      at_page:
+        type: integer
+        format: int64
+      total_page:
+        type: integer
+        format: int64
+      reward_list:
+        type: array
+        items:
+         $ref: '#/definitions/Reward'
+  Slash:
+     type: "object"
+     properties:
+      blockNumber:
+        type: integer
+        format: int64
+      eventIndex:
+        type: integer
+        format: int16
+      amount:
+        type: integer
+        format: int64
+      era:
+        type: integer
+        format: int16
+      timestamp:
+        type: integer
+        format: int64
+  Slashs:
+     type: "object"
+     properties:
+      total_list_slash:
+        type: integer
+        format: int64
+      at_page:
+        type: integer
+        format: int64
+      total_page:
+        type: integer
+        format: int64
+      slash_list:
+        type: array
+        items:
+         $ref: '#/definitions/Slash'
   Error:
     type: "object"
     properties:
