@@ -77,7 +77,7 @@ paths:
             $ref: '#/definitions/Error'
   /account/all/{page_number}:
     get:
-      summary: Get all accounts with detail by page address
+      summary: Get all accounts with detail by page nubmer
       operationId: AccountsByPage
       tags:
         - account
@@ -117,7 +117,7 @@ paths:
         "200":
           description: Expected response to a valid request
           schema:
-            $ref: '#/definitions/Extrinsics'
+            $ref: '#/definitions/AccountExtrinsics'
         default:
           description: unexpected error
           schema:
@@ -143,7 +143,7 @@ paths:
         "200":
           description: Expected response to a valid request
           schema:
-            $ref: '#/definitions/Transfers'
+            $ref: '#/definitions/AccountTransfers'
         default:
           description: unexpected error
           schema:
@@ -169,7 +169,7 @@ paths:
         "200":
           description: Expected response to a valid request
           schema:
-            $ref: '#/definitions/Rewards'
+            $ref: '#/definitions/AccountRewards'
         default:
           description: unexpected error
           schema:
@@ -195,7 +195,96 @@ paths:
         "200":
           description: Expected response to a valid request
           schema:
-            $ref: '#/definitions/Slashs'
+            $ref: '#/definitions/AccountSlashs'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /extrinsic/{hash}:
+    get:
+      summary: Get all extrinsics with detail by hash
+      operationId: ExtrinsicByHash
+      tags:
+        - extrinsic
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          description: Use hash to retrieve extrinsics
+          type: string
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Extrinsic'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /extrinsic/all/{page_number}:
+    get:
+      summary: Get all extrinsics with detail by page nubmer
+      operationId: ExtrinsicBypage
+      tags:
+        - extrinsic
+      parameters:
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all extrinsics with detail
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Extrinsics'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /extrinsic/signed/{page_number}:
+    get:
+      summary: Get all signed extrinsics with detail by page nubmer
+      operationId: ExtrinsicSignedBypage
+      tags:
+        - extrinsic
+      parameters:
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all signed extrinsics with detail
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Extrinsics'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /extrinsic/{module}/{page_number}:
+    get:
+      summary: Get all extrinsics with detail by module and page nubmer
+      operationId: ExtrinsicsByModule
+      tags:
+        - extrinsic
+      parameters:
+        - name: module
+          in: path
+          required: true
+          description: Use address to retrieve all extrinsic with specific module
+          type: string
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all slashs in account
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Extrinsics'
         default:
           description: unexpected error
           schema:
@@ -299,7 +388,7 @@ definitions:
         type: array
         items:
          $ref: '#/definitions/Account'
-  Extrinsic:
+  AccountExtrinsic:
      type: "object"
      properties:
       blockNumber:
@@ -319,7 +408,7 @@ definitions:
       timestamp:
         type: integer
         format: int64
-  Extrinsics:
+  AccountExtrinsics:
      type: "object"
      properties:
       total_extriniscs:
@@ -334,8 +423,8 @@ definitions:
       extriniscs:
         type: array
         items:
-         $ref: '#/definitions/Extrinsic'
-  Transfer:
+         $ref: '#/definitions/AccountExtrinsic'
+  AccountTransfer:
      type: "object"
      properties:
       blockNumber:
@@ -359,7 +448,7 @@ definitions:
       timestamp:
         type: integer
         format: int64
-  Transfers:
+  AccountTransfers:
      type: "object"
      properties:
       total_transfer:
@@ -374,8 +463,8 @@ definitions:
       transfers:
         type: array
         items:
-         $ref: '#/definitions/Transfer'
-  Reward:
+         $ref: '#/definitions/AccountTransfer'
+  AccountReward:
      type: "object"
      properties:
       blockNumber:
@@ -395,7 +484,7 @@ definitions:
       timestamp:
         type: integer
         format: int64
-  Rewards:
+  AccountRewards:
      type: "object"
      properties:
       total_list_rewards:
@@ -410,8 +499,8 @@ definitions:
       reward_list:
         type: array
         items:
-         $ref: '#/definitions/Reward'
-  Slash:
+         $ref: '#/definitions/AccountReward'
+  AccountSlash:
      type: "object"
      properties:
       blockNumber:
@@ -429,7 +518,7 @@ definitions:
       timestamp:
         type: integer
         format: int64
-  Slashs:
+  AccountSlashs:
      type: "object"
      properties:
       total_list_slash:
@@ -444,7 +533,59 @@ definitions:
       slash_list:
         type: array
         items:
-         $ref: '#/definitions/Slash'
+         $ref: '#/definitions/AccountSlash'
+  Extrinsic:
+     type: "object"
+     properties:
+      blockNumber:
+        type: integer
+        format: int64
+      extrinsicIndex:
+        type: integer
+        format: int16
+      signer:
+        type: string
+      hash:
+        type: string
+      method:
+        type: string
+      section:
+        type: string
+      args:
+        type: string
+      argsDef:
+        type: string
+      doc:
+        type: string
+      feeDetails:
+        type: string
+      feeInfo:
+        type: string
+      errorMessage:
+        type: string
+      isSigned:
+        type: boolean
+      success:
+        type: boolean
+      timestamp:
+        type: integer
+        format: int64
+  Extrinsics:
+     type: "object"
+     properties:
+      total_extrinsics:
+        type: integer
+        format: int64
+      at_page:
+        type: integer
+        format: int64
+      total_page:
+        type: integer
+        format: int64
+      extrinsics:
+        type: array
+        items:
+         $ref: '#/definitions/Extrinsic'
   Error:
     type: "object"
     properties:
