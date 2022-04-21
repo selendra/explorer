@@ -10,6 +10,7 @@ pub struct Account {
     pub freeBalance: f32,
     pub lockedBalance: f32,
     pub reservedBalance: f32,
+    pub timestamp: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
