@@ -244,7 +244,7 @@ async function insertEraValidatorStats(client, validator, activeEra) {
           stashAddress: validator.stashAddress,
           era: parseInt(stakefHistoryItem.era),
           selfStake: new BigNumber(stakefHistoryItem.self)
-            .dividedBy(1e18)
+            .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
             .toNumber(),
         },
       };
@@ -354,12 +354,14 @@ async function insertRankingValidator(
       governanceRating: validator.governanceRating,
       payoutHistory: JSON.stringify(validator.payoutHistory),
       payoutRating: validator.payoutRating,
-      selfStake: new BigNumber(validator.selfStake).dividedBy(1e18).toNumber(),
+      selfStake: new BigNumber(validator.selfStake)
+        .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+        .toNumber(),
       otherStake: new BigNumber(validator.otherStake)
-        .dividedBy(1e18)
+        .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
         .toNumber(),
       totalStake: new BigNumber(validator.totalStake)
-        .dividedBy(1e18)
+        .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
         .toNumber(),
       stakeHistory: JSON.stringify(validator.stakeHistory),
       totalRating: validator.totalRating,

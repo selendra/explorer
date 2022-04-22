@@ -11,6 +11,8 @@ module.exports.backendConfig = {
     db: process.env.DATABASE || "TestDadabase",
     vdb: process.env.VALIDATEDATABASE || "TestValidatorDadabase",
   },
+  Ss58Format: process.env.SS58FORMAT || 204,
+  TokenDecimal: process.env.TOKEN_DECIMAL || 18,
   MongoDbCol: {
     account: "accounts",
     block: "blocks",

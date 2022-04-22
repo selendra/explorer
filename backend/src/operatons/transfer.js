@@ -74,7 +74,7 @@ async function processTransfer(
   // fee calculation not supported for some runtimes
   const feeAmount = !!feeInfo
     ? new BigNumber(JSON.stringify(feeInfo.toJSON().partialFee))
-        .dividedBy(1e18)
+        .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
         .toNumber()
     : null;
 
@@ -87,7 +87,9 @@ async function processTransfer(
       hash,
       source,
       destination: utils.ss58.ss58Format(destination),
-      amount: new BigNumber(amount).dividedBy(1e18).toNumber(),
+      amount: new BigNumber(amount)
+        .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+        .toNumber(),
       feeAmount,
       success,
       errorMessage,

@@ -198,7 +198,9 @@ async function crawler(delayedStart) {
     nominatorStakes.sort((a, b) => (a.unwrap().lt(b.unwrap()) ? -1 : 1));
     let minimumStake = nominatorStakes[0];
 
-    minimumStake = new BigNumber(minimumStake).dividedBy(1e18).toNumber();
+    minimumStake = new BigNumber(minimumStake)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+      .toNumber();
 
     logger.debug(`${activeValidatorCount} active validators`);
     logger.debug(`${waitingValidatorCount} waiting validators`);
