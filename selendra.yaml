@@ -1,9 +1,14 @@
 openapi: 3.0.1
 info:
   title: Selendra scan swagger
+  contact:
+    name: Selendra
+    url: https://selendra.org
+    email: info@selendra.org
   license:
     name: MIT
   version: 0.2.0
+
 servers:
 - url: https://scan-api.selendra.org/
 paths:
@@ -20,6 +25,8 @@ paths:
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -46,6 +53,8 @@ paths:
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -72,6 +81,7 @@ paths:
         required: true
         schema:
           type: string
+          example: "seaNrTD9PpKseJKzGtR6KSoG32SB5tSF8DbZ7eqZp194YgTVu"
       responses:
         200:
           description: Expected response to a valid request
@@ -98,6 +108,8 @@ paths:
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -124,12 +136,15 @@ paths:
         required: true
         schema:
           type: string
+          example: "seXog1QcSuU6Y9Us99A2v8ToQSfwvrJEsj2avaWkd2PHxYXfj"
       - name: page_number
         in: path
         description: Use page nuber to retrieve all extrinsics in account
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -156,12 +171,15 @@ paths:
         required: true
         schema:
           type: string
+          example: "seXog1QcSuU6Y9Us99A2v8ToQSfwvrJEsj2avaWkd2PHxYXfj"
       - name: page_number
         in: path
         description: Use page nuber to retrieve all transfers in account
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -188,12 +206,15 @@ paths:
         required: true
         schema:
           type: string
+          example: "seaZ6tDPD6jdhwbbZmA7kqwMBAsqV79ZR1aTcz1KVJaEwQs42"
       - name: page_number
         in: path
         description: Use page nuber to retrieve all rewards in account
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -220,12 +241,15 @@ paths:
         required: true
         schema:
           type: string
+          example: "seaZ6tDPD6jdhwbbZmA7kqwMBAsqV79ZR1aTcz1KVJaEwQs42"
       - name: page_number
         in: path
         description: Use page nuber to retrieve all slashs in account
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -252,6 +276,7 @@ paths:
         required: true
         schema:
           type: string
+          example: "0x237e9fcd3f06f8347ecd932d6d190dc2cd54e64da04b330f83bb6616652b8fa1"
       responses:
         200:
           description: Expected response to a valid request
@@ -278,6 +303,8 @@ paths:
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -304,6 +331,8 @@ paths:
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -336,6 +365,8 @@ paths:
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -362,6 +393,7 @@ paths:
         required: true
         schema:
           type: string
+          example: "0x237e9fcd3f06f8347ecd932d6d190dc2cd54e64da04b330f83bb6616652b8fa1"
       responses:
         200:
           description: Expected response to a valid request
@@ -388,6 +420,8 @@ paths:
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -420,6 +454,8 @@ paths:
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
@@ -446,6 +482,8 @@ paths:
         required: true
         schema:
           type: integer
+          example: 1
+          minimum: 1
       responses:
         200:
           description: Expected response to a valid request
