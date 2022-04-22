@@ -105,7 +105,9 @@ async function harvestBlock(
     // Totals
     const totalEvents = events.length;
     const totalExtrinsics = block.extrinsics.length;
-    let totalIssuance = new BigNumber(total).dividedBy(1e18).toNumber();
+    let totalIssuance = new BigNumber(total)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+      .toNumber();
 
     const query = { blockNumber: blockNumber };
     const options = { upsert: true };

@@ -141,7 +141,7 @@ async function process_staking_reward(
           validatorStashAddress: utils.ss58.ss58Format(validator.toString()),
           era: era.toNumber(),
           amount: new BigNumber(event.data[1].toString())
-            .dividedBy(1e18)
+            .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
             .toNumber(),
           timestamp,
         },
@@ -155,7 +155,7 @@ async function process_staking_reward(
           validatorStashAddress: "",
           era: 0,
           amount: new BigNumber(event.data[1].toString())
-            .dividedBy(1e18)
+            .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
             .toNumber(),
           timestamp,
         },
@@ -201,7 +201,7 @@ async function process_staking_slash(
         validatorStashAddress: utils.ss58.ss58Format(event.data[0].toString()),
         era: activeEra - 1,
         amount: new BigNumber(event.data[1].toString())
-          .dividedBy(1e18)
+          .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
           .toNumber(),
         timestamp,
       },
@@ -245,7 +245,7 @@ async function process_staking_slash(
         validatorStashAddress: validatorStashAddress,
         era: activeEra - 1,
         amount: new BigNumber(event.data[1].toString())
-          .dividedBy(1e18)
+          .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
           .toNumber(),
         timestamp,
       },
