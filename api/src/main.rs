@@ -4,7 +4,7 @@ extern crate dotenv_codegen;
 mod handlers;
 mod models;
 mod utils;
-use handlers::{account::*, block::*, extrinsic::*};
+use handlers::{account::*, block::*, extrinsic::*, transfer::*};
 
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, App, HttpServer};
@@ -65,6 +65,9 @@ async fn main() -> std::io::Result<()> {
             .service(get_extrinsics)
             .service(get_signed_extrinsics)
             .service(get_mudule_extrinsics);
+        let transfer_controller = actix_web::web::scope("/transfer")
+            .service(get_transfer)
+            .service(get_transfers);
 
         App::new()
             .wrap(Logger::new("%a %{User-Agent}i"))
@@ -79,6 +82,7 @@ async fn main() -> std::io::Result<()> {
             .service(block_controller)
             .service(account_controller)
             .service(extrinsic_controller)
+            .service(transfer_controller)
     })
     .bind((HOST, PORT))?
     .run()
