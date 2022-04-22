@@ -17,6 +17,7 @@ jobs:
        run:
          working-directory: ./frontend/
 
+    environment: development
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
