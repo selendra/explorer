@@ -31,21 +31,21 @@ async function processAccountsChunk(client, api, accountId) {
     ]);
 
     const availableBalance = new BigNumber(balances.availableBalance)
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
     const freeBalance = new BigNumber(balances.freeBalance)
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
     const lockedBalance = new BigNumber(balances.lockedBalance)
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
     const reservedBalance = new BigNumber(balances.reservedBalance)
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
     const totalBalance = new BigNumber(
       balances.freeBalance.add(balances.reservedBalance)
     )
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
 
     const identityDisplay = identity.display ? identity.display.toString() : "";
@@ -101,21 +101,21 @@ async function updateAccountInfo(client, api, blockNumber, timestamp, address) {
       api.derive.accounts.info(address),
     ]);
     const availableBalance = new BigNumber(balances.availableBalance)
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
     const freeBalance = new BigNumber(balances.freeBalance)
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
     const lockedBalance = new BigNumber(balances.lockedBalance)
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
     const reservedBalance = new BigNumber(balances.reservedBalance)
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
     const totalBalance = new BigNumber(
       balances.freeBalance.add(balances.reservedBalance)
     )
-      .dividedBy(1e18)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
 
     const identityDisplay = identity.display ? identity.display.toString() : "";

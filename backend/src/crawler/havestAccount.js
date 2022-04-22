@@ -17,6 +17,7 @@ async function crawler(blockNumber) {
   const client = await utils.db.mongodbConnect();
 
   await harvestBlock(client, api, blockNumber, true, false);
+  process.exit(1);
 }
 
 crawler(43200).catch((error) => {
