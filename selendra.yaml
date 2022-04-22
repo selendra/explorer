@@ -333,6 +333,48 @@ paths:
           description: unexpected error
           schema:
             $ref: '#/definitions/Error'
+  /transfer/{hash}:
+    get:
+      summary: Get all transfers with detail by hash
+      operationId: TransferByHash
+      tags:
+        - transfer
+      parameters:
+        - name: hash
+          in: path
+          required: true
+          description: Use hash to retrieve transfers
+          type: string
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Transfer'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /transfer/all/{page_number}:
+    get:
+      summary: Get all transfers with detail by page nubmer
+      operationId: TransferBypage
+      tags:
+        - transfer
+      parameters:
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all transfers with detail
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Transfers'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
 definitions:
   Block:
     type: "object"
@@ -469,8 +511,8 @@ definitions:
         items:
          $ref: '#/definitions/AccountExtrinsic'
   AccountTransfer:
-     type: "object"
-     properties:
+    type: "object"
+    properties:
       blockNumber:
         type: integer
         format: int64
@@ -493,8 +535,8 @@ definitions:
         type: integer
         format: int64
   AccountTransfers:
-     type: "object"
-     properties:
+    type: "object"
+    properties:
       total_transfer:
         type: integer
         format: int64
@@ -509,8 +551,8 @@ definitions:
         items:
          $ref: '#/definitions/AccountTransfer'
   AccountReward:
-     type: "object"
-     properties:
+    type: "object"
+    properties:
       blockNumber:
         type: integer
         format: int64
@@ -529,8 +571,8 @@ definitions:
         type: integer
         format: int64
   AccountRewards:
-     type: "object"
-     properties:
+    type: "object"
+    properties:
       total_list_rewards:
         type: integer
         format: int64
@@ -545,8 +587,8 @@ definitions:
         items:
          $ref: '#/definitions/AccountReward'
   AccountSlash:
-     type: "object"
-     properties:
+    type: "object"
+    properties:
       blockNumber:
         type: integer
         format: int64
@@ -563,8 +605,8 @@ definitions:
         type: integer
         format: int64
   AccountSlashs:
-     type: "object"
-     properties:
+    type: "object"
+    properties:
       total_list_slash:
         type: integer
         format: int64
@@ -579,8 +621,8 @@ definitions:
         items:
          $ref: '#/definitions/AccountSlash'
   Extrinsic:
-     type: "object"
-     properties:
+    type: "object"
+    properties:
       blockNumber:
         type: integer
         format: int64
@@ -615,8 +657,8 @@ definitions:
         type: integer
         format: int64
   Extrinsics:
-     type: "object"
-     properties:
+    type: "object"
+    properties:
       total_extrinsics:
         type: integer
         format: int64
@@ -630,6 +672,52 @@ definitions:
         type: array
         items:
          $ref: '#/definitions/Extrinsic'
+  Transfer:
+    type: "object"
+    properties:
+      blockNumber:
+        type: integer
+        format: int64
+      extrinsicIndex:
+        type: integer
+        format: int16
+      hash:
+        type: string
+      source:
+        type: string
+      destination:
+        type: string
+      amount:
+        type: integer
+        format: int64
+      feeAmount:
+        type: integer
+        format: int64
+      method:
+        type: string
+      success:
+        type: boolean
+      errorMessage:
+        type: string
+      timestamp:
+        type: integer
+        format: int64
+  Transfers:
+     type: "object"
+     properties:
+      total_transfer:
+        type: integer
+        format: int64
+      at_page:
+        type: integer
+        format: int64
+      total_page:
+        type: integer
+        format: int64
+      transfers:
+        type: array
+        items:
+         $ref: '#/definitions/Transfer'
   Error:
     type: "object"
     properties:
