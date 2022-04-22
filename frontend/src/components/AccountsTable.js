@@ -1,45 +1,34 @@
-import { Table } from 'antd'
-import { useState } from 'react'
-import useFetch from '../hooks/useFetch';
+import { Table } from 'antd';
 
-export default function AccountsTable({short}) {
-  const [page, setPage] = useState(0);
-  const { loading, error, data = [] } = useFetch(
-    `${process.env.REACT_APP_API}/accounts?page=${page}`
-  )
-
+export default function AccountsTable({ short, loading, data, onChange }) {
   return (
     <Table
       pagination={short ? false : {
         pageSize: 10,
-        total: data?.total,
+        total: data?.total_page,
         onChange:(page) => {
-          setPage(page)
+          onChange(page)
         }
       }}
-      dataSource={data?.data}
+      dataSource={data?.accounts}
       loading={loading}
       className='table-styling'
     >
       <Table.Column 
         title='Account'
-        dataIndex='address'
-        key='address'
+        dataIndex='accountId'
       />
       <Table.Column
         title='Free Balance'
-        dataIndex=''
-        key=''
+        dataIndex='freeBalance'
       />
       <Table.Column
         title='Locked Balance'
-        dataIndex=''
-        key=''
+        dataIndex='lockedBalance'
       />
       <Table.Column
         title='Available Balance'
-        dataIndex=''
-        key=''
+        dataIndex='availableBalance'
       />
     </Table>
   )

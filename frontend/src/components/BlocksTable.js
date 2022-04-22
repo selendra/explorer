@@ -5,12 +5,12 @@ import { shortenAddress, timeDuration } from '../utils';
 export default function BlocksTable({ short, loading, data, onChange }) {
   return (
     <Table 
-      dataSource={data?.data}
+      dataSource={data?.blocks}
       loading={loading}
       className='table-styling'
       pagination={short ? false : {
         pageSize: 10,
-        total: data?.total,
+        total: data?.total_page,
         onChange:(page) => {
           onChange(page);
         } 
@@ -18,40 +18,52 @@ export default function BlocksTable({ short, loading, data, onChange }) {
     >
       <Table.Column 
         title="Block"
-        dataIndex="block"
+        dataIndex="blockNumber"
         key="block"
-        defaultSortOrder= 'descend'
-        render={block => (
-          <Link to={`/blocks/${block.header.number}`}>
+        render={blockNumber => (
+          <Link to={`/blocks/${blockNumber}`}>
             <div className='blocks-height'>
-              <p># {Number(block.header.number)}</p>
+              <p># {Number(blockNumber)}</p>
             </div>  
           </Link>
         )}
       />
       <Table.Column 
-        title="Age"
-        dataIndex="blockTime" 
-        key="blockTime" 
-        render={blockTime => (
-          <p>{timeDuration(blockTime)}</p>
+        title="Status"
+        dataIndex="finalized"
+        render={finalized => (
+          <p>{+(finalized)}</p>
         )}
       />
       <Table.Column 
-        title="Status"
-        dataIndex="status" 
-        key="status" 
+        title="Time"
+        dataIndex="timestamp" 
+        render={timestamp => (
+          <p>{timeDuration(timestamp)}</p>
+        )}
       />
-      { !short && 
-        <Table.Column 
-          title="Hash"
-          dataIndex="hash" 
-          key="hash" 
-          render={hash => (
-            <p>{shortenAddress(hash)}</p>
-          )}
-        />
-      }
+      <Table.Column 
+        title="Extrinsics"
+        dataIndex="totalExtrinsics" 
+      />
+      <Table.Column 
+        title="Events"
+        dataIndex="totalEvents" 
+      />
+      <Table.Column 
+        title="Validator"
+        dataIndex="blockAuthor" 
+        render={blockAuthor => (
+          <p>{shortenAddress(blockAuthor)}</p>
+        )}
+      />
+      <Table.Column 
+        title="BlockHash"
+        dataIndex="blockHash"
+        render={blockHash => (
+          <p>{shortenAddress(blockHash)}</p>
+        )}
+      />
     </Table>
   )
 }
