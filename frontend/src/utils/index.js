@@ -3,7 +3,7 @@ import moment from "moment";
 
 export function shortenAddress(address) {
   if(!address) return;
-  return address.slice(0, 5) + '...' + address.slice(-4);
+  return address.slice(0, 5) + '....' + address.slice(-4);
 }
 
 export function FormatBalance(amount) {

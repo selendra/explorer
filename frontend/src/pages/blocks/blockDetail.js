@@ -7,24 +7,29 @@ import ExtrinsicsTable from '../../components/ExtrinsicsTable';
 
 export default function BlockDetail() {
   const { id } = useParams();
-  const { loading, error, data = [] } = useFetch(
-    `${process.env.REACT_APP_API}/blocks/${id}`
+  const { loading, data = [] } = useFetch(
+    `${process.env.REACT_APP_API}/block/${id}`
   );
   console.log(data)
 
   if(loading) {
-    return (<p>loading</p>)
+    return (
+      <div className="container">
+        <p>Loading</p>
+      </div>
+    )
   }
 
   let newData;
   if(!loading) {
     newData = [
-      { title: 'Block Time', data: timeDuration(data?.data?.blockTime) },
-      { title: 'Status', data: '' },
-      { title: 'Hash', data: data?.data?.hash },
-      { title: 'Parent Hash', data: data?.data?.block.header.parentHash },
-      { title: 'State Root', data: data?.data?.block.header.stateRoot },
-      { title: 'Extrinsics Root', data: data?.data?.block.header.extrinsicsRoot },
+      { title: 'Block Time', data: timeDuration(data?.timestamp) },
+      { title: 'Status', data: data?.finalized },
+      { title: 'Hash', data: data?.blockHash },
+      { title: 'Parent Hash', data: data?.parentHash },
+      { title: 'State Root', data: data?.stateRoot },
+      { title: 'Extrinsics Root', data: data?.extrinsicsRoot },
+      { title: 'Validators', data: data?.blockAuthor },
     ]
   }
 
@@ -47,10 +52,12 @@ export default function BlockDetail() {
       <div className='spacing'/>
       <Tabs size='large'>
         <Tabs.TabPane tab='Extrinsics' key='extrinsics'>
-          {/* <ExtrinsicsTable 
+          {/* 
+          <ExtrinsicsTable 
             data={data}
             loading={loading}
-          /> */}
+          /> 
+          */}
         </Tabs.TabPane>
         <Tabs.TabPane tab='Events' key='events'>
 

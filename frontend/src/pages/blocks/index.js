@@ -4,10 +4,11 @@ import BlocksTable from "../../components/BlocksTable";
 import useFetch from "../../hooks/useFetch";
 
 export default function Blocks() {
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const { loading, data = [] } = useFetch(
-    `${process.env.REACT_APP_API}/blocks?page=${page}`
+    `${process.env.REACT_APP_API}/block/all/${page}`
   );
+  console.log(data);
 
   return (
     <div>
