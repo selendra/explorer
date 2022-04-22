@@ -4,7 +4,7 @@ import menuWhite from "../assets/menu-white.svg";
 import logo from "../assets/logo.png";
 import logoWhite from "../assets/logo-white.png";
 
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 const routes = [
   { name: "Explore", route: "/" },
@@ -50,11 +50,11 @@ function SideMenu() {
                   const { route: link, name } = route;
                   return (
                     <Col span={24}>
-                      <Link to={link}>
+                      <NavLink to={link} activeClassName="active">
                         <p className="side-menu-text" onClick={() => onClose()}>
                           {name}
                         </p>
-                      </Link>
+                      </NavLink>
                     </Col>
                   );
                 })}
