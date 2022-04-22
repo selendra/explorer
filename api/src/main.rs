@@ -4,7 +4,7 @@ extern crate dotenv_codegen;
 mod handlers;
 mod models;
 mod utils;
-use handlers::{account::*, block::*, extrinsic::*, transfer::*};
+use handlers::{account::*, block::*, event::*, extrinsic::*, transfer::*};
 
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, App, HttpServer};
@@ -13,7 +13,7 @@ use mongodb::sync::Client;
 // Collection name
 pub const ACCOUNT: &str = "accounts";
 pub const BLOCK: &str = "blocks";
-pub const EVENT: &str = "event";
+pub const EVENT: &str = "events";
 pub const EXTRINSIC: &str = "extrinsics";
 pub const REWARD: &str = "staking_reward";
 pub const SLASH: &str = "staking_slash";
@@ -60,6 +60,9 @@ async fn main() -> std::io::Result<()> {
             .service(get_account_reward)
             .service(get_account_slash);
         let block_controller = actix_web::web::scope("/block").service(get_block).service(get_blocks);
+        let event_controller = actix_web::web::scope("/event")
+            .service(get_events)
+            .service(get_events_module);
         let extrinsic_controller = actix_web::web::scope("/extrinsic")
             .service(get_extrinsic)
             .service(get_extrinsics)
@@ -79,8 +82,9 @@ async fn main() -> std::io::Result<()> {
             )
             .wrap(sentry_actix::Sentry::new())
             .app_data(web::Data::new(client.clone()))
-            .service(block_controller)
             .service(account_controller)
+            .service(block_controller)
+            .service(event_controller)
             .service(extrinsic_controller)
             .service(transfer_controller)
     })

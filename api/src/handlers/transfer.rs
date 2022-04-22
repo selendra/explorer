@@ -58,12 +58,12 @@ async fn get_transfers(client: web::Data<Client>, page_number: web::Path<u64>) -
         total_page = total_page + 1;
     }
 
-    let account_page = TransferPage {
+    let transfer_page = TransferPage {
         total_transfer: collection_count,
         at_page: page_number,
         total_page,
         transfers: transfer_vec,
     };
 
-    return HttpResponse::Ok().json(account_page);
+    return HttpResponse::Ok().json(transfer_page);
 }

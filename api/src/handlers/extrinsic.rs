@@ -159,12 +159,12 @@ async fn get_signed_extrinsics(client: web::Data<Client>, page_number: web::Path
         total_page = total_page + 1;
     }
 
-    let account_page = ExtrinsicPage {
+    let extrinsic_page = ExtrinsicPage {
         total_extrinsics: collection_count,
         at_page: page_number,
         total_page,
         extrinsics: extrinsic_vec,
     };
 
-    return HttpResponse::Ok().json(account_page);
+    return HttpResponse::Ok().json(extrinsic_page);
 }
