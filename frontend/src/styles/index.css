@@ -162,6 +162,11 @@ code {
   padding: 0px !important;
 }
 
+.active p {
+  background-color: #174159;
+  border-radius: 5px;
+}
+
 /*  responsive */
 @media screen and (max-width: 1500px) {
   
@@ -210,6 +215,9 @@ code {
   }
   .spacing {
     height: 20px;
+  }
+  .active {
+    color: red;
   }
 }
 
