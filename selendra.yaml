@@ -77,7 +77,7 @@ paths:
             $ref: '#/definitions/Error'
   /account/all/{page_number}:
     get:
-      summary: Get all accounts with detail by page nubmer
+      summary: Get all accounts by page nubmer
       operationId: AccountsByPage
       tags:
         - account
@@ -85,7 +85,7 @@ paths:
         - name: page_number
           in: path
           required: true
-          description: Use page nuber to retrieve all accounts with detail
+          description: Use page nuber to retrieve all accounts 
           type: integer
       responses:
         "200":
@@ -98,7 +98,7 @@ paths:
             $ref: '#/definitions/Error'
   /account/extrinsics/{address}/{page_number}:
     get:
-      summary: Get all accounts with detail by page address
+      summary: Get all accounts by page address
       operationId: AccountExtrinsicsByAddress
       tags:
         - account
@@ -124,7 +124,7 @@ paths:
             $ref: '#/definitions/Error'
   /account/transfer/{address}/{page_number}:
     get:
-      summary: Get all accounts with detail by page address
+      summary: Get all accounts by page address
       operationId: AccountTransferByAddress
       tags:
         - account
@@ -150,7 +150,7 @@ paths:
             $ref: '#/definitions/Error'
   /account/reward/{address}/{page_number}:
     get:
-      summary: Get all accounts with detail by page address
+      summary: Get all accounts by page address
       operationId: AccountRewardByAddress
       tags:
         - account
@@ -176,7 +176,7 @@ paths:
             $ref: '#/definitions/Error'
   /account/slash/{address}/{page_number}:
     get:
-      summary: Get all accounts with detail by page address
+      summary: Get all accounts by page address
       operationId: AccountSlashByAddress
       tags:
         - account
@@ -202,7 +202,7 @@ paths:
             $ref: '#/definitions/Error'
   /extrinsic/{hash}:
     get:
-      summary: Get all extrinsics with detail by hash
+      summary: Get all extrinsics by hash
       operationId: ExtrinsicByHash
       tags:
         - extrinsic
@@ -223,7 +223,7 @@ paths:
             $ref: '#/definitions/Error'
   /extrinsic/all/{page_number}:
     get:
-      summary: Get all extrinsics with detail by page nubmer
+      summary: Get all extrinsics by page nubmer
       operationId: ExtrinsicBypage
       tags:
         - extrinsic
@@ -231,7 +231,7 @@ paths:
         - name: page_number
           in: path
           required: true
-          description: Use page nuber to retrieve all extrinsics with detail
+          description: Use page nuber to retrieve all extrinsics 
           type: integer
       responses:
         "200":
@@ -244,7 +244,7 @@ paths:
             $ref: '#/definitions/Error'
   /extrinsic/signed/{page_number}:
     get:
-      summary: Get all signed extrinsics with detail by page nubmer
+      summary: Get all signed extrinsics by page nubmer
       operationId: ExtrinsicSignedBypage
       tags:
         - extrinsic
@@ -252,7 +252,7 @@ paths:
         - name: page_number
           in: path
           required: true
-          description: Use page nuber to retrieve all signed extrinsics with detail
+          description: Use page nuber to retrieve all signed extrinsics 
           type: integer
       responses:
         "200":
@@ -265,7 +265,7 @@ paths:
             $ref: '#/definitions/Error'
   /extrinsic/{module}/{page_number}:
     get:
-      summary: Get all extrinsics with detail by module and page nubmer modules 
+      summary: Get all extrinsics by module and page nubmer 
       operationId: ExtrinsicsByModule
       tags:
         - extrinsic
@@ -273,7 +273,7 @@ paths:
         - name: module
           in: path
           required: true
-          description: Use address to retrieve all extrinsic with specific module
+          description: Use module to retrieve all extrinsic with specific module
           type: string
           enum: 
             [
@@ -322,7 +322,7 @@ paths:
         - name: page_number
           in: path
           required: true
-          description: Use page nuber to retrieve all slashs in account
+          description: Use page nuber to retrieve all event
           type: integer
       responses:
         "200":
@@ -335,7 +335,7 @@ paths:
             $ref: '#/definitions/Error'
   /transfer/{hash}:
     get:
-      summary: Get all transfers with detail by hash
+      summary: Get all transfers by hash
       operationId: TransferByHash
       tags:
         - transfer
@@ -356,7 +356,7 @@ paths:
             $ref: '#/definitions/Error'
   /transfer/all/{page_number}:
     get:
-      summary: Get all transfers with detail by page nubmer
+      summary: Get all transfers by page nubmer
       operationId: TransferBypage
       tags:
         - transfer
@@ -364,13 +364,104 @@ paths:
         - name: page_number
           in: path
           required: true
-          description: Use page nuber to retrieve all transfers with detail
+          description: Use page nuber to retrieve all transfers 
           type: integer
       responses:
         "200":
           description: Expected response to a valid request
           schema:
             $ref: '#/definitions/Transfers'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /event/{module}/{page_number}:
+    get:
+      summary: Get all event by module and page nubmer 
+      operationId: EventByModule
+      tags:
+        - event
+      parameters:
+        - name: module
+          in: path
+          required: true
+          description: Use module to retrieve all event with specific module
+          type: string
+          enum: 
+            [
+              authoritydiscovery, 
+              authorship,
+              babe,
+              bagslist,
+              balances,
+              bounties,
+              configuration,
+              council,
+              democracy,
+              dmp,
+              electionprovidermultiphase,
+              grandpa,
+              historical,
+              hrmp,
+              identity,
+              imonline,
+              indices,
+              initializer,
+              multisig,
+              parainherent,
+              paras,
+              parasdisputes,
+              phragmenElection,
+              preimage,
+              proxy,
+              recovery,
+              registrar,
+              scheduler,
+              session,
+              slots,
+              staking,
+              system,
+              technicalCommittee,
+              technicalMembership,
+              timestamp,
+              tips,
+              treasury,
+              ump,
+              utility,
+              vesting,
+              xcmPallet,
+            ]
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all event
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Event'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /event/all/{page_number}:
+    get:
+      summary: Get all event by page nubmer
+      operationId: EventBypage
+      tags:
+        - event
+      parameters:
+        - name: page_number
+          in: path
+          required: true
+          description: Use page nuber to retrieve all event 
+          type: integer
+      responses:
+        "200":
+          description: Expected response to a valid request
+          schema:
+            $ref: '#/definitions/Events'
         default:
           description: unexpected error
           schema:
@@ -718,6 +809,46 @@ definitions:
         type: array
         items:
          $ref: '#/definitions/Transfer'
+  Event:
+    type: "object"
+    properties:
+      blockNumber:
+        type: integer
+        format: int64
+      eventIndex:
+        type: integer
+        format: int16
+      section:
+        type: string
+      method:
+        type: string
+      phase:
+        type: string
+      types:
+        type: string
+      data:
+        type: string
+      doc:
+        type: string
+      timestamp:
+        type: string
+        format: int64
+  Events:
+     type: "object"
+     properties:
+      total_event:
+        type: integer
+        format: int64
+      at_page:
+        type: integer
+        format: int64
+      total_page:
+        type: integer
+        format: int64
+      events:
+        type: array
+        items:
+         $ref: '#/definitions/Event'
   Error:
     type: "object"
     properties:
