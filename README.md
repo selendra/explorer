@@ -1,6 +1,6 @@
 # Selendra Scan
 
-Selendra blocks explorer
+A blocks explorer for Selendra Blockchain.
 
 ## API
 
