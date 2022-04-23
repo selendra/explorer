@@ -38,3 +38,27 @@ async fn get_runtimes(client: web::Data<Client>) -> HttpResponse {
 
     return HttpResponse::Ok().json(runtime_page);
 }
+
+#[get("/last")]
+async fn get_last_runtime(client: web::Data<Client>) -> HttpResponse {
+    let collection: Collection<Runtime> = client.database(DATABASE).collection(RUNTIME);
+    let filter = doc! {};
+
+    let find_options = FindOptions::builder().sort(doc! { "blockNumber": -1 }).limit(1).build();
+
+    match collection.find(filter, find_options) {
+        Ok(mut cursor) => {
+            while let Some(doc) = cursor.next() {
+                match doc {
+                    Ok(db) => {
+                        return HttpResponse::Ok().json(db);
+                    }
+                    Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+                }
+            }
+        }
+        Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+    }
+
+    return HttpResponse::NotFound().body(format!("Error onr get runtime"));
+}
