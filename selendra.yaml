@@ -578,6 +578,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /runtimes/last:
+    get:
+      tags:
+      - runtime
+      summary: Get last runtime
+      operationId: LastRuntime
+      responses:
+        200:
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runtime'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Block:
