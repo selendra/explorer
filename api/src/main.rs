@@ -4,7 +4,7 @@ extern crate dotenv_codegen;
 mod handlers;
 mod models;
 mod utils;
-use handlers::{account::*, block::*, event::*, extrinsic::*, log::*, transfer::*};
+use handlers::{account::*, block::*, event::*, extrinsic::*, log::*, runtime::*, transfer::*};
 
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, App, HttpServer};
@@ -17,6 +17,7 @@ pub const EVENT: &str = "events";
 pub const EXTRINSIC: &str = "extrinsics";
 pub const LOG: &str = "logs";
 pub const REWARD: &str = "staking_reward";
+pub const RUNTIME: &str = "runtimes";
 pub const SLASH: &str = "staking_slash";
 pub const SIGNEDEXTRINSIC: &str = "signed_extrinsic";
 pub const TRANSFER: &str = "transfer";
@@ -72,6 +73,7 @@ async fn main() -> std::io::Result<()> {
         let log_controller = actix_web::web::scope("/log")
             .service(get_logs)
             .service(get_logs_engine_type);
+        let runtime_controller = actix_web::web::scope("/runtimes").service(get_runtimes);
         let transfer_controller = actix_web::web::scope("/transfer")
             .service(get_transfer)
             .service(get_transfers);
@@ -91,6 +93,7 @@ async fn main() -> std::io::Result<()> {
             .service(event_controller)
             .service(log_controller)
             .service(extrinsic_controller)
+            .service(runtime_controller)
             .service(transfer_controller)
     })
     .bind((HOST, PORT))?
