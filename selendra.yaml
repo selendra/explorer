@@ -559,6 +559,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /runtimes:
+    get:
+      tags:
+      - runtime
+      summary: Get all runtime
+      operationId: Runtime
+      responses:
+        200:
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runtimes'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Block:
@@ -903,6 +922,43 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Transfer'
+    Runtime:
+      type: object
+      properties:
+        blockNumber:
+          type: integer
+          format: int64
+        specName:
+          type: string
+        specVersion:
+          type: integer
+          format: int64
+        metadata_version:
+          type: string
+        magic_number:
+          type: string
+        metadata:
+          type: array
+          items: 
+            $ref: '#/components/schemas/Metadata'
+        timestamp:
+          type: integer
+          format: int64
+    Runtimes:
+      type: object
+      properties:
+        total_runtimes:
+          type: integer
+          format: int64
+        runtimes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Runtime'
+    Metadata:
+      type: object
+      properties:
+        name:
+          type: string
     Event:
       type: object
       properties:
