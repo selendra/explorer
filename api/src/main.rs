@@ -73,7 +73,9 @@ async fn main() -> std::io::Result<()> {
         let log_controller = actix_web::web::scope("/log")
             .service(get_logs)
             .service(get_logs_engine_type);
-        let runtime_controller = actix_web::web::scope("/runtimes").service(get_runtimes);
+        let runtime_controller = actix_web::web::scope("/runtimes")
+            .service(get_runtimes)
+            .service(get_last_runtime);
         let transfer_controller = actix_web::web::scope("/transfer")
             .service(get_transfer)
             .service(get_transfers);
