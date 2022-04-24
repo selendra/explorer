@@ -54,6 +54,7 @@ async function processEvent(
     );
   } catch (error) {
     logger.error(`Error adding event #${blockNumber}-${eventIndex}: ${error}`);
+    const scope = new Sentry.Scope();
     scope.setTag("events", blockNumber);
     Sentry.captureException(error);
   }
