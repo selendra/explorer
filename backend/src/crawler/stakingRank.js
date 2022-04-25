@@ -17,7 +17,7 @@ const {
   insertRankingValidator,
   removeRanking,
   addNewFeaturedValidator,
-} = require("../operatons/staking");
+} = require("../operations/staking");
 
 Sentry.init({
   dsn: backendConfig.sentryDSN,

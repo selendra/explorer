@@ -6,7 +6,7 @@ const logger = require("../utils/logger");
 const {
   processAccountsChunk,
   fetchAccountIds,
-} = require("../operatons/account");
+} = require("../operations/account");
 
 Sentry.init({
   dsn: backendConfig.sentryDSN,
