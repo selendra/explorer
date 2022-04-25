@@ -193,23 +193,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /account/reward/{address}/{page_number}:
+  /account/staking/{address}/{page_number}:
     get:
       tags:
       - account
       summary: Get all accounts by page address
-      operationId: AccountRewardByAddress
+      operationId: AccountStakingByAddress
       parameters:
       - name: address
         in: path
-        description: Use address to retrieve all rewards
+        description: Use address to retrieve all rewards and slash
         required: true
         schema:
           type: string
           example: "seaZ6tDPD6jdhwbbZmA7kqwMBAsqV79ZR1aTcz1KVJaEwQs42"
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all rewards in account
+        description: Use page nuber to retrieve all rewards and slash in account
         required: true
         schema:
           type: integer
@@ -221,42 +221,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountRewards'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-  /account/slash/{address}/{page_number}:
-    get:
-      tags:
-      - account
-      summary: Get all accounts by page address
-      operationId: AccountSlashByAddress
-      parameters:
-      - name: address
-        in: path
-        description: Use address to retrieve all slashs
-        required: true
-        schema:
-          type: string
-          example: "seaZ6tDPD6jdhwbbZmA7kqwMBAsqV79ZR1aTcz1KVJaEwQs42"
-      - name: page_number
-        in: path
-        description: Use page nuber to retrieve all slashs in account
-        required: true
-        schema:
-          type: integer
-          example: 1
-          minimum: 1
-      responses:
-        200:
-          description: Expected response to a valid request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccountSlashs'
+                $ref: '#/components/schemas/AccountStakings'
         default:
           description: unexpected error
           content:
@@ -773,7 +738,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AccountTransfer'
-    AccountReward:
+    AccountStaking:
       type: object
       properties:
         blockNumber:
@@ -793,10 +758,10 @@ components:
         timestamp:
           type: integer
           format: int64
-    AccountRewards:
+    AccountStakings:
       type: object
       properties:
-        total_list_rewards:
+        total_lists:
           type: integer
           format: int64
         at_page:
@@ -805,44 +770,10 @@ components:
         total_page:
           type: integer
           format: int64
-        reward_list:
+        staking_list:
           type: array
           items:
-            $ref: '#/components/schemas/AccountReward'
-    AccountSlash:
-      type: object
-      properties:
-        blockNumber:
-          type: integer
-          format: int64
-        eventIndex:
-          type: integer
-          format: int16
-        amount:
-          type: integer
-          format: int64
-        era:
-          type: integer
-          format: int16
-        timestamp:
-          type: integer
-          format: int64
-    AccountSlashs:
-      type: object
-      properties:
-        total_list_slash:
-          type: integer
-          format: int64
-        at_page:
-          type: integer
-          format: int64
-        total_page:
-          type: integer
-          format: int64
-        slash_list:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccountSlash'
+            $ref: '#/components/schemas/AccountStaking'
     Extrinsic:
       type: object
       properties:
