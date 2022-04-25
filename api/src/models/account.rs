@@ -43,21 +43,12 @@ pub struct AccountTransfer {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AccountReward {
+pub struct AccountStakingQuery {
     pub blockNumber: u64,
     pub eventIndex: u16,
     pub amount: f32,
     pub era: u16,
     pub validatorStashAddress: String,
-    pub timestamp: f64,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct AccountSlash {
-    pub blockNumber: u64,
-    pub eventIndex: u16,
-    pub amount: f32,
-    pub era: i32,
     pub timestamp: f64,
 }
 
@@ -86,17 +77,20 @@ pub struct AccountTransferPage {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AccountRewardPage {
-    pub total_list_rewards: u64,
-    pub at_page: u64,
-    pub total_page: u64,
-    pub reward_list: Vec<AccountReward>,
+pub struct AccountStaking {
+    pub blockNumber: u64,
+    pub eventIndex: u16,
+    pub action: String,
+    pub amount: f32,
+    pub era: u16,
+    pub validatorStashAddress: String,
+    pub timestamp: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AccountSlashPage {
-    pub total_list_slash: u64,
+pub struct AccountStakingPage {
+    pub total_lists: u64,
     pub at_page: u64,
     pub total_page: u64,
-    pub slash_list: Vec<AccountSlash>,
+    pub staking_list: Vec<AccountStaking>,
 }

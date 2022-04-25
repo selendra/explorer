@@ -193,8 +193,8 @@ async fn get_account_transfer(client: web::Data<Client>, param: web::Path<(Strin
     return HttpResponse::Ok().json(account_page);
 }
 
-#[get("/reward/{address}/{page_number}")]
-async fn get_account_reward(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
+#[get("/staking/{address}/{page_number}")]
+async fn get_account_staking(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
     let address = param.0.clone();
     let page_number = param.1.clone().saturating_sub(1);
 
@@ -202,9 +202,12 @@ async fn get_account_reward(client: web::Data<Client>, param: web::Path<(String,
         return HttpResponse::NotFound().body(format!("Invalid address {} type", address));
     };
 
-    let collection: Collection<AccountReward> = client.database(DATABASE).collection(REWARD);
+    let collection_reward: Collection<AccountStakingQuery> = client.database(DATABASE).collection(REWARD);
+    let collection_slash: Collection<AccountStakingQuery> = client.database(DATABASE).collection(SLASH);
     let filter = doc! { "accountId": &address };
-    let collection_count = collection.count_documents(filter.clone(), None).unwrap();
+
+    let collection_count = collection_reward.count_documents(filter.clone(), None).unwrap()
+        + collection_slash.count_documents(filter.clone(), None).unwrap();
 
     let page: u64 = PAGESIZE * page_number;
     let mut page_size = PAGESIZE;
@@ -215,16 +218,48 @@ async fn get_account_reward(client: web::Data<Client>, param: web::Path<(String,
 
     let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
 
-    let mut account_vec: Vec<AccountReward> = Vec::new();
+    let mut account_vec: Vec<AccountStaking> = Vec::new();
 
-    match collection.find(filter, find_options) {
+    match collection_reward.find(filter.clone(), find_options.clone()) {
         Ok(mut cursor) => {
             while let Some(doc) = cursor.next() {
                 match doc {
                     Ok(db) => {
-                        account_vec.push(db);
+                        let reward = AccountStaking {
+                            blockNumber: db.blockNumber,
+                            eventIndex: db.eventIndex,
+                            action: "reward".to_string(),
+                            amount: db.amount,
+                            era: db.era,
+                            validatorStashAddress: db.validatorStashAddress,
+                            timestamp: db.timestamp,
+                        };
+                        account_vec.push(reward);
                     }
                     Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+                }
+            }
+        }
+        Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+    }
+
+    match collection_slash.find(filter.clone(), find_options.clone()) {
+        Ok(mut cursor) => {
+            while let Some(doc) = cursor.next() {
+                match doc {
+                    Ok(db) => {
+                        let reward = AccountStaking {
+                            blockNumber: db.blockNumber,
+                            eventIndex: db.eventIndex,
+                            action: "slash".to_string(),
+                            amount: db.amount,
+                            era: db.era,
+                            validatorStashAddress: db.validatorStashAddress,
+                            timestamp: db.timestamp,
+                        };
+                        account_vec.push(reward);
+                    }
+                    Err(_err) => continue,
                 }
             }
         }
@@ -236,64 +271,11 @@ async fn get_account_reward(client: web::Data<Client>, param: web::Path<(String,
         total_page = total_page + 1;
     }
 
-    let account_page = AccountRewardPage {
-        total_list_rewards: collection_count,
+    let account_page = AccountStakingPage {
+        total_lists: collection_count,
         at_page: page_number.saturating_add(1),
         total_page,
-        reward_list: account_vec,
-    };
-
-    return HttpResponse::Ok().json(account_page);
-}
-
-#[get("/slash/{address}/{page_number}")]
-async fn get_account_slash(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
-    let address = param.0.clone();
-    let page_number = param.1.clone().saturating_sub(1);
-
-    if !(is_address(&address)) {
-        return HttpResponse::NotFound().body(format!("Invalid address {} type", address));
-    };
-
-    let collection: Collection<AccountSlash> = client.database(DATABASE).collection(SLASH);
-    let filter = doc! { "accountId": &address };
-    let collection_count = collection.count_documents(filter.clone(), None).unwrap();
-
-    let page: u64 = PAGESIZE * page_number;
-    let mut page_size = PAGESIZE;
-
-    if collection_count < page {
-        page_size = page - collection_count;
-    }
-
-    let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
-
-    let mut account_vec: Vec<AccountSlash> = Vec::new();
-
-    match collection.find(filter, find_options) {
-        Ok(mut cursor) => {
-            while let Some(doc) = cursor.next() {
-                match doc {
-                    Ok(db) => {
-                        account_vec.push(db);
-                    }
-                    Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
-                }
-            }
-        }
-        Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
-    }
-
-    let mut total_page = collection_count / PAGESIZE;
-    if collection_count % PAGESIZE != 0 {
-        total_page = total_page + 1;
-    }
-
-    let account_page = AccountSlashPage {
-        total_list_slash: collection_count,
-        at_page: page_number.saturating_add(1),
-        total_page,
-        slash_list: account_vec,
+        staking_list: account_vec,
     };
 
     return HttpResponse::Ok().json(account_page);
