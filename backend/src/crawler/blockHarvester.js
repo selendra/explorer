@@ -9,7 +9,7 @@ const {
   harvestBlocksSeq,
   updateFinalizedBlock,
   storeMetadata,
-} = require("../operatons/block");
+} = require("../operations/block");
 
 Sentry.init({
   dsn: backendConfig.sentryDSN,
