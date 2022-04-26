@@ -243,6 +243,20 @@ code {
   .spacing {
     height: 20px;
   }
+
+  /*** Block Table */
+.ant-table {
+ overflow-x: scroll;
+}
+.blocks-height {
+  width: 80px !important;
+}
+.timestamp-col {
+  width: 120px !important;
+  }
+  .ant-table-cell {
+    padding: 10px !important;
+  }
 }
 
 @media screen and (max-width: 576px) {
@@ -267,5 +281,33 @@ code {
   }
   .spacing {
     height: 20px;
+  }
+  /* blocks table*/
+  .ant-table {
+    overflow-x: scroll;
+   }
+  .blocks-height {
+    width: 80px !important;
+  }
+  .timestamp-col {
+    width: 120px !important;
+  }
+  .ant-table-cell {
+    padding: 10px !important;
+  }
+  /*** Block Detail */
+.block-detail-card  {
+  overflow-x: hidden;
+  margin: 0px 10px !important;
+}
+.block-title {
+  padding-left: 10px;
+  }
+.block-tabs {
+  padding-left: 10px !important;
+  }
+
+.block-detail-text{
+  word-break: break-all;
   }
 }
