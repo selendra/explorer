@@ -47,14 +47,12 @@ async fn get_accounts(client: web::Data<Client>, page_number: web::Path<u64>) ->
     let filter = doc! {};
     let collection_count = collection.count_documents(filter.clone(), None).unwrap();
 
-    let page_size: u64 = PAGESIZE;
-    let mut page = page_size * page_number;
+    let page: u64 = PAGESIZE * page_number;
+    let mut page_size = PAGESIZE;
 
-    if collection_count > page {
-        page = collection_count - page;
-    } else {
-        page = 0;
-    }
+    if collection_count < page {
+        page_size = page - collection_count;
+    };
 
     let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
 
