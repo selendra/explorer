@@ -54,7 +54,7 @@ async fn get_status(client: web::Data<Client>) -> HttpResponse {
     }
 }
 
-#[get("/featur_of_week")]
+#[get("/feature_of_week")]
 async fn get_feature(client: web::Data<Client>) -> HttpResponse {
     let collection: Collection<ValaidatorFeature> = client.database(VALIDATORDATABASE).collection(VALIDATORFEATURE);
 
