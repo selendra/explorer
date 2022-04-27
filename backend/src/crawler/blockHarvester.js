@@ -9,7 +9,7 @@ const {
   harvestBlocksSeq,
   updateFinalizedBlock,
   storeMetadata,
-} = require("../operatons/block");
+} = require("../operations/block");
 
 Sentry.init({
   dsn: backendConfig.sentryDSN,
@@ -66,6 +66,7 @@ async function crawler() {
     }
 
     if (config.mode === "chunks") {
+      saveBlock = saveBlock - config.chunkSize;
       await harvestBlocks(client, config, api, saveBlock, finalizedBlockNumber);
     } else {
       await harvestBlocksSeq(client, api, saveBlock, finalizedBlockNumber);

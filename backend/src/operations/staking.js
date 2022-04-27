@@ -311,6 +311,26 @@ async function insertRankingValidator(
   blockHeight,
   startTime
 ) {
+  let nominators = [];
+
+  await Promise.all(
+    validator.nominations.map((nominator) => {
+      if (nominator.who) {
+        let norminate = {};
+        norminate.staking = nominator.who.toString();
+        norminate.amount = new BigNumber(nominator.value)
+          .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+          .toNumber();
+        nominators.push(norminate);
+      } else {
+        let norminate = {};
+        norminate.staking = nominator.nominator.toString();
+        norminate.amount = null;
+        nominators.push(norminate);
+      }
+    })
+  );
+
   const data = {
     $set: {
       blockHeight: blockHeight,
@@ -334,7 +354,7 @@ async function insertRankingValidator(
       show_clusterMember: validator.showClusterMember,
       nominators: validator.nominators,
       nominatorsRating: validator.nominatorsRating,
-      nominations: JSON.stringify(validator.nominations),
+      nominations: nominators,
       commission: parseFloat(validator.commission),
       commissionHistory: JSON.stringify(validator.commissionHistory),
       commissionRating: validator.commissionRating,
