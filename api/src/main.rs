@@ -4,7 +4,7 @@ extern crate dotenv_codegen;
 mod handlers;
 mod models;
 mod utils;
-use handlers::{account::*, block::*, event::*, extrinsic::*, log::*, runtime::*, transfer::*};
+use handlers::{account::*, block::*, event::*, extrinsic::*, log::*, runtime::*, staking::*, transfer::*};
 
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, App, HttpServer};
@@ -21,6 +21,9 @@ pub const RUNTIME: &str = "runtimes";
 pub const SLASH: &str = "staking_slash";
 pub const SIGNEDEXTRINSIC: &str = "signed_extrinsic";
 pub const TRANSFER: &str = "transfer";
+pub const VALIDATOR: &str = "valaidator_ranking";
+pub const VALIDATORFEATURE: &str = "valaidator_feature";
+pub const VALIDATORSTATUS: &str = "valaidator_status";
 
 // database
 pub const MOGOURI: &str = dotenv!("MONGO_URI");
@@ -75,6 +78,10 @@ async fn main() -> std::io::Result<()> {
         let runtime_controller = actix_web::web::scope("/runtimes")
             .service(get_runtimes)
             .service(get_last_runtime);
+        let staking_controller = actix_web::web::scope("/staking")
+            .service(get_validators)
+            .service(get_status)
+            .service(get_feature);
         let transfer_controller = actix_web::web::scope("/transfer")
             .service(get_transfer)
             .service(get_transfers);
@@ -95,6 +102,7 @@ async fn main() -> std::io::Result<()> {
             .service(log_controller)
             .service(extrinsic_controller)
             .service(runtime_controller)
+            .service(staking_controller)
             .service(transfer_controller)
     })
     .bind((HOST, PORT))?

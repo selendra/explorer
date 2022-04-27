@@ -562,6 +562,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /staking/status:
+    get:
+      tags:
+      - staking
+      summary: Get all staking infomation of current era
+      operationId: StakingStatus
+      responses:
+        200:
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidatorStatus'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /staking/feature_of_week:
+    get:
+      tags:
+      - staking
+      summary: Get random featured validator of the week that meet the rules
+      operationId: ValidatorFeature
+      responses:
+        200:
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValaidatorFeature'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /staking/validators:
+    get:
+      tags:
+      - staking
+      summary: Get all validator order by ranking
+      operationId: Validator
+      responses:
+        200:
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Validators'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Block:
@@ -983,6 +1040,171 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Log'
+    ValaidatorFeature:
+      type: object
+      properties:
+        stashAddress: 
+          type: string
+        name:
+          type: string
+        timestamp:
+          type: integer
+          format: int64
+    ValidatorStatus:
+      type: object
+      properties:
+        activeEra:
+          type: integer
+          format: int64
+        currentEra:
+          type: integer
+          format: int64
+        activeValidatorCount:
+          type: integer
+          format: int64
+        waitingValidatorCount:
+          type: integer
+          format: int64
+        nominatorCount:
+          type: integer
+          format: int64
+        minimumStake:
+          type: integer
+          format: int64
+    Validator:
+      type: object
+      properties:
+        blockHeight:
+          type: integer
+          format: int64
+        activeEras:
+          type: integer
+          format: int32
+        rank:
+          type: integer
+          format: int16
+        active:
+          type: boolean
+        stashAddress:
+          type: string
+        controllerAddress:
+          type: string
+        name:
+          type: string
+        totalStake:
+          type: integer
+          format: int32
+        otherStake:
+          type: integer
+          format: int32
+        stakeHistory:
+          type: string
+        nominators:
+          type: integer
+          format: int8
+        nominatorsRating:
+          type: integer
+          format: int8
+        nominations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Nomination'
+        clusterName:
+          type: string
+        clusterMembers:
+          type: integer
+          format: int8
+        partOfCluster:
+          type: boolean
+        show_clusterMember:
+          type: boolean
+        identity:
+          type: string
+        hasSubIdentity:
+          type: boolean
+        verifiedIdentity:
+          type: boolean
+        identityRating:
+          type: integer
+          format: int8
+        addressCreationCating:
+          type: integer
+          format: int8
+        activeInGovernance:
+          type: boolean
+        councilBacking:
+          type: boolean
+        governanceRating:
+          type: integer
+          format: int8
+        dominated:
+          type: boolean
+        commission:
+          type: integer
+          format: int32
+        commissionRating:
+          type: integer
+          format: int8
+        commissionHistory:
+          type: string
+        activeRating:
+          type: integer
+          format: int8
+        eraPointsPercent:
+          type: integer
+          format: int32
+        eraPointsRating:
+          type: integer
+          format: int8
+        eraPointsHistory:
+          type: string
+        payoutRating:
+          type: integer
+          format: int8
+        payoutHistory:
+          type: string
+        performance:
+          type: integer
+          format: int32
+        performanceHistory:
+          type: string
+        relativePerformance:
+          type: integer
+          format: int32
+        relativePerformanceHistory:
+          type: integer
+          format: int32
+        slash_rating:
+          type: integer
+          format: int8
+        slashed:
+          type: boolean
+        slashes:
+          type: string
+        totalRating:
+          type: integer
+          format: int8
+        timestamp:
+          type: integer
+          format: int64
+    Nomination:
+      type: object
+      properties:
+        staking: 
+          type: string
+        amount:
+          type: integer
+          format: int32
+    Validators:
+      type: object
+      properties:
+        total_valalidaors:
+          type: integer
+          format: int64
+        validators:
+          type: array
+          items:
+            $ref: '#/components/schemas/Validator'
     Error:
       type: object
       properties:
