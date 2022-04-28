@@ -3,7 +3,7 @@ const { backendConfig } = require("../config");
 
 async function removeEraValidatorStats(client, currentEra) {
   let depthHistory = currentEra - backendConfig.historySize;
-  const query = { era: { $lt: depthHistory } };
+  const query = { $or: [{ era: { $lt: depthHistory } }, { era: null }] };
 
   const eraVrcCol = await utils.db.getEraVRCColCollection(client);
   const eraCommissionCol = await utils.db.getEraCommissionColCollection(client);

@@ -710,21 +710,18 @@ async function crawler(delayedStart) {
 
     // We want to store era stats only when there's a new consolidated era in chain history
     if (parseInt(activeEra, 10) - 1 > parseInt(lastEraInDb, 10)) {
-      const currentChainEra = await api.query.staking.currentEra();
-      const currentActiveEra = new BigNumber(
-        currentChainEra.toString()
-      ).toNumber();
-
       logger.debug("Storing era stats in db...");
       await Promise.all(
-        ranking.map((validator) => insertEraValidatorStats(client, validator))
+        ranking.map((validator) =>
+          insertEraValidatorStats(client, validator, activeEra)
+        )
       );
 
       logger.info("remove old era stats in db...");
-      await removeEraValidatorStats(client, currentActiveEra);
+      await removeEraValidatorStats(client, activeEra);
 
       logger.info("remove old average era stats in db...");
-      await removeEraValidatorAvgStats(client, currentActiveEra);
+      await removeEraValidatorAvgStats(client, activeEra);
 
       logger.debug("Storing era stats averages in db...");
       await Promise.all(
