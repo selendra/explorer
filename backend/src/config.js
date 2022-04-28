@@ -13,6 +13,7 @@ module.exports.backendConfig = {
   },
   Ss58Format: process.env.SS58FORMAT || 204,
   TokenDecimal: process.env.TOKEN_DECIMAL || 18,
+  historySize: process.env.HISTORYSIZE || 84,
   MongoDbCol: {
     account: "accounts",
     block: "blocks",
