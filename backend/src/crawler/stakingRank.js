@@ -18,6 +18,10 @@ const {
   removeRanking,
   addNewFeaturedValidator,
 } = require("../operations/staking");
+const {
+  removeEraValidatorStats,
+  removeEraValidatorAvgStats,
+} = require("../operations/staking_rm");
 
 Sentry.init({
   dsn: backendConfig.sentryDSN,
@@ -712,6 +716,13 @@ async function crawler(delayedStart) {
           insertEraValidatorStats(client, validator, activeEra)
         )
       );
+
+      logger.info("remove old era stats in db...");
+      await removeEraValidatorStats(client, activeEra);
+
+      logger.info("remove old average era stats in db...");
+      await removeEraValidatorAvgStats(client, activeEra);
+
       logger.debug("Storing era stats averages in db...");
       await Promise.all(
         eraIndexes.map((eraIndex) =>
