@@ -69,7 +69,16 @@ async function crawler() {
       saveBlock = saveBlock - config.chunkSize;
       await harvestBlocks(client, config, api, saveBlock, finalizedBlockNumber);
     } else {
-      await harvestBlocksSeq(client, api, saveBlock - 1, finalizedBlockNumber);
+      if (saveBlock == 0) {
+        await harvestBlocksSeq(client, api, saveBlock, finalizedBlockNumber);
+      } else {
+        await harvestBlocksSeq(
+          client,
+          api,
+          saveBlock - 1,
+          finalizedBlockNumber
+        );
+      }
     }
 
     finalizedBlockNumber = await getFinalishBlock(api);
