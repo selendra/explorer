@@ -29,26 +29,21 @@ async function processEvent(
   const doc = JSON.stringify(event.meta.docs.toJSON());
   const types = JSON.stringify(event.typeDef);
 
-  let query = { blockNumber: blockNumber, eventIndex: eventIndex };
-  const options = { upsert: true };
-
   let data = {
-    $set: {
-      blockNumber: blockNumber,
-      eventIndex,
-      section: event.section,
-      method: event.method,
-      phase: phase.toString(),
-      types,
-      doc,
-      data: JSON.stringify(event.data),
-      timestamp,
-    },
+    blockNumber: blockNumber,
+    eventIndex,
+    section: event.section,
+    method: event.method,
+    phase: phase.toString(),
+    types,
+    doc,
+    data: JSON.stringify(event.data),
+    timestamp,
   };
 
   try {
     let eventCol = await utils.db.getEventCollection(client);
-    await eventCol.updateOne(query, data, options);
+    await eventCol.insertOne(data);
     logger.debug(
       `Added event #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`
     );

@@ -128,42 +128,36 @@ async function process_staking_reward(
       }
     }
 
-    const query = { blockNumber: blockNumber, eventIndex: eventIndex };
-    const options = { upsert: true };
     let data = {};
 
     if (validator && era) {
       data = {
-        $set: {
-          blockNumber,
-          eventIndex,
-          accountId: utils.ss58.ss58Format(event.data[0].toString()),
-          validatorStashAddress: utils.ss58.ss58Format(validator.toString()),
-          era: era.toNumber(),
-          amount: new BigNumber(event.data[1].toString())
-            .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
-            .toNumber(),
-          timestamp,
-        },
+        blockNumber,
+        eventIndex,
+        accountId: utils.ss58.ss58Format(event.data[0].toString()),
+        validatorStashAddress: utils.ss58.ss58Format(validator.toString()),
+        era: era.toNumber(),
+        amount: new BigNumber(event.data[1].toString())
+          .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+          .toNumber(),
+        timestamp,
       };
     } else {
       data = {
-        $set: {
-          blockNumber,
-          eventIndex,
-          accountId: utils.ss58.ss58Format(event.data[0].toString()),
-          validatorStashAddress: "",
-          era: 0,
-          amount: new BigNumber(event.data[1].toString())
-            .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
-            .toNumber(),
-          timestamp,
-        },
+        blockNumber,
+        eventIndex,
+        accountId: utils.ss58.ss58Format(event.data[0].toString()),
+        validatorStashAddress: "",
+        era: 0,
+        amount: new BigNumber(event.data[1].toString())
+          .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+          .toNumber(),
+        timestamp,
       };
     }
     try {
       const stakingCol = await utils.db.getStakinRewardColCollection(client);
-      await stakingCol.updateOne(query, data, options);
+      await stakingCol.insertOne(data);
 
       logger.debug(
         `Added staking reward #${blockNumber}-${eventIndex} ${event.section} ➡ ${event.method}`

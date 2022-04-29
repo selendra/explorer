@@ -109,31 +109,27 @@ async function harvestBlock(
       .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
 
-    const query = { blockNumber: blockNumber };
-    const options = { upsert: true };
     const data = {
-      $set: {
-        blockNumber,
-        finalized: finalizedBlock,
-        blockAuthor,
-        blockAuthorName,
-        blockHash: blockHash.toHuman(),
-        parentHash: parentHash.toHuman(),
-        extrinsicsRoot: extrinsicsRoot.toHuman(),
-        stateRoot: stateRoot.toHuman(),
-        activeEra: parseInt(activeEra),
-        currentIndex: parseInt(currentIndex),
-        runtimeVersion: parseInt(runtimeVersion.specVersion),
-        totalEvents: totalEvents,
-        totalExtrinsics: totalExtrinsics,
-        totalIssuance: totalIssuance,
-        timestamp,
-      },
+      blockNumber,
+      finalized: finalizedBlock,
+      blockAuthor,
+      blockAuthorName,
+      blockHash: blockHash.toHuman(),
+      parentHash: parentHash.toHuman(),
+      extrinsicsRoot: extrinsicsRoot.toHuman(),
+      stateRoot: stateRoot.toHuman(),
+      activeEra: parseInt(activeEra),
+      currentIndex: parseInt(currentIndex),
+      runtimeVersion: parseInt(runtimeVersion.specVersion),
+      totalEvents: totalEvents,
+      totalExtrinsics: totalExtrinsics,
+      totalIssuance: totalIssuance,
+      timestamp,
     };
 
     try {
       const blockCol = await utils.db.getBlockCollection(client);
-      await blockCol.updateOne(query, data, options);
+      await blockCol.insertOne(data);
 
       const endTime = new Date().getTime();
       logger.info(
