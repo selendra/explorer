@@ -58,14 +58,14 @@ async fn get_extrinsics(client: web::Data<Client>, page_number: web::Path<u64>) 
         total_page = total_page + 1;
     }
 
-    let account_page = ExtrinsicPage {
+    let extrinsic_page = ExtrinsicPage {
         total_extrinsics: collection_count,
         at_page: page_number,
         total_page,
         extrinsics: extrinsic_vec,
     };
 
-    return HttpResponse::Ok().json(account_page);
+    return HttpResponse::Ok().json(extrinsic_page);
 }
 
 #[get("/{module}/{page_number}")]
@@ -109,14 +109,46 @@ async fn get_mudule_extrinsics(client: web::Data<Client>, param: web::Path<(Stri
         total_page = total_page + 1;
     }
 
-    let account_page = ExtrinsicPage {
+    let extrinsic_page = ExtrinsicPage {
         total_extrinsics: collection_count,
         at_page: page_number,
         total_page,
         extrinsics: extrinsic_vec,
     };
 
-    return HttpResponse::Ok().json(account_page);
+    return HttpResponse::Ok().json(extrinsic_page);
+}
+
+#[get("/block/{block_number}")]
+async fn get_block_extrinsics(client: web::Data<Client>, block_number: web::Path<u32>) -> HttpResponse {
+    let block_number = block_number.into_inner();
+
+    let collection: Collection<Extrinsic> = client.database(DATABASE).collection(EXTRINSIC);
+    let filter = doc! { "blockNumber": block_number };
+    let collection_count = collection.count_documents(filter.clone(), None).unwrap();
+
+    let mut extrinsic_vec: Vec<Extrinsic> = Vec::new();
+
+    match collection.find(filter, None) {
+        Ok(mut cursor) => {
+            while let Some(doc) = cursor.next() {
+                match doc {
+                    Ok(db) => {
+                        extrinsic_vec.push(db);
+                    }
+                    Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+                }
+            }
+        }
+        Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+    }
+
+    let extrinsic_page = ExtrinsicPerBlock {
+        total_extrinsics: collection_count,
+        extrinsics: extrinsic_vec,
+    };
+
+    return HttpResponse::Ok().json(extrinsic_page);
 }
 
 #[get("/signed/{page_number}")]
