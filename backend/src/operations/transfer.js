@@ -79,30 +79,25 @@ async function processTransfer(
     : null;
 
   const data = {
-    $set: {
-      blockNumber,
-      extrinsicIndex,
-      section,
-      method,
-      hash,
-      source,
-      destination: utils.ss58.ss58Format(destination),
-      amount: new BigNumber(amount)
-        .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
-        .toNumber(),
-      feeAmount,
-      success,
-      errorMessage,
-      timestamp,
-    },
+    blockNumber,
+    extrinsicIndex,
+    section,
+    method,
+    hash,
+    source,
+    destination: utils.ss58.ss58Format(destination),
+    amount: new BigNumber(amount)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+      .toNumber(),
+    feeAmount,
+    success,
+    errorMessage,
+    timestamp,
   };
-
-  const query = { blockNumber: blockNumber, hash: hash };
-  const options = { upsert: true };
 
   try {
     const transferCol = await utils.db.getTransferColCollection(client);
-    await transferCol.updateOne(query, data, options);
+    await transferCol.insertOne(data);
 
     logger.debug(
       `Added transfer ${blockNumber}-${extrinsicIndex} (${utils.shortHash(

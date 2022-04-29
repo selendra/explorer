@@ -28,24 +28,28 @@ async function initVDB(client) {
 async function getBlockCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.block);
+  collection.createIndex("blockNumber", { unique: true });
   return collection;
 }
 
 async function getEventCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.event);
+  collection.createIndex({ blockNumber: 1, eventIndex: 1 }, { unique: true });
   return collection;
 }
 
 async function getExtrinsicCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.extrinsic);
+  collection.createIndex({ blockNumber: 1, hash: "" }, { unique: true });
   return collection;
 }
 
 async function getSignedExtrinsicCol(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.signedExtrinsic);
+  collection.createIndex({ blockNumber: 1, hash: "" }, { unique: true });
   return collection;
 }
 
@@ -58,6 +62,7 @@ async function getAccountsCollection(client) {
 async function getTransferColCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.transfer);
+  collection.createIndex({ blockNumber: 1, hash: "" }, { unique: true });
   return collection;
 }
 
@@ -70,6 +75,7 @@ async function getRuntimeColCollection(client) {
 async function getStakinRewardColCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.stakingReward);
+  collection.createIndex({ blockNumber: 1, eventIndex: 1 }, { unique: true });
   return collection;
 }
 
@@ -82,6 +88,7 @@ async function getStakingSlashColCollection(client) {
 async function getLogColCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.log);
+  collection.createIndex({ blockNumber: 1, index: 1 }, { unique: true });
   return collection;
 }
 
