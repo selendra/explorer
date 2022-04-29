@@ -448,6 +448,7 @@ async function addNewFeaturedValidator(client, ranking) {
     timestamp: new Date().getTime(),
   };
 
+  await featuredCol.deleteMany({});
   await featuredCol.insertOne(data);
 
   logger.debug(

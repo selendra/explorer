@@ -13,6 +13,7 @@ module.exports.backendConfig = {
   },
   Ss58Format: process.env.SS58FORMAT || 204,
   TokenDecimal: process.env.TOKEN_DECIMAL || 18,
+  historySize: process.env.HISTORYSIZE || 84,
   MongoDbCol: {
     account: "accounts",
     block: "blocks",
@@ -65,7 +66,7 @@ module.exports.backendConfig = {
       crawler: "src/crawler/stakingRank.js",
       startDelay: parseInt(process.env.RANKING_START_DELAY_MS, 10) || 1 * 1000,
       pollingTime:
-        parseInt(process.env.RANKING_POLLING_TIME_MS, 10) || 30 * 60 * 1000, // 30 Minutes
+        parseInt(process.env.RANKING_POLLING_TIME_MS, 10) || 4 * 60 * 60 * 1000, // 4 hours
       historySize: 84,
       erasPerDay: 2,
       featuredTimespan: 60 * 60 * 24 * 7 * 2 * 1000, // 2 weeks

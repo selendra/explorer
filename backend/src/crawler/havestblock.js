@@ -20,7 +20,7 @@ async function crawler(blockNumber) {
   process.exit(1);
 }
 
-crawler(43200).catch((error) => {
+crawler(7).catch((error) => {
   logger.error(`Crawler error: ${error}`);
   Sentry.captureException(error);
   process.exit(1);
