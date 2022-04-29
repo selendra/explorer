@@ -107,3 +107,35 @@ async fn get_events(client: web::Data<Client>, page_number: web::Path<u64>) -> H
 
     return HttpResponse::Ok().json(event_page);
 }
+
+#[get("/block/{block_number}")]
+async fn get_block_event(client: web::Data<Client>, block_number: web::Path<u32>) -> HttpResponse {
+    let block_number = block_number.into_inner();
+
+    let collection: Collection<Event> = client.database(DATABASE).collection(EVENT);
+    let filter = doc! { "blockNumber": block_number };
+    let collection_count = collection.count_documents(filter.clone(), None).unwrap();
+
+    let mut event_vec: Vec<Event> = Vec::new();
+
+    match collection.find(filter, None) {
+        Ok(mut cursor) => {
+            while let Some(doc) = cursor.next() {
+                match doc {
+                    Ok(db) => {
+                        event_vec.push(db);
+                    }
+                    Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+                }
+            }
+        }
+        Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+    }
+
+    let event_page = EventPerBlock {
+        total_event: collection_count,
+        events: event_vec,
+    };
+
+    return HttpResponse::Ok().json(event_page);
+}

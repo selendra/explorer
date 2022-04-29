@@ -19,3 +19,9 @@ pub struct LogPage {
     pub total_page: u64,
     pub logs: Vec<Log>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LogPerBlock {
+    pub total_logs: u64,
+    pub logs: Vec<Log>,
+}

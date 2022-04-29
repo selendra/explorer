@@ -21,3 +21,9 @@ pub struct EventPage {
     pub total_page: u64,
     pub events: Vec<Event>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct EventPerBlock {
+    pub total_event: u64,
+    pub events: Vec<Event>,
+}

@@ -107,3 +107,35 @@ async fn get_logs_engine_type(client: web::Data<Client>, param: web::Path<(Strin
 
     return HttpResponse::Ok().json(account_page);
 }
+
+#[get("/block/{block_number}")]
+async fn get_block_log(client: web::Data<Client>, block_number: web::Path<u32>) -> HttpResponse {
+    let block_number = block_number.into_inner();
+
+    let collection: Collection<Log> = client.database(DATABASE).collection(LOG);
+    let filter = doc! { "blockNumber": block_number };
+    let collection_count = collection.count_documents(filter.clone(), None).unwrap();
+
+    let mut log_vec: Vec<Log> = Vec::new();
+
+    match collection.find(filter, None) {
+        Ok(mut cursor) => {
+            while let Some(doc) = cursor.next() {
+                match doc {
+                    Ok(db) => {
+                        log_vec.push(db);
+                    }
+                    Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+                }
+            }
+        }
+        Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+    }
+
+    let log_page = LogPerBlock {
+        total_logs: collection_count,
+        logs: log_vec,
+    };
+
+    return HttpResponse::Ok().json(log_page);
+}

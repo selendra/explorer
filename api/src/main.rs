@@ -65,14 +65,17 @@ async fn main() -> std::io::Result<()> {
             .service(get_account_staking);
         let block_controller = actix_web::web::scope("/block").service(get_block).service(get_blocks);
         let event_controller = actix_web::web::scope("/event")
+            .service(get_block_event)
             .service(get_events)
             .service(get_events_module);
         let extrinsic_controller = actix_web::web::scope("/extrinsic")
+            .service(get_block_extrinsics)
             .service(get_extrinsic)
             .service(get_extrinsics)
             .service(get_signed_extrinsics)
             .service(get_mudule_extrinsics);
         let log_controller = actix_web::web::scope("/log")
+            .service(get_block_log)
             .service(get_logs)
             .service(get_logs_engine_type);
         let runtime_controller = actix_web::web::scope("/runtimes")

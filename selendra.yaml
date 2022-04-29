@@ -104,7 +104,7 @@ paths:
       parameters:
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all accounts
+        description: Use page number to retrieve all accounts
         required: true
         schema:
           type: integer
@@ -139,7 +139,7 @@ paths:
           example: "seXog1QcSuU6Y9Us99A2v8ToQSfwvrJEsj2avaWkd2PHxYXfj"
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all extrinsics in account
+        description: Use page number to retrieve all extrinsics in account
         required: true
         schema:
           type: integer
@@ -174,7 +174,7 @@ paths:
           example: "seXog1QcSuU6Y9Us99A2v8ToQSfwvrJEsj2avaWkd2PHxYXfj"
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all transfers in account
+        description: Use page number to retrieve all transfers in account
         required: true
         schema:
           type: integer
@@ -209,7 +209,7 @@ paths:
           example: "seaZ6tDPD6jdhwbbZmA7kqwMBAsqV79ZR1aTcz1KVJaEwQs42"
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all rewards and slash in account
+        description: Use page number to retrieve all rewards and slash in account
         required: true
         schema:
           type: integer
@@ -264,7 +264,7 @@ paths:
       parameters:
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all extrinsics
+        description: Use page number to retrieve all extrinsics
         required: true
         schema:
           type: integer
@@ -283,6 +283,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /extrinsic/block/{block_number}:
+    get:
+      tags:
+      - extrinsic
+      summary: Get all extrinsics by page nubmer
+      operationId: ExtrinsicByBlock
+      parameters:
+      - name: block_number
+        in: path
+        description: Use block number to retrieve all extrinsics in 
+        required: true
+        schema:
+          type: integer
+          example: 1
+          minimum: 1
+      responses:
+        200:
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtrinsicsPerBlock'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /extrinsic/signed/{page_number}:
     get:
       tags:
@@ -292,7 +320,7 @@ paths:
       parameters:
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all signed extrinsics
+        description: Use page number to retrieve all signed extrinsics
         required: true
         schema:
           type: integer
@@ -326,7 +354,7 @@ paths:
           $ref: '#/components/schemas/Modules'
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all event
+        description: Use page number to retrieve all extrinsic
         required: true
         schema:
           type: integer
@@ -381,7 +409,7 @@ paths:
       parameters:
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all transfers
+        description: Use page number to retrieve all transfers
         required: true
         schema:
           type: integer
@@ -415,7 +443,7 @@ paths:
           $ref: '#/components/schemas/Modules'
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all event
+        description: Use page number to retrieve all event
         required: true
         schema:
           type: integer
@@ -443,7 +471,7 @@ paths:
       parameters:
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all event
+        description: Use page number to retrieve all event
         required: true
         schema:
           type: integer
@@ -456,6 +484,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Events'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /event/block/{block_number}:
+    get:
+      tags:
+      - event
+      summary: Get all event by block nubmer
+      operationId: EventByblock
+      parameters:
+      - name: block_number
+        in: path
+        description: Use block number to retrieve all event
+        required: true
+        schema:
+          type: integer
+          example: 1
+          minimum: 1
+      responses:
+        200:
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventPerBlock'
         default:
           description: unexpected error
           content:
@@ -477,7 +533,7 @@ paths:
           $ref: '#/components/schemas/Engins'
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all logs
+        description: Use page number to retrieve all logs
         required: true
         schema:
           type: integer
@@ -505,7 +561,7 @@ paths:
       parameters:
       - name: page_number
         in: path
-        description: Use page nuber to retrieve all logs
+        description: Use page number to retrieve all logs
         required: true
         schema:
           type: integer
@@ -518,6 +574,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Logs'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /log/block/{block_number}:
+    get:
+      tags:
+      - log
+      summary: Get all log by block_number
+      operationId: LogByBlock
+      parameters:
+      - name: block_number
+        in: path
+        description: Use block number to retrieve all logs
+        required: true
+        schema:
+          type: integer
+          example: 1
+          minimum: 1
+      responses:
+        200:
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogPerBlock'
         default:
           description: unexpected error
           content:
@@ -883,6 +967,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Extrinsic'
+    ExtrinsicsPerBlock:
+      type: object
+      properties:
+        total_extrinsics:
+          type: integer
+          format: int64
+        extrinsics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Extrinsic'
     Transfer:
       type: object
       properties:
@@ -1006,6 +1100,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Event'
+    EventPerBlock:
+      type: object
+      properties:
+        total_event:
+          type: integer
+          format: int64
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
     Log:
       type: object
       properties:
@@ -1034,6 +1138,16 @@ components:
           type: integer
           format: int64
         total_page:
+          type: integer
+          format: int64
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Log'
+    LogPerBlock:
+      type: object
+      properties:
+        total_logs:
           type: integer
           format: int64
         logs:
