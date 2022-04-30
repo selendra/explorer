@@ -30,15 +30,18 @@ async fn get_blocks(client: web::Data<Client>, page_number: web::Path<u64>) -> H
     let collection_count = collection.count_documents(filter.clone(), None).unwrap();
 
     let page_size: u64 = PAGESIZE;
-    let mut page = page_size * page_number;
+    let page = page_size * page_number.saturating_sub(1);
 
-    if collection_count > page {
-        page = collection_count - page;
-    } else {
-        page = 0;
+    let mut total_page = collection_count / PAGESIZE;
+    if collection_count % PAGESIZE != 0 {
+        total_page = total_page + 1;
     }
 
-    let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
+    let find_options = FindOptions::builder()
+        .sort(doc! { "blockNumber": -1 })
+        .skip(page)
+        .limit(page_size as i64)
+        .build();
 
     let mut block_vec: Vec<Block> = Vec::new();
 
@@ -54,11 +57,6 @@ async fn get_blocks(client: web::Data<Client>, page_number: web::Path<u64>) -> H
             }
         }
         Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
-    }
-
-    let mut total_page = collection_count / PAGESIZE;
-    if collection_count % PAGESIZE != 0 {
-        total_page = total_page + 1;
     }
 
     let account_page = BlockPage {
