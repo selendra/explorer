@@ -14,6 +14,7 @@ const { processLogs } = require("./log");
 Sentry.init({
   dsn: backendConfig.sentryDSN,
   tracesSampleRate: 1.0,
+  ignoreErrors: ["MongoServerError"],
 });
 
 function getDisplayName(identity) {
