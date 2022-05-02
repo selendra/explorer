@@ -6,7 +6,7 @@ export default function ExtrinsicsTable({short, loading, data, onChange}) {
   return (
     <Table
       dataSource={data?.extrinsics}
-      // loading={loading}
+      loading={loading}
       className='table-styling'
       // sortDirections='descend'
       pagination={short ? false : {
