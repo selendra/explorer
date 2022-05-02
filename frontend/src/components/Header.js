@@ -1,9 +1,28 @@
-import { Col, Row } from "antd";
+import { Col, Dropdown, Menu, Row, Space } from "antd";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
 import SideHeader from "./SideHeader";
 
 export default function HeaderComponent() {
+  const menu = (
+    <Menu>
+      <Menu.Item>
+        <Link to='/blocks'>
+          <p>Blocks</p>
+        </Link>
+      </Menu.Item>
+      <Menu.Item>
+        <Link to='/extrinsics'>
+          <p>Extrinsics</p>
+        </Link>
+      </Menu.Item>
+      <Menu.Item>
+        <Link to='/events'>
+          <p>Events</p>
+        </Link>
+      </Menu.Item>
+    </Menu>
+  );
   return (
     <div>
       <div className="header">
@@ -21,12 +40,7 @@ export default function HeaderComponent() {
             <Row>
               <Col span={4}>
                 <Link to="/">
-                  <p>Explorer</p>
-                </Link>
-              </Col>
-              <Col span={4}>
-                <Link to="/blocks">
-                  <p>Blocks</p>
+                  <p>Home</p>
                 </Link>
               </Col>
               <Col span={4}>
@@ -40,14 +54,19 @@ export default function HeaderComponent() {
                 </Link>
               </Col>
               <Col span={4}>
-                <Link to="/extrinsics">
-                  <p>Extrinsics</p>
+                <Link to="/staking">
+                  <p>Staking</p>
                 </Link>
               </Col>
               <Col span={4}>
-                <Link to="/events">
-                  <p>Events</p>
-                </Link>
+                <Dropdown overlay={menu} placement="bottomLeft" arrow>
+                  <a onClick={e => e.preventDefault()}>
+                    <Space>
+                      <p>Blockchain</p>
+                      <img alt='' src='/assets/icons/chevron-down.svg' width={16} />
+                    </Space>
+                  </a>
+                </Dropdown>
               </Col>
             </Row>
           </Col>

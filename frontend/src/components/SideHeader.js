@@ -13,6 +13,7 @@ const routes = [
   { name: "Transfers", route: "/transfers" },
   { name: "Extrinsics", route: "/extrinsics" },
   { name: "Events", route: "/events" },
+  { name: "Staking", route: "/staking" },
 ];
 
 function SideMenu() {

@@ -1,64 +1,79 @@
-import React, { useEffect, useState } from "react";
 import { Col, Row } from "antd";
+import { useEffect, useState } from "react";
+import Search from "../components/Search";
 import Overview from "../components/Overview";
 import BlocksTable from "../components/BlocksTable";
 import ExtrinsicsTable from "../components/ExtrinsicsTable";
-import Search from "../components/Search";
 import { useAPIState } from "../context/APIContext";
 
 export default function Home() {
   const { api } = useAPIState();
+  const [loading, setLoading] = useState(true);
   const [blockNumber, setBlockNumber] = useState(0);
+  const [blockNumberFinalized, setBlockNumberFinalized] = useState(0);
+  const [validators, setValidators] = useState(0);
   const [overview, setOverview] = useState();
 
   const bestNumber = api.derive.chain.bestNumber;
+  const bestNumberFinalized = api.derive.chain.bestNumberFinalized;
+  const validatorsData = api.query.session.validators;
 
   useEffect(() => {
-    let unsubscribeAll = null
+    let unsubscribeAll = null;
 
     bestNumber(number => {
-      // Append `.toLocaleString('en-US')` to display a nice thousand-separated digit.
-      setBlockNumber(number.toNumber().toLocaleString('en-US'))
+      setBlockNumber(number.toNumber().toLocaleString('en-US'));
     })
-      .then(unsub => {
-        unsubscribeAll = unsub
-      })
-      .catch(console.error)
+    bestNumberFinalized(number => {
+      setBlockNumberFinalized(number.toNumber().toLocaleString('en-US'));
+    })
+    validatorsData(data => {
+      setValidators(data.toHuman());
+    })
+    .then(unsub => {
+      unsubscribeAll = unsub;
+    })
+    .catch(console.error);
 
-    return () => unsubscribeAll && unsubscribeAll()
-  }, [bestNumber])
+    return () => unsubscribeAll && unsubscribeAll();
+  }, [bestNumber, bestNumberFinalized, validatorsData])
 
   useEffect(() => {
     Promise.all([
       fetch(`${process.env.REACT_APP_API}/block/all/1`),
       fetch(`${process.env.REACT_APP_API}/extrinsic/all/1`),
       fetch(`${process.env.REACT_APP_API}/event/all/1`),
-      fetch(`${process.env.REACT_APP_API}/account/all/1`),
-      fetch(`${process.env.REACT_APP_API}/transfer/all/1`),
+      fetch(`${process.env.REACT_APP_API}/totals`),
       fetch(`${process.env.REACT_APP_API}/staking/status`)
     ])
-    .then(async([a, b, c, d, e, f]) => {
+    .then(async([a, b, c, d, e]) => {
       const block = await a.json();
       const extrinsic = await b.json();
       const event = await c.json();
-      const account = await d.json();
-      const transfer = await e.json();
-      const staking = await f.json();
-
+      const trxAndAccount = await d.json();
+      const staking = await e.json();
+      
+      setLoading(false);
       setOverview({
         block,
         extrinsic,
         event,
-        account,
-        transfer,
+        trxAndAccount,
         staking
       })
-      return [block, extrinsic, event, account, transfer, staking];
     })
     .catch(err => {
+      setLoading(false);
       console.log(err);
     })
-  },[blockNumber]);
+  },[]);
+
+  if(loading) return (
+    <div className="container">
+      <div className='spacing' />
+      <p>Loading...</p>
+    </div>
+  )
 
   return (
     <div>
@@ -69,11 +84,14 @@ export default function Home() {
           <Search />
           <div className="spacing" />
           <Overview 
+            total_blocks={blockNumber}
+            total_blocksFinalized={blockNumberFinalized}
             total_extrinsics={overview?.extrinsic.total_extrinsics}
             total_events={overview?.event.total_event}
-            total_accounts={overview?.account.total_account}
-            total_transfers={overview?.transfer.total_transfer}
+            total_accounts={overview?.trxAndAccount.Accounts}
+            total_transfers={overview?.trxAndAccount.Transfers}
             total_nominators={overview?.staking.nominatorCount}
+            total_validators={validators}
           />
         </div>
       </div>
