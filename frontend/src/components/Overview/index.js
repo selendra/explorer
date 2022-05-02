@@ -1,64 +1,18 @@
-import { Col, Row } from "antd";
+import { Row } from "antd";
+import DataField from "./DataField";
 
 export default function Overview(props) {
   return (
     <div className="home-all-data">
-      <Row justify="center" align="middle" gutter={[8, 8]}>
-        <Col xs={10} sm={3} md={3} lg={3} xl={3}>
-          <Col>
-            <p className="home-all-data-title">Last Block</p>
-            <p className="home-all-data-data">#{props.total_blocks}</p>
-          </Col>
-          <Col>
-            <p className="home-all-data-title">Transfers</p>
-            <p className="home-all-data-data">#{new Intl.NumberFormat().format(props.total_transfers)}</p>
-          </Col>
-        </Col>
-        <Col xs={4} sm={3} md={3} lg={3} xl={3}>
-          <Row justify="center">
-            <div className="home-divider" />
-          </Row>
-        </Col>
-        <Col xs={10} sm={3} md={3} lg={3} xl={3}>
-          <Col>
-            <p className="home-all-data-title">Last Finalized</p>
-            <p className="home-all-data-data">#{props.total_blocksFinalized}</p>
-          </Col>
-          <Col>
-            <p className="home-all-data-title">Accounts</p>
-            <p className="home-all-data-data">#{new Intl.NumberFormat().format(props.total_accounts)}</p>
-          </Col>
-        </Col>
-        <Col xs={0} sm={3} md={3} lg={3} xl={3}>
-          <Row justify="center">
-            <div className="home-divider" />
-          </Row>
-        </Col>
-        <Col xs={10} sm={3} md={3} lg={3} xl={3}>
-          <Col>
-            <p className="home-all-data-title">Total Extrinsic</p>
-            <p className="home-all-data-data">#{new Intl.NumberFormat().format(props.total_extrinsics)}</p>
-          </Col>
-          <Col>
-            <p className="home-all-data-title">Total Validators</p>
-            <p className="home-all-data-data">{props.total_validators.length}</p>
-          </Col>
-        </Col>
-        <Col xs={4} sm={3} md={3} lg={3} xl={3}>
-          <Row justify="center">
-            <div className="home-divider" />
-          </Row>
-        </Col>
-        <Col xs={10} sm={3} md={3} lg={3} xl={3}>
-          <Col>
-            <p className="home-all-data-title">Total Events</p>
-            <p className="home-all-data-data">#{new Intl.NumberFormat().format(props.total_events)}</p>
-          </Col>
-          <Col>
-            <p className="home-all-data-title">Total Nominator</p>
-            <p className="home-all-data-data">#{new Intl.NumberFormat().format(props.total_nominators)}</p>
-          </Col>
-        </Col>
+      <Row justify="center" align="middle" gutter={[8, 32]}>
+        <DataField icon='/assets/icons/box.svg' title='Last Block' data={props.total_blocks} />
+        <DataField icon='/assets/icons/box-tick.svg' title='Last Finalized' data={props.total_blocksFinalized} />
+        <DataField icon='/assets/icons/edit.svg' title='Total Extrinsic' data={new Intl.NumberFormat().format(props.total_extrinsics)} />
+        <DataField icon='/assets/icons/user-square.svg' title='Total Account' data={new Intl.NumberFormat().format(props.total_accounts)} />
+        <DataField icon='/assets/icons/arrow-swap-horizontal.svg' title='Total Transfer' data={new Intl.NumberFormat().format(props.total_transfers)} />
+        <DataField icon='/assets/icons/validator-white.svg' title='Total Validator' data={new Intl.NumberFormat().format(props.total_validators)} />
+        <DataField icon='/assets/icons/profile-2user.svg' title='Total Nominator' data={new Intl.NumberFormat().format(props.total_nominators)} />
+        <DataField icon='/assets/icons/box-time.svg' title='Total Stake' data={new Intl.NumberFormat().format(props.total_staking)} />
       </Row>
     </div>
   );

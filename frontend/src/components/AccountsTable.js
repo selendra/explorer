@@ -1,5 +1,6 @@
 import { Table } from 'antd';
 import { Link } from 'react-router-dom';
+import { shortenAddress } from '../utils';
 
 export default function AccountsTable({ short, loading, data, onChange }) {
   return (
@@ -19,7 +20,7 @@ export default function AccountsTable({ short, loading, data, onChange }) {
         title='Account'
         dataIndex='accountId'
         render={(accountId) => 
-          <Link to={`/accounts/${accountId}`}>{accountId}</Link>
+          <Link to={`/accounts/${accountId}`}>{shortenAddress(accountId)}</Link>
         }
       />
       <Table.Column
@@ -28,6 +29,7 @@ export default function AccountsTable({ short, loading, data, onChange }) {
       />
       <Table.Column
         title='Locked Balance'
+        responsive={['md']}
         dataIndex='lockedBalance'
       />
       <Table.Column

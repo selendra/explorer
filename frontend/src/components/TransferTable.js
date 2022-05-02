@@ -29,6 +29,7 @@ export default function TransferTable({short, loading, data, onChange}) {
       />
       <Table.Column
         title="Block"
+        responsive={['md']}
         dataIndex="blockNumber"
         render={blockNumber => (
           <Link to={`/blocks/${blockNumber}`}>
@@ -40,6 +41,7 @@ export default function TransferTable({short, loading, data, onChange}) {
       />
       <Table.Column
         title="Time"
+        responsive={['md']}
         dataIndex="timestamp"
         render={timestamp => (
           <p>{timeDuration(timestamp)}</p>
@@ -47,6 +49,7 @@ export default function TransferTable({short, loading, data, onChange}) {
       />
       <Table.Column
         title="From"
+        responsive={['md']}
         dataIndex="source"
         render={source => (
           <p>{shortenAddress(source)}</p>
