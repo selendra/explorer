@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAPIState } from '../context/APIContext';
 
-const useFetch = (url = '', options = null, page) => {
+const useFetch = (url = '', options = null, page, autoRefresh) => {
   const { api } = useAPIState();
   const [blockNumber, setBlockNumber] = useState(0);
   const [data, setData] = useState(null);
@@ -43,10 +43,10 @@ const useFetch = (url = '', options = null, page) => {
           setData(null);
         }
       })
-      .finally(() => setLoading(false));
+      .finally(() => isMounted && setLoading(false));
 
     return () => (isMounted = false);
-  }, [url, options, page, blockNumber]);
+  }, [url, options, page]);
 
   return { loading, error, data };
 };

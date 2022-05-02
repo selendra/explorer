@@ -6,7 +6,8 @@ export default function BlocksTable({ short, loading, data, onChange }) {
   return (
     <Table 
       dataSource={data?.blocks}
-      // loading={loading}
+      loading={loading}
+      rowKey="name"
       className='table-styling'
       sortDirections='descend'
       pagination={short ? false : {
@@ -20,7 +21,6 @@ export default function BlocksTable({ short, loading, data, onChange }) {
       <Table.Column 
         title="Block"
         dataIndex="blockNumber"
-        key="block"
         render={blockNumber => (
           <Link to={`/blocks/${blockNumber}`}>
             <div className='blocks-height'>
