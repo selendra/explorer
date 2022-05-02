@@ -60,6 +60,7 @@ export default function BlocksTable({ short, loading, data, onChange }) {
       { !short &&
         <Table.Column 
           title="Time"
+          responsive={['md']}
           dataIndex="timestamp" 
           render={timestamp => (
             <p>{timeDuration(timestamp)}</p>
@@ -68,15 +69,18 @@ export default function BlocksTable({ short, loading, data, onChange }) {
       }
       <Table.Column 
         title="Extrinsics"
+        responsive={['md']}
         dataIndex="totalExtrinsics" 
       />
       <Table.Column 
         title="Events"
+        responsive={['md']}
         dataIndex="totalEvents" 
       />
       {!short &&
         <Table.Column 
           title="Validator"
+          responsive={['md']}
           dataIndex="blockAuthor" 
           render={blockAuthor => (
             <p>{shortenAddress(blockAuthor)}</p>

@@ -34,6 +34,7 @@ export default function EventsTable({loading, data, onChange}) {
       />
       <Table.Column 
         title='Time'
+        responsive={['md']}
         render={(text, record) => (
           <p>{timeDuration(record.timestamp)}</p>
         )}

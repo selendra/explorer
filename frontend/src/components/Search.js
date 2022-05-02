@@ -14,7 +14,7 @@ export default function Search() {
 
   return (
     <Row align="middle" gutter={[16, 16]}>
-      <Col xs={18} sm={18} md={4} lg={4} xl={4}>
+      <Col xs={8} sm={8} md={6} lg={4} xl={4}>
         <Select 
           className='search-select'
           defaultValue='BLOCK NUMBER'
@@ -25,7 +25,7 @@ export default function Search() {
           )}
         </Select>
       </Col>
-      <Col xs={18} sm={18} md={16} lg={18} xl={16}>
+      <Col xs={16} sm={16} md={12} lg={16} xl={16}>
         <Input
           placeholder="Search by block number, extrinsic hash or account address"
           className="home-search"
@@ -33,7 +33,7 @@ export default function Search() {
           onChange={e => setForm(e.target.value)}
         />
       </Col>
-      <Col xs={6} sm={6} md={4} lg={4} xl={4}>
+      <Col xs={24} sm={24} md={6} lg={4} xl={4}>
         <Link
           to={
             selected === 'BLOCK NUMBER' ?

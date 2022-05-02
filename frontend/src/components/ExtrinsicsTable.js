@@ -29,6 +29,7 @@ export default function ExtrinsicsTable({short, loading, data, onChange}) {
       { !short &&
         <Table.Column
           title='Block'
+          responsive={['md']}
           dataIndex='blockNumber'
           render={blockNumber => (
             <Link to={`/blocks/${blockNumber}`}>
@@ -55,6 +56,7 @@ export default function ExtrinsicsTable({short, loading, data, onChange}) {
         <>
           <Table.Column
             title='Time'
+            responsive={['md']}
             dataIndex='timestamp'
             render={timestamp => (
               <p>{timeDuration(timestamp)}</p>
@@ -62,6 +64,7 @@ export default function ExtrinsicsTable({short, loading, data, onChange}) {
           />
           <Table.Column
             title='Signed'
+            responsive={['md']}
             dataIndex='isSigned'
             render={isSigned => (
               <p>

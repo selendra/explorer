@@ -64,7 +64,7 @@ function SideMenu() {
           </Row>
         </Drawer>
 
-        <a href="/home">
+        <a href="/">
           <img src={logo} alt="selendra-logo" width="130px" />
         </a>
 

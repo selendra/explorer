@@ -39,6 +39,7 @@ export default function TableStaking({loading, data, short, onChange }) {
       />
       <Table.Column 
         title="Active Eras"
+        responsive={['md']}
         dataIndex="activeEras" 
       />
     </Table>

@@ -44,14 +44,16 @@ export default function Home() {
       fetch(`${process.env.REACT_APP_API}/extrinsic/all/1`),
       fetch(`${process.env.REACT_APP_API}/event/all/1`),
       fetch(`${process.env.REACT_APP_API}/totals`),
-      fetch(`${process.env.REACT_APP_API}/staking/status`)
+      fetch(`${process.env.REACT_APP_API}/staking/status`),
+      fetch(`${process.env.REACT_APP_API}/totals/staking`)
     ])
-    .then(async([a, b, c, d, e]) => {
+    .then(async([a, b, c, d, e, f]) => {
       const block = await a.json();
       const extrinsic = await b.json();
       const event = await c.json();
       const trxAndAccount = await d.json();
       const staking = await e.json();
+      const totalStaking = await f.json();
       
       setLoading(false);
       setOverview({
@@ -59,7 +61,8 @@ export default function Home() {
         extrinsic,
         event,
         trxAndAccount,
-        staking
+        staking,
+        totalStaking
       })
     })
     .catch(err => {
@@ -91,7 +94,8 @@ export default function Home() {
             total_accounts={overview?.trxAndAccount.Accounts}
             total_transfers={overview?.trxAndAccount.Transfers}
             total_nominators={overview?.staking.nominatorCount}
-            total_validators={validators}
+            total_validators={validators.length}
+            total_staking={overview?.totalStaking.totalStake}
           />
         </div>
       </div>
