@@ -5,4 +5,5 @@ pub mod extrinsic;
 pub mod log;
 pub mod runtime;
 pub mod staking;
+pub mod total;
 pub mod transfer;
