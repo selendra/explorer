@@ -14,6 +14,7 @@ const {
 Sentry.init({
   dsn: backendConfig.sentryDSN,
   tracesSampleRate: 1.0,
+  ignoreErrors: ["MongoServerError"],
 });
 
 const config = backendConfig.crawlers.find(

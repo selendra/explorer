@@ -29,3 +29,9 @@ pub struct ExtrinsicPage {
     pub total_page: u64,
     pub extrinsics: Vec<Extrinsic>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ExtrinsicPerBlock {
+    pub total_extrinsics: u64,
+    pub extrinsics: Vec<Extrinsic>,
+}

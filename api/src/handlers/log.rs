@@ -16,15 +16,18 @@ async fn get_logs(client: web::Data<Client>, page_number: web::Path<u64>) -> Htt
     let collection_count = collection.count_documents(filter.clone(), None).unwrap();
 
     let page_size: u64 = PAGESIZE;
-    let mut page = page_size * page_number;
+    let page = page_size * page_number.saturating_sub(1);
 
-    if collection_count > page {
-        page = collection_count - page;
-    } else {
-        page = 0;
+    let mut total_page = collection_count / PAGESIZE;
+    if collection_count % PAGESIZE != 0 {
+        total_page = total_page + 1;
     }
 
-    let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
+    let find_options = FindOptions::builder()
+        .sort(doc! { "blockNumber": -1 })
+        .skip(page)
+        .limit(page_size as i64)
+        .build();
 
     let mut log_vec: Vec<Log> = Vec::new();
 
@@ -40,11 +43,6 @@ async fn get_logs(client: web::Data<Client>, page_number: web::Path<u64>) -> Htt
             }
         }
         Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
-    }
-
-    let mut total_page = collection_count / PAGESIZE;
-    if collection_count % PAGESIZE != 0 {
-        total_page = total_page + 1;
     }
 
     let log_page = LogPage {
@@ -67,15 +65,18 @@ async fn get_logs_engine_type(client: web::Data<Client>, param: web::Path<(Strin
     let collection_count = collection.count_documents(filter.clone(), None).unwrap();
 
     let page_size: u64 = PAGESIZE;
-    let mut page = page_size * page_number;
+    let page = page_size * page_number.saturating_sub(1);
 
-    if collection_count > page {
-        page = collection_count - page;
-    } else {
-        page = 0;
+    let mut total_page = collection_count / PAGESIZE;
+    if collection_count % PAGESIZE != 0 {
+        total_page = total_page + 1;
     }
 
-    let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
+    let find_options = FindOptions::builder()
+        .sort(doc! { "blockNumber": -1 })
+        .skip(page)
+        .limit(page_size as i64)
+        .build();
 
     let mut log_vec: Vec<Log> = Vec::new();
 
@@ -93,11 +94,6 @@ async fn get_logs_engine_type(client: web::Data<Client>, param: web::Path<(Strin
         Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
     }
 
-    let mut total_page = collection_count / PAGESIZE;
-    if collection_count % PAGESIZE != 0 {
-        total_page = total_page + 1;
-    }
-
     let account_page = LogPage {
         total_logs: collection_count,
         at_page: page_number,
@@ -106,4 +102,36 @@ async fn get_logs_engine_type(client: web::Data<Client>, param: web::Path<(Strin
     };
 
     return HttpResponse::Ok().json(account_page);
+}
+
+#[get("/block/{block_number}")]
+async fn get_block_log(client: web::Data<Client>, block_number: web::Path<u32>) -> HttpResponse {
+    let block_number = block_number.into_inner();
+
+    let collection: Collection<Log> = client.database(DATABASE).collection(LOG);
+    let filter = doc! { "blockNumber": block_number };
+    let collection_count = collection.count_documents(filter.clone(), None).unwrap();
+
+    let mut log_vec: Vec<Log> = Vec::new();
+
+    match collection.find(filter, None) {
+        Ok(mut cursor) => {
+            while let Some(doc) = cursor.next() {
+                match doc {
+                    Ok(db) => {
+                        log_vec.push(db);
+                    }
+                    Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+                }
+            }
+        }
+        Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+    }
+
+    let log_page = LogPerBlock {
+        total_logs: collection_count,
+        logs: log_vec,
+    };
+
+    return HttpResponse::Ok().json(log_page);
 }
