@@ -4,7 +4,7 @@ extern crate dotenv_codegen;
 mod handlers;
 mod models;
 mod utils;
-use handlers::{account::*, block::*, event::*, extrinsic::*, log::*, runtime::*, staking::*, transfer::*};
+use handlers::{account::*, block::*, event::*, extrinsic::*, log::*, runtime::*, staking::*, total::*, transfer::*};
 
 use actix_cors::Cors;
 use actix_web::{middleware::Logger, web, App, HttpServer};
@@ -85,6 +85,9 @@ async fn main() -> std::io::Result<()> {
             .service(get_validators)
             .service(get_status)
             .service(get_feature);
+        let totals_controller = actix_web::web::scope("/totals")
+            .service(get_stake_value)
+            .service(get_totals);
         let transfer_controller = actix_web::web::scope("/transfer")
             .service(get_transfer)
             .service(get_transfers);
@@ -106,6 +109,7 @@ async fn main() -> std::io::Result<()> {
             .service(extrinsic_controller)
             .service(runtime_controller)
             .service(staking_controller)
+            .service(totals_controller)
             .service(transfer_controller)
     })
     .bind((HOST, PORT))?
