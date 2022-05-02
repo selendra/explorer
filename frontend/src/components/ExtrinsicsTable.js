@@ -1,67 +1,76 @@
-import { Table, Row } from 'antd'
-import { CaretRightOutlined } from '@ant-design/icons'
-import useFetch from '../hooks/useFetch'
-import { shortenAddress, timeDuration } from '../utils'
-import { useState } from 'react';
+import { Table } from 'antd';
+import { Link } from 'react-router-dom';
+import { shortenAddress, timeDuration } from '../utils';
 
 export default function ExtrinsicsTable({short, loading, data, onChange}) {
   return (
     <Table
-      dataSource={data?.data}
-      loading={loading}
+      dataSource={data?.extrinsics}
+      // loading={loading}
       className='table-styling'
+      // sortDirections='descend'
       pagination={short ? false : {
         pageSize: 10,
-        total: data?.total,
+        total: data?.total_page,
         onChange: onChange
       }}
     >
       <Table.Column
-        title='ID'
-        dataIndex='indexer'
-        key='indexer'
-        render={indexer => (
-          <div className='blocks-height'>
-            <p># {indexer?.blockHeight}</p>
-          </div>
-        )}
-      />
-      <Table.Column
         title='Hash'
         dataIndex='hash'
-        key='hash'
         render={hash => (
-          <p>{shortenAddress(hash)}</p>
+          <Link to={`/extrinsics/${hash}`}>
+            <div className='blocks-height'>
+              <p>{shortenAddress(hash)}</p>
+            </div>
+          </Link>
+        )}
+      />
+      { !short &&
+        <Table.Column
+          title='Block'
+          dataIndex='blockNumber'
+          render={blockNumber => (
+            <Link to={`/blocks/${blockNumber}`}>
+              <div className='blocks-height'>
+                <p>#{blockNumber}</p>
+              </div>
+            </Link>
+          )}
+        />
+      }
+      <Table.Column
+        title='Extrinsic ID'
+        render={(text, record) => (
+          <p>#{record.blockNumber}-{record.extrinsicIndex}</p>
         )}
       />
       <Table.Column
         title='Section/Method'
-        dataIndex='call'
-        key='call'
-        render={call => (
-          <Row gutter={[8,8]} align='middle'>
-            <p>{call.section}</p>
-            <CaretRightOutlined />
-            <p>{call.method}</p>
-          </Row>
+        render={(text, render) => (
+          <span>{render.section} <img src='/assets/icons/arrow.svg' alt='' width={14} height={14} /> {render.method}</span>
         )}
       />
       { !short &&
         <>
           <Table.Column
-            title='Age'
-            dataIndex='indexer'
-            key=''
-            render={indexer => (
-              <p>{timeDuration(indexer.blockTime)}</p>
+            title='Time'
+            dataIndex='timestamp'
+            render={timestamp => (
+              <p>{timeDuration(timestamp)}</p>
             )}
           />
           <Table.Column
             title='Signed'
             dataIndex='isSigned'
-            key=''
             render={isSigned => (
-              <p>{(isSigned).toString()}</p>
+              <p>
+                { isSigned ?
+                  <img src='/assets/icons/check.svg' alt='' width={18} height={18} />
+                  :
+                  <img src='/assets/icons/x-circle.svg' alt='' width={18} height={18} />
+                }
+              </p>
             )}
           />
         </>

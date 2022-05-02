@@ -1,16 +1,64 @@
-import { Button, Col, Input, Row } from "antd";
-import AllDataInfo from "../components/AllDataInfo";
+import React, { useEffect, useState } from "react";
+import { Col, Row } from "antd";
+import Overview from "../components/Overview";
 import BlocksTable from "../components/BlocksTable";
 import ExtrinsicsTable from "../components/ExtrinsicsTable";
-import useFetch from "../hooks/useFetch";
+import Search from "../components/Search";
+import { useAPIState } from "../context/APIContext";
 
 export default function Home() {
-  const { loading: loadingBlocks, data: blockData = [] } = useFetch(
-    `${process.env.REACT_APP_API}/blocks`
-  );
-  const { loading: loadingExtr, data: ExtrData = [] } = useFetch(
-    `${process.env.REACT_APP_API}/extrinsics`
-  );
+  const { api } = useAPIState();
+  const [blockNumber, setBlockNumber] = useState(0);
+  const [overview, setOverview] = useState();
+
+  const bestNumber = api.derive.chain.bestNumber;
+
+  useEffect(() => {
+    let unsubscribeAll = null
+
+    bestNumber(number => {
+      // Append `.toLocaleString('en-US')` to display a nice thousand-separated digit.
+      setBlockNumber(number.toNumber().toLocaleString('en-US'))
+    })
+      .then(unsub => {
+        unsubscribeAll = unsub
+      })
+      .catch(console.error)
+
+    return () => unsubscribeAll && unsubscribeAll()
+  }, [bestNumber])
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`${process.env.REACT_APP_API}/block/all/1`),
+      fetch(`${process.env.REACT_APP_API}/extrinsic/all/1`),
+      fetch(`${process.env.REACT_APP_API}/event/all/1`),
+      fetch(`${process.env.REACT_APP_API}/account/all/1`),
+      fetch(`${process.env.REACT_APP_API}/transfer/all/1`),
+      fetch(`${process.env.REACT_APP_API}/staking/status`)
+    ])
+    .then(async([a, b, c, d, e, f]) => {
+      const block = await a.json();
+      const extrinsic = await b.json();
+      const event = await c.json();
+      const account = await d.json();
+      const transfer = await e.json();
+      const staking = await f.json();
+
+      setOverview({
+        block,
+        extrinsic,
+        event,
+        account,
+        transfer,
+        staking
+      })
+      return [block, extrinsic, event, account, transfer, staking];
+    })
+    .catch(err => {
+      console.log(err);
+    })
+  },[blockNumber]);
 
   return (
     <div>
@@ -18,30 +66,26 @@ export default function Home() {
         <div className="home-info">
           <h1>Selendra Blockchain Explorer</h1>
           <div className="spacing" />
-          <Row align="middle" gutter={[16, 16]}>
-            <Col xs={18} sm={18} md={20} lg={20} xl={20}>
-              <Input
-                placeholder="Search by block number, block hash, extrinsic hash or account address"
-                className="home-search"
-              />
-            </Col>
-            <Col xs={6} sm={6} md={4} lg={4} xl={4}>
-              <Button className="home-search-btn">Search</Button>
-            </Col>
-          </Row>
+          <Search />
           <div className="spacing" />
-          <AllDataInfo />
+          <Overview 
+            total_extrinsics={overview?.extrinsic.total_extrinsics}
+            total_events={overview?.event.total_event}
+            total_accounts={overview?.account.total_account}
+            total_transfers={overview?.transfer.total_transfer}
+            total_nominators={overview?.staking.nominatorCount}
+          />
         </div>
       </div>
       <div className="home-info">
         <Row gutter={[16, { xs: 8, sm: 16, md: 24, lg: 32 }]}>
           <Col xs={24} md={12} lg={12} xl={12}>
-            <p className="home-subTitle">Blocks</p>
-            <BlocksTable short loading={loadingBlocks} data={blockData} />
+            <p className="home-subTitle">Latest Blocks</p>
+            <BlocksTable short data={overview?.block} />
           </Col>
           <Col xs={24} md={12} lg={12} xl={12}>
-            <p className="home-subTitle">Extrinsic</p>
-            <ExtrinsicsTable short loading={loadingExtr} data={ExtrData} />
+            <p className="home-subTitle">Latest Extrinsic</p>
+            <ExtrinsicsTable short data={overview?.extrinsic} />
           </Col>
         </Row>
       </div>

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import AccountsTable from "../components/AccountsTable";
-import useFetch from "../hooks/useFetch";
+import AccountsTable from "../../components/AccountsTable";
+import useFetch from "../../hooks/useFetch";
 
 export default function Accounts() {
   const [page, setPage] = useState(1);

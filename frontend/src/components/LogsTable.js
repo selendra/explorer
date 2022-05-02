@@ -2,12 +2,11 @@ import { Table, Row } from 'antd'
 import { CaretRightOutlined } from '@ant-design/icons'
 import React, { useState } from 'react'
 import { shortenAddress, timeDuration } from '../utils';
-import { Link } from 'react-router-dom';
 
-export default function EventsTable({loading, data, onChange}) {
+export default function LogsTable({loading, data, onChange}) {
   return (
     <Table
-      dataSource={data?.events}
+      dataSource={data?.logs}
       loading={loading}
       className='table-styling'
       pagination={{
@@ -19,29 +18,27 @@ export default function EventsTable({loading, data, onChange}) {
       }}
     >
       <Table.Column 
-        title='Event ID'
+        title='Log Index'
         render={(text, record) => (
-          <p>#{record.blockNumber}-{record.eventIndex}</p>
+          <p>#{record.blockNumber}-{record.index}</p>
         )}
       />
       <Table.Column 
         title='Block'
         render={(text, record) => (
-          <Link to={`/blocks/${record.blockNumber}`}>
-            <p>#{record.blockNumber}</p>
-          </Link>
+          <p>#{record.blockNumber}</p>
         )}
       />
       <Table.Column 
-        title='Time'
+        title='Type'
         render={(text, record) => (
-          <p>{timeDuration(record.timestamp)}</p>
+          <p>{record.type}</p>
         )}
       />
       <Table.Column 
-        title='Section/Method'
+        title='Engine'
         render={(text, record) => (
-          <p>{record.section} <img src='/assets/icons/arrow.svg' alt='' width={14} height={14} /> {record.method}</p>
+          <p>{record.engine}</p>
         )}
       />
     </Table>
