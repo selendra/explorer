@@ -1,4 +1,5 @@
 import { Table } from 'antd';
+import { Link } from 'react-router-dom';
 
 export default function AccountsTable({ short, loading, data, onChange }) {
   return (
@@ -17,6 +18,9 @@ export default function AccountsTable({ short, loading, data, onChange }) {
       <Table.Column 
         title='Account'
         dataIndex='accountId'
+        render={(accountId) => 
+          <Link to={`/accounts/${accountId}`}>{accountId}</Link>
+        }
       />
       <Table.Column
         title='Free Balance'

@@ -1,78 +1,69 @@
 import { Table } from 'antd'
-import React, { useState } from 'react'
-import useFetch from '../hooks/useFetch';
-import { FormatBalance, shortenAddress, timeDuration } from '../utils';
+import { Link } from 'react-router-dom';
+import { shortenAddress, timeDuration } from '../utils';
 
-export default function TransferTable({short}) {
-  const [page, setPage] = useState(0);
-  const { loading, error, data = [] } = useFetch(
-    `${process.env.REACT_APP_API}/transfers?page=${page}`
-  )
-  // console.log(data);
-
+export default function TransferTable({short, loading, data, onChange}) {
   return (
     <Table
-      dataSource={data?.data}
+      dataSource={data?.transfers}
       loading={loading}
       className='table-styling'
       pagination={short ? false : {
         pageSize: 10,
-        total: data?.total,
+        total: data?.total_page,
         onChange:(page) => {
-          setPage(page)
+          onChange(page)
         }
       }}
     >
       <Table.Column 
-        title="Transfer"
-        dataIndex="indexer" 
-        key="indexer" 
-        render={indexer => (
-          <div className='blocks-height'>
-            <p>{shortenAddress(indexer?.blockHash)}</p>
-          </div>
+        title="Hash"
+        dataIndex="hash" 
+        render={hash => (
+          <Link to={`/transfers/${hash}`}>
+            <div className='blocks-height'>
+              <p>{shortenAddress(hash)}</p>
+            </div>
+          </Link>
         )}
       />
       <Table.Column
-        title="Extrinsic"
-        dataIndex="extrinsicHash"
-        key="extrinsicHash"
-        render={extrinsicHash => (
-          <div className='blocks-height'>
-            <p>{shortenAddress(extrinsicHash)}</p>
-          </div>
+        title="Block"
+        dataIndex="blockNumber"
+        render={blockNumber => (
+          <Link to={`/blocks/${blockNumber}`}>
+            <div className='blocks-height'>
+              <p>#{(blockNumber)}</p>
+            </div>
+          </Link>
+        )}
+      />
+      <Table.Column
+        title="Time"
+        dataIndex="timestamp"
+        render={timestamp => (
+          <p>{timeDuration(timestamp)}</p>
         )}
       />
       <Table.Column
         title="From"
-        dataIndex="from"
-        key="from"
-        render={from => (
-          <p>{shortenAddress(from)}</p>
+        dataIndex="source"
+        render={source => (
+          <p>{shortenAddress(source)}</p>
         )}
       />
       <Table.Column
         title="To"
-        dataIndex="to"
-        key="to"
-        render={to => (
-          <p>{shortenAddress(to.id)}</p>
+        dataIndex="destination"
+        render={destination => (
+          <p>{shortenAddress(destination)}</p>
         )}
       />
       <Table.Column
         title="Amount"
-        dataIndex="value"
-        key="value"
-        render={value => (
-          <p>{FormatBalance(value)}</p>
-        )}
-      />
-      <Table.Column
-        title="Age"
-        dataIndex="indexer"
-        key="value"
-        render={indexer => (
-          <p>{timeDuration(indexer.blockTime)}</p>
+        dataIndex="amount"
+        render={amount => (
+          <p>{amount} SEL</p>
         )}
       />
     </Table>

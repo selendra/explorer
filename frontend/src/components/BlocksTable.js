@@ -1,4 +1,4 @@
-import { Table } from 'antd'
+import { Spin, Table } from 'antd'
 import { Link } from 'react-router-dom';
 import { shortenAddress, timeDuration } from '../utils';
 
@@ -6,8 +6,9 @@ export default function BlocksTable({ short, loading, data, onChange }) {
   return (
     <Table 
       dataSource={data?.blocks}
-      loading={loading}
+      // loading={loading}
       className='table-styling'
+      sortDirections='descend'
       pagination={short ? false : {
         pageSize: 10,
         total: data?.total_page,
@@ -32,16 +33,39 @@ export default function BlocksTable({ short, loading, data, onChange }) {
         title="Status"
         dataIndex="finalized"
         render={finalized => (
-          <p>{+(finalized)}</p>
+          <div>
+            {finalized ? 
+              <div>
+                <img 
+                  src='/assets/icons/check.svg' 
+                  alt='finalized'
+                  width={18} 
+                  height={18}
+                /> 
+                <span style={{marginLeft: '4px'}}>Finalized</span>
+              </div>
+              :
+              <Spin size='small'/> 
+            }
+          </div>
         )}
       />
       <Table.Column 
-        title="Time"
-        dataIndex="timestamp" 
-        render={timestamp => (
-          <p>{timeDuration(timestamp)}</p>
+        title="Hash"
+        dataIndex="blockHash" 
+        render={blockHash => (
+          <p>{shortenAddress(blockHash)}</p>
         )}
       />
+      { !short &&
+        <Table.Column 
+          title="Time"
+          dataIndex="timestamp" 
+          render={timestamp => (
+            <p>{timeDuration(timestamp)}</p>
+          )}
+        />
+      }
       <Table.Column 
         title="Extrinsics"
         dataIndex="totalExtrinsics" 
@@ -50,20 +74,15 @@ export default function BlocksTable({ short, loading, data, onChange }) {
         title="Events"
         dataIndex="totalEvents" 
       />
-      <Table.Column 
-        title="Validator"
-        dataIndex="blockAuthor" 
-        render={blockAuthor => (
-          <p>{shortenAddress(blockAuthor)}</p>
-        )}
-      />
-      <Table.Column 
-        title="BlockHash"
-        dataIndex="blockHash"
-        render={blockHash => (
-          <p>{shortenAddress(blockHash)}</p>
-        )}
-      />
+      {!short &&
+        <Table.Column 
+          title="Validator"
+          dataIndex="blockAuthor" 
+          render={blockAuthor => (
+            <p>{shortenAddress(blockAuthor)}</p>
+          )}
+        />
+      }
     </Table>
   )
 }

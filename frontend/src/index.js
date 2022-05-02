@@ -4,6 +4,7 @@ import './styles/index.css';
 import App from './App';
 import 'antd/dist/antd.variable.min.css';
 import { ConfigProvider } from 'antd';
+import { APIContextProvider } from './context/APIContext';
 
 ConfigProvider.config({
   theme: {
@@ -12,10 +13,12 @@ ConfigProvider.config({
 });
 
 ReactDOM.render(
-  <ConfigProvider>
-    <div className='app'>
-      <App />
-    </div>
-  </ConfigProvider>,
+  <APIContextProvider>
+    <ConfigProvider>
+      <div className='app'>
+        <App />
+      </div>
+    </ConfigProvider>
+  </APIContextProvider>,
   document.getElementById('root')
 );
