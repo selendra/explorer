@@ -31,9 +31,9 @@ export default function Staking() {
     <div className='blocks-bg'>
       <div className='container'>
         <p className='blocks-title'>Validator</p>
-        <Card style={{borderRadius: '8px'}}>
+        <Card style={{borderRadius: '8px', maxWidth: '520px'}}>
           <Row justify='space-between'>
-            <Col span={8}>
+            <Col span={10}>
               <Row>
                 <Col xs={24} sm={24} md={8} lg={8} xl={8}>
                   <center>
@@ -59,9 +59,9 @@ export default function Staking() {
                 </Col>
               </Row>
             </Col>
-            <Col span={14}>
-              <Row justify='start'>
-                <Col xs={24} sm={24} md={8} lg={8} xl={8}>
+            <Col span={12}>
+              <Row justify='start' align='middle' style={{width: '100%', height: '100%'}}>
+                <Col xs={24} sm={24} md={24} lg={24} xl={24}>
                   <Row justify='space-between'>
                     <p>Era</p>
                     <p>{data?.status.activeEra}/{data?.status.currentEra}</p>

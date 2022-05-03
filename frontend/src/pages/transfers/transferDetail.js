@@ -1,15 +1,20 @@
 import { Card } from 'antd';
 import React from 'react'
 import { useParams } from 'react-router-dom';
+import Loading from '../../components/Loading';
 import useFetch from '../../hooks/useFetch';
 
 export default function TransferDetail() {
   const {id} = useParams();
-
   const { loading, data = [] } = useFetch(
     `${process.env.REACT_APP_API}/transfer/${id}`
   );
-  console.log(data);
+
+  if(loading) return (
+    <div className="container">
+      <Loading />
+    </div>
+  )
 
   return (
     <div className='container'>

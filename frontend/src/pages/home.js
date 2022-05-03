@@ -5,6 +5,7 @@ import Overview from "../components/Overview";
 import BlocksTable from "../components/BlocksTable";
 import ExtrinsicsTable from "../components/ExtrinsicsTable";
 import { useAPIState } from "../context/APIContext";
+import Loading from "../components/Loading";
 
 export default function Home() {
   const { api } = useAPIState();
@@ -42,25 +43,22 @@ export default function Home() {
     Promise.all([
       fetch(`${process.env.REACT_APP_API}/block/all/1`),
       fetch(`${process.env.REACT_APP_API}/extrinsic/all/1`),
-      fetch(`${process.env.REACT_APP_API}/event/all/1`),
       fetch(`${process.env.REACT_APP_API}/totals`),
       fetch(`${process.env.REACT_APP_API}/staking/status`),
       fetch(`${process.env.REACT_APP_API}/totals/staking`)
     ])
-    .then(async([a, b, c, d, e, f]) => {
+    .then(async([a, b, c, d, e]) => {
       const block = await a.json();
       const extrinsic = await b.json();
-      const event = await c.json();
-      const trxAndAccount = await d.json();
-      const staking = await e.json();
-      const totalStaking = await f.json();
+      const total = await c.json();
+      const staking = await d.json();
+      const totalStaking = await e.json();
       
       setLoading(false);
       setOverview({
         block,
         extrinsic,
-        event,
-        trxAndAccount,
+        total,
         staking,
         totalStaking
       })
@@ -73,8 +71,7 @@ export default function Home() {
 
   if(loading) return (
     <div className="container">
-      <div className='spacing' />
-      <p>Loading...</p>
+      <Loading />
     </div>
   )
 
@@ -89,11 +86,10 @@ export default function Home() {
           <Overview 
             total_blocks={blockNumber}
             total_blocksFinalized={blockNumberFinalized}
-            total_extrinsics={overview?.extrinsic.total_extrinsics}
-            total_events={overview?.event.total_event}
-            total_accounts={overview?.trxAndAccount.Accounts}
-            total_transfers={overview?.trxAndAccount.Transfers}
-            total_nominators={overview?.staking.nominatorCount}
+            total_extrinsicSigned={overview?.total.SignedExtrinsic}
+            total_accounts={overview?.total.Accounts}
+            total_transfers={overview?.total.Transfers}
+            total_issuance={overview?.block.blocks[0].totalIssuance}
             total_validators={validators.length}
             total_staking={overview?.totalStaking.totalStake}
           />
