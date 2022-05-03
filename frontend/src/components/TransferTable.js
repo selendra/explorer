@@ -27,26 +27,30 @@ export default function TransferTable({short, loading, data, onChange}) {
           </Link>
         )}
       />
-      <Table.Column
-        title="Block"
-        responsive={['md']}
-        dataIndex="blockNumber"
-        render={blockNumber => (
-          <Link to={`/blocks/${blockNumber}`}>
-            <div className='blocks-height'>
-              <p>#{(blockNumber)}</p>
-            </div>
-          </Link>
-        )}
-      />
-      <Table.Column
-        title="Time"
-        responsive={['md']}
-        dataIndex="timestamp"
-        render={timestamp => (
-          <p>{timeDuration(timestamp)}</p>
-        )}
-      />
+      { !short &&
+        <Table.Column
+          title="Block"
+          responsive={['md']}
+          dataIndex="blockNumber"
+          render={blockNumber => (
+            <Link to={`/blocks/${blockNumber}`}>
+              <div className='blocks-height'>
+                <p>#{(blockNumber)}</p>
+              </div>
+            </Link>
+          )}
+        />
+      }
+      { !short &&
+        <Table.Column
+          title="Time"
+          responsive={['md']}
+          dataIndex="timestamp"
+          render={timestamp => (
+            <p>{timeDuration(timestamp)}</p>
+          )}
+        />  
+      }
       <Table.Column
         title="From"
         responsive={['md']}

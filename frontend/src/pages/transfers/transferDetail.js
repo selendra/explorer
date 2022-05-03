@@ -9,7 +9,7 @@ export default function TransferDetail() {
   const { loading, data = [] } = useFetch(
     `${process.env.REACT_APP_API}/transfer/${id}`
   );
-
+  
   if(loading) return (
     <div className="container">
       <Loading />
@@ -70,6 +70,12 @@ export default function TransferDetail() {
                 }
               </td>
             </tr>
+            { data?.errorMessage &&
+              <tr>
+                <td>Error Message</td>
+                <td>{data?.errorMessage}</td>
+              </tr>
+            }
           </tbody>
         </table>
       </Card>

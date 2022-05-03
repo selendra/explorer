@@ -23,12 +23,6 @@ const reducer = (state, action) => {
       return { ...state, apiState: 'READY' }
     case 'CONNECT_ERROR':
       return { ...state, apiState: 'ERROR', apiError: action.payload }
-    case 'LOAD_KEYRING':
-      return { ...state, keyringState: 'LOADING' }
-    case 'SET_KEYRING':
-      return { ...state, keyring: action.payload, keyringState: 'READY' }
-    case 'KEYRING_ERROR':
-      return { ...state, keyring: null, keyringState: 'ERROR' }
     default:
       throw new Error(`Unknown type: ${action.type}`)
   }

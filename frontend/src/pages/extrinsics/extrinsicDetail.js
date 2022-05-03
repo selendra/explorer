@@ -2,18 +2,26 @@ import { Card } from 'antd';
 import React from 'react'
 import { useParams } from 'react-router-dom';
 import Loading from '../../components/Loading';
+import NotFound from '../../components/NotFound';
 import useFetch from '../../hooks/useFetch';
 import { timeDuration } from '../../utils';
 
 export default function ExtrinsicDetail() {
   const { id } = useParams();
-  const { loading, data = [] } = useFetch(
+  const { loading, data = [], error } = useFetch(
     `${process.env.REACT_APP_API}/extrinsic/${id}`
   );
-
+ 
   if(loading) return (
     <div className="container">
       <Loading />
+    </div>
+  )
+  console.log('error', error)
+
+  if(error) return (
+    <div className="container">
+      <NotFound error={error} />
     </div>
   )
 
