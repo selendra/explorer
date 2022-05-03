@@ -6,11 +6,12 @@ import ExtrinsicsTable from '../../components/ExtrinsicsTable';
 import EventsTable from '../../components/EventsTable';
 import LogsTable from '../../components/LogsTable';
 import Loading from '../../components/Loading';
+import NotFound from '../../components/NotFound';
 
 export default function BlockDetail() {
   const { id } = useParams();
 
-  const { loading, data = [] } = useFetch(
+  const { loading, data = [], error } = useFetch(
     `${process.env.REACT_APP_API}/block/${id}`
   );
   const { data: extrinsicData = [] } = useFetch(
@@ -26,6 +27,12 @@ export default function BlockDetail() {
   if(loading) return (
     <div className="container">
       <Loading />
+    </div>
+  )
+
+  if(error) return (
+    <div className="container">
+      <NotFound error={error} />
     </div>
   )
 

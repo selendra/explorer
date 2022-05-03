@@ -190,6 +190,23 @@ code {
   justify-content: center;
   align-items: center;
 }
+.notfound {
+  height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.notfound-btn {
+  max-width: 220px!important;
+  width: 100%!important;
+  height: 40px!important;
+  border: none!important;
+  border-radius: 8px!important;
+  margin-top: 8px;
+  font-weight: 500!important;
+  color: #03A9F4!important;
+}
 /*  responsive */
 @media screen and (max-width: 1500px) {
   
