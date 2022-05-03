@@ -54,7 +54,11 @@ async fn get_accounts(client: web::Data<Client>, page_number: web::Path<u64>) ->
         page_size = page - collection_count;
     };
 
-    let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
+    let find_options = FindOptions::builder()
+        .sort(doc! { "totalBalance": -1 })
+        .skip(page)
+        .limit(page_size as i64)
+        .build();
 
     let mut account_vec: Vec<Account> = Vec::new();
 
