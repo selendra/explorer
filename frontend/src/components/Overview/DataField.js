@@ -12,7 +12,7 @@ export default function DataField({icon, title, data}) {
             height={26}
           />
         </Col>
-        <Col xs={24} sm={20} md={12} lg={12} xl={10}>
+        <Col xs={24} sm={20} md={12} lg={12} xl={12}>
           <p className="home-all-data-title">{title}</p>
           <p className="home-all-data-data">{data}</p>
         </Col>

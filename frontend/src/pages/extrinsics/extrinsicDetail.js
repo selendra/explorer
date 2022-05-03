@@ -1,6 +1,7 @@
 import { Card } from 'antd';
 import React from 'react'
 import { useParams } from 'react-router-dom';
+import Loading from '../../components/Loading';
 import useFetch from '../../hooks/useFetch';
 import { timeDuration } from '../../utils';
 
@@ -9,15 +10,12 @@ export default function ExtrinsicDetail() {
   const { loading, data = [] } = useFetch(
     `${process.env.REACT_APP_API}/extrinsic/${id}`
   );
-  console.log(data);
 
-  if(loading) {
-    return (
-      <div className="container">
-        <p>Loading</p>
-      </div>
-    )
-  }
+  if(loading) return (
+    <div className="container">
+      <Loading />
+    </div>
+  )
 
   return (
     <div className='container'>

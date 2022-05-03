@@ -2,6 +2,7 @@ import { Card, Tabs } from 'antd';
 import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import ExtrinsicsTable from '../../components/ExtrinsicsTable';
+import Loading from '../../components/Loading';
 import TableAccountStaking from '../../components/TableAccountStaking';
 import TransferTable from '../../components/TransferTable';
 import useFetch from '../../hooks/useFetch';
@@ -23,7 +24,11 @@ export default function AccountDetail() {
     `${process.env.REACT_APP_API}/account/staking/${id}/${page}`
   );
 
-  console.log(stakingData)
+  if(loading) return (
+    <div className="container">
+      <Loading />
+    </div>
+  )
 
   return (
     <div className='container'>

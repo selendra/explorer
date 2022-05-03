@@ -140,6 +140,7 @@ code {
 .block-title {
   font-size: 20px;
   font-weight: 600;
+  word-break: break-all;
   margin-bottom: 20px!important;
 }
 /*** Block Detail */
@@ -175,6 +176,7 @@ code {
 .table th,
 .table td {
   padding: 0.45rem;
+  word-break: break-all;
 }
 
 .table tr td:first-child {
@@ -269,6 +271,9 @@ code {
     overflow-x: hidden;
     padding: 0px 10px  20px 10px;
   }
+  .container {
+    padding: 0px 10px  20px 10px;
+  }
   .home-info  {
     overflow-x: hidden !important;
     padding: 0px 10px;
@@ -285,5 +290,8 @@ code {
   }
   .spacing {
     height: 20px;
+  }
+  .block-detail-card .ant-card-body {
+    padding: 16px!important;
   }
 }

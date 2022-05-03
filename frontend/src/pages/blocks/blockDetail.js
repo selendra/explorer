@@ -5,6 +5,7 @@ import { timeDuration } from '../../utils';
 import ExtrinsicsTable from '../../components/ExtrinsicsTable';
 import EventsTable from '../../components/EventsTable';
 import LogsTable from '../../components/LogsTable';
+import Loading from '../../components/Loading';
 
 export default function BlockDetail() {
   const { id } = useParams();
@@ -22,14 +23,11 @@ export default function BlockDetail() {
     `${process.env.REACT_APP_API}/log/block/${id}`
   );
 
-  if(loading) {
-    return (
-      <div className="container">
-        <div className='spacing' />
-        <p>Loading...</p>
-      </div>
-    )
-  }
+  if(loading) return (
+    <div className="container">
+      <Loading />
+    </div>
+  )
 
   return (
     <div className='container'>
