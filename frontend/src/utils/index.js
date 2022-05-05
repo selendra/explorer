@@ -6,6 +6,10 @@ export function shortenAddress(address) {
   return address.slice(0, 5) + '....' + address.slice(-4);
 }
 
+export function formatNumber(amount) {
+  return new Intl.NumberFormat().format(amount);
+}
+
 export function FormatBalance(amount) {
   return formatBalance(amount, { withSi: false, forceUnit: '-' }, 18)
 }

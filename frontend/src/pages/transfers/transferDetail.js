@@ -3,6 +3,7 @@ import React from 'react'
 import { useParams } from 'react-router-dom';
 import Loading from '../../components/Loading';
 import useFetch from '../../hooks/useFetch';
+import { formatNumber } from '../../utils';
 
 export default function TransferDetail() {
   const {id} = useParams();
@@ -29,7 +30,7 @@ export default function TransferDetail() {
             </tr>
             <tr>
               <td>Block</td>
-              <td>#{data?.blockNumber}</td>
+              <td>#{formatNumber(data?.blockNumber)}</td>
             </tr>
             <tr>
               <td>Sender</td>
@@ -41,7 +42,7 @@ export default function TransferDetail() {
             </tr>
             <tr>
               <td>Amount</td>
-              <td>{data?.amount} SEL</td>
+              <td>{formatNumber(data?.amount)} SEL</td>
             </tr>
             <tr>
               <td>Fee</td>

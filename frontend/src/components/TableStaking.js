@@ -1,7 +1,7 @@
 import { Table } from 'antd'
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { shortenAddress } from '../utils'
+import { formatNumber, shortenAddress } from '../utils'
 
 export default function TableStaking({loading, data, short, onChange }) {
   return (
@@ -30,7 +30,7 @@ export default function TableStaking({loading, data, short, onChange }) {
         title="Total stake"
         dataIndex="totalStake" 
         render={totalStake => (
-          <p>{totalStake} SEL</p>
+          <p>{formatNumber(totalStake)} SEL</p>
         )}
       />
       <Table.Column 
