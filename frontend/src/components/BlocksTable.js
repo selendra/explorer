@@ -1,6 +1,6 @@
 import { Spin, Table } from 'antd'
 import { Link } from 'react-router-dom';
-import { shortenAddress, timeDuration } from '../utils';
+import { formatNumber, shortenAddress, timeDuration } from '../utils';
 
 export default function BlocksTable({ short, loading, data, onChange }) {
   return (
@@ -24,7 +24,7 @@ export default function BlocksTable({ short, loading, data, onChange }) {
         render={blockNumber => (
           <Link to={`/blocks/${blockNumber}`}>
             <div className='blocks-height'>
-              <p># {Number(blockNumber)}</p>
+              <p># {formatNumber(blockNumber)}</p>
             </div>  
           </Link>
         )}

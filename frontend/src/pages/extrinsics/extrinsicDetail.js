@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import Loading from '../../components/Loading';
 import NotFound from '../../components/NotFound';
 import useFetch from '../../hooks/useFetch';
-import { timeDuration } from '../../utils';
+import { formatNumber, timeDuration } from '../../utils';
 
 export default function ExtrinsicDetail() {
   const { id } = useParams();
@@ -55,7 +55,7 @@ export default function ExtrinsicDetail() {
             </tr>
             <tr>
               <td>Block Number</td>
-              <td>#{data?.blockNumber}</td>
+              <td>#{formatNumber(data?.blockNumber)}</td>
             </tr>
             <tr>
               <td>Extrinsic Index</td>

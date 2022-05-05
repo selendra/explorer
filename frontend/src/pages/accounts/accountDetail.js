@@ -6,6 +6,7 @@ import Loading from '../../components/Loading';
 import TableAccountStaking from '../../components/TableAccountStaking';
 import TransferTable from '../../components/TransferTable';
 import useFetch from '../../hooks/useFetch';
+import { formatNumber } from '../../utils';
 
 export default function AccountDetail() {
   const { id } = useParams();
@@ -43,15 +44,15 @@ export default function AccountDetail() {
             </tr>
             <tr>
               <td>Balance</td>
-              <td>{data?.totalBalance}</td>
+              <td>{formatNumber(data?.totalBalance)} SEL</td>
             </tr>
             <tr>
               <td>Reserved</td>
-              <td>{data?.reservedBalance}</td>
+              <td>{formatNumber(data?.reservedBalance)} SEL</td>
             </tr>
             <tr>
               <td>Locked</td>
-              <td>{data?.lockedBalance}</td>
+              <td>{formatNumber(data?.lockedBalance)} SEL</td>
             </tr>
           </tbody>
         </table>
