@@ -37,7 +37,7 @@ export default function Home() {
     .catch(console.error);
 
     return () => unsubscribeAll && unsubscribeAll();
-  }, [bestNumber, bestNumberFinalized, validatorsData])
+  }, [bestNumber, bestNumberFinalized, validatorsData]);
 
   useEffect(() => {
     Promise.all([
@@ -67,7 +67,7 @@ export default function Home() {
       setLoading(false);
       console.log(err);
     })
-  },[]);
+  },[blockNumber]);
 
   if(loading) return (
     <div className="container">

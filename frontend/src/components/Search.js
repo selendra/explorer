@@ -22,8 +22,6 @@ export default function Search() {
     }
   },[form]);
 
-  console.log(form.slice(0,2))
-
   return (
     <Row align="middle" gutter={[16, 16]}>
       {/* <Col xs={8} sm={8} md={6} lg={4} xl={4}>

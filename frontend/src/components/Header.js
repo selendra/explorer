@@ -6,17 +6,17 @@ import SideHeader from "./SideHeader";
 export default function HeaderComponent() {
   const menu = (
     <Menu>
-      <Menu.Item>
+      <Menu.Item key='blocks'>
         <Link to='/blocks'>
           <p>Blocks</p>
         </Link>
       </Menu.Item>
-      <Menu.Item>
+      <Menu.Item key='extrinsics'>
         <Link to='/extrinsics'>
           <p>Extrinsics</p>
         </Link>
       </Menu.Item>
-      <Menu.Item>
+      <Menu.Item key='events'>
         <Link to='/events'>
           <p>Events</p>
         </Link>

@@ -7,6 +7,7 @@ export default function TableStaking({loading, data, short, onChange }) {
   return (
     <Table
       dataSource={data?.validators}
+      rowKey={record => record.stashAddress}
       loading={loading}
       className='table-styling'
       // pagination={short ? false : {

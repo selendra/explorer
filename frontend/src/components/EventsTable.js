@@ -8,6 +8,7 @@ export default function EventsTable({loading, data, onChange}) {
   return (
     <Table
       dataSource={data?.events}
+      rowKey={record => (record.blockNumber + ' ' + record.eventIndex)}
       loading={loading}
       className='table-styling'
       pagination={{

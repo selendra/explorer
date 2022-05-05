@@ -22,7 +22,6 @@ export default function Extrinsics() {
     :
     `${process.env.REACT_APP_API}/extrinsic/${selectedModule}/${page}`
   );
-  // console.log(data);
 
   function handleChangeModule(value) {
     setSelectedModule(value);

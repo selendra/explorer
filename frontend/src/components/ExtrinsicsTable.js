@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 import { formatNumber, shortenAddress, timeDuration } from '../utils';
 
 export default function ExtrinsicsTable({short, loading, data, onChange}) {
-console.log(data)
-  
   return (
     <Table
       dataSource={data?.extrinsics}
+      rowKey={record => record.hash}
       loading={loading}
       className='table-styling'
       // sortDirections='descend'

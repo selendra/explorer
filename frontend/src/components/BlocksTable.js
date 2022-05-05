@@ -7,7 +7,7 @@ export default function BlocksTable({ short, loading, data, onChange }) {
     <Table 
       dataSource={data?.blocks}
       loading={loading}
-      rowKey="name"
+      rowKey={record => record.blockNumber}
       className='table-styling'
       sortDirections='descend'
       pagination={short ? false : {
