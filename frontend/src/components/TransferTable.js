@@ -6,6 +6,7 @@ export default function TransferTable({short, loading, data, onChange}) {
   return (
     <Table
       dataSource={data?.transfers}
+      rowKey={record => record.blockNumber}
       loading={loading}
       className='table-styling'
       pagination={short ? false : {

@@ -4,7 +4,7 @@ import DataField from "./DataField";
 export default function Overview(props) {
   return (
     <div className="home-all-data">
-      <Row justify="center" align="middle" gutter={[8, 32]}>
+      <Row justify="center" align="middle" gutter={[32, 32]}>
         <DataField icon='/assets/icons/box.svg' title='Last Block' data={props.total_blocks} />
         <DataField icon='/assets/icons/box-tick.svg' title='Last Finalized' data={props.total_blocksFinalized} />
         <DataField icon='/assets/icons/edit.svg' title='Signed Extrinsics' data={new Intl.NumberFormat().format(props.total_extrinsicSigned)} />

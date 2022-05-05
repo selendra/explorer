@@ -24,6 +24,7 @@ function SideMenu() {
   const onClose = () => {
     setVisible(false);
   };
+
   return (
     <div className="">
       <div className="top-menu">
@@ -47,10 +48,10 @@ function SideMenu() {
           >
             <Col span={24}>
               <Row gutter={[8, 16]}>
-                {routes.map((route) => {
+                {routes.map((route, key) => {
                   const { route: link, name } = route;
                   return (
-                    <Col span={24}>
+                    <Col span={24} key={key}>
                       <Link to={link}>
                         <p className="side-menu-text" onClick={() => onClose()}>
                           {name}

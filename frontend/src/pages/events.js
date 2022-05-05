@@ -14,7 +14,6 @@ export default function Events() {
   const { loading, data = [] } = useFetch(
     `${process.env.REACT_APP_API}/event/${selectedModule}/${page}`
   );
-  console.log(data);
 
   function handleChangeModule(value) {
     setSelectedModule(value);

@@ -13,6 +13,7 @@ export default function AccountsTable({ short, loading, data, onChange }) {
         }
       }}
       dataSource={data?.accounts}
+      rowKey={record => record.accountId}
       loading={loading}
       className='table-styling'
     >
