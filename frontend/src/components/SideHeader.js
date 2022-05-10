@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 const routes = [
   { name: "Explore", route: "/" },
   { name: "Blocks", route: "/blocks" },
-  { name: "Account", route: "/accounts" },
+  { name: "Accounts", route: "/accounts" },
   { name: "Transfers", route: "/transfers" },
   { name: "Extrinsics", route: "/extrinsics" },
   { name: "Events", route: "/events" },
