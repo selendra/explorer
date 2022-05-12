@@ -48,7 +48,6 @@ async function processAccountsChunk(client, api, accountId) {
       .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
     
-    
     const vestBalance = new BigNumber(balances.vestingTotal)
       .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
