@@ -59,6 +59,12 @@ async function getAccountsCollection(client) {
   return collection;
 }
 
+async function gettotalLockCollection(client) {
+  const db = await initDB(client);
+  const collection = db.collection(backendConfig.MongoDbCol.totalLock);
+  return collection;
+}
+
 async function getTransferColCollection(client) {
   const db = await initDB(client);
   const collection = db.collection(backendConfig.MongoDbCol.transfer);
@@ -201,4 +207,5 @@ module.exports = {
   getEraPointsAvgColCollection,
   getValidatorRankingColCollection,
   getFeatureColCollection,
+  gettotalLockCollection
 };

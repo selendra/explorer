@@ -6,6 +6,7 @@ const logger = require("../utils/logger");
 const {
   processAccountsChunk,
   fetchAccountIds,
+  getTotalLockBalance,
 } = require("../operations/account");
 
 Sentry.init({
@@ -58,6 +59,8 @@ async function crawler(delayedStart) {
       ).toFixed(config.statsPrecision)}s`
     );
   }
+
+  await getTotalLockBalance(client);
 
   logger.debug("Disconnecting from API");
   await api

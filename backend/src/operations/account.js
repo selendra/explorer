@@ -298,8 +298,46 @@ async function updateAccountsInfo(
   );
 }
 
+async function getTotalLockBalance(client) {
+  const queryTotalLock = [
+    {
+      $group: {
+        _id: null,
+        totalLock: { $sum: "$lockedBalance" },
+      },
+    },
+  ];
+
+  try {
+    const accountCol = await utils.db.getAccountsCollection(client);
+    let lockBalance = await accountCol.aggregate(queryTotalLock).toArray();
+
+    const query = {};
+    const update = {
+      $set: {
+        totalLockBalances: lockBalance[0].totalLock,
+      },
+    };
+    const options = { upsert: true };
+
+    const lockBalanceCol = await utils.db.gettotalLockCollection(client);
+    await lockBalanceCol.updateOne(query, update, options);
+
+    logger.debug(
+      `Update total lock balance`
+    );
+  } catch (error) {
+    logger.error(`Error update total lock balance: ${error}`);
+    const scope = new Sentry.Scope();
+    scope.setTag("lockbalance");
+    Sentry.captureException(error, scope);
+  }
+}
+
+
 module.exports = {
   processAccountsChunk,
   updateAccountsInfo,
   fetchAccountIds,
+  getTotalLockBalance,
 };
