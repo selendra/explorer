@@ -1,13 +1,13 @@
 import { Spin, Table } from 'antd'
 import { Link } from 'react-router-dom';
-import { shortenAddress, timeDuration } from '../utils';
+import { formatNumber, shortenAddress, timeDuration } from '../utils';
 
 export default function BlocksTable({ short, loading, data, onChange }) {
   return (
     <Table 
       dataSource={data?.blocks}
       loading={loading}
-      rowKey="name"
+      rowKey={record => record.blockNumber}
       className='table-styling'
       sortDirections='descend'
       pagination={short ? false : {
@@ -24,7 +24,7 @@ export default function BlocksTable({ short, loading, data, onChange }) {
         render={blockNumber => (
           <Link to={`/blocks/${blockNumber}`}>
             <div className='blocks-height'>
-              <p># {Number(blockNumber)}</p>
+              <p># {formatNumber(blockNumber)}</p>
             </div>  
           </Link>
         )}

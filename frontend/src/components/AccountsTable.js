@@ -1,6 +1,6 @@
 import { Table } from 'antd';
 import { Link } from 'react-router-dom';
-import { shortenAddress } from '../utils';
+import { formatNumber, shortenAddress } from '../utils';
 
 export default function AccountsTable({ short, loading, data, onChange }) {
   return (
@@ -13,6 +13,7 @@ export default function AccountsTable({ short, loading, data, onChange }) {
         }
       }}
       dataSource={data?.accounts}
+      rowKey={record => record.accountId}
       loading={loading}
       className='table-styling'
     >
@@ -26,15 +27,24 @@ export default function AccountsTable({ short, loading, data, onChange }) {
       <Table.Column
         title='Free Balance'
         dataIndex='freeBalance'
+        render={(freeBalance) => 
+          <p>{formatNumber(freeBalance)} SEL</p>
+        }
       />
       <Table.Column
         title='Locked Balance'
         responsive={['md']}
         dataIndex='lockedBalance'
+        render={(lockedBalance) => 
+          <p>{formatNumber(lockedBalance)} SEL</p>
+        }
       />
       <Table.Column
         title='Available Balance'
         dataIndex='availableBalance'
+        render={(availableBalance) => 
+          <p>{formatNumber(availableBalance)} SEL</p>
+        }
       />
     </Table>
   )

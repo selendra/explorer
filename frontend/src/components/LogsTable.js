@@ -1,7 +1,7 @@
 import { Table, Row } from 'antd'
 import { CaretRightOutlined } from '@ant-design/icons'
 import React, { useState } from 'react'
-import { shortenAddress, timeDuration } from '../utils';
+import { formatNumber, shortenAddress, timeDuration } from '../utils';
 
 export default function LogsTable({loading, data, onChange}) {
   return (
@@ -20,13 +20,13 @@ export default function LogsTable({loading, data, onChange}) {
       <Table.Column 
         title='Log Index'
         render={(text, record) => (
-          <p>#{record.blockNumber}-{record.index}</p>
+          <p>#{formatNumber(record.blockNumber)}-{record.index}</p>
         )}
       />
       <Table.Column 
         title='Block'
         render={(text, record) => (
-          <p>#{record.blockNumber}</p>
+          <p>#{formatNumber(record.blockNumber)}</p>
         )}
       />
       <Table.Column 

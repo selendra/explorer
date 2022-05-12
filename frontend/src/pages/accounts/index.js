@@ -7,7 +7,6 @@ export default function Accounts() {
   const { loading, data = [] } = useFetch(
     `${process.env.REACT_APP_API}/account/all/${page}`
   );
-  console.log(data);
 
   return (
     <div>

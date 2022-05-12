@@ -7,7 +7,6 @@ export default function Transfers() {
   const { loading, data = [] } = useFetch(
     `${process.env.REACT_APP_API}/transfer/all/${page}`
   );
-  console.log(data);
 
   return (
     <div>

@@ -37,7 +37,7 @@ export default function Home() {
     .catch(console.error);
 
     return () => unsubscribeAll && unsubscribeAll();
-  }, [bestNumber, bestNumberFinalized, validatorsData])
+  }, [bestNumber, bestNumberFinalized, validatorsData]);
 
   useEffect(() => {
     Promise.all([
@@ -67,7 +67,7 @@ export default function Home() {
       setLoading(false);
       console.log(err);
     })
-  },[]);
+  },[blockNumber]);
 
   if(loading) return (
     <div className="container">
@@ -79,7 +79,7 @@ export default function Home() {
     <div>
       <div className="home-container">
         <div className="home-info">
-          <h1>Selendra Blockchain Explorer</h1>
+          <h1>Selendra Blocks Explorer</h1>
           <div className="spacing" />
           <Search />
           <div className="spacing" />

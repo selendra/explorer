@@ -1,6 +1,6 @@
 import { Table } from 'antd';
 import React from 'react'
-import { timeDuration } from '../utils';
+import { formatNumber, timeDuration } from '../utils';
 
 export default function TableAccountStaking({loading, data, short, onChange }) {
   return (
@@ -22,7 +22,7 @@ export default function TableAccountStaking({loading, data, short, onChange }) {
         dataIndex="blockNumber"
         render={blockNumber => (
           <div className='blocks-height'>
-            <p># {Number(blockNumber)}</p>
+            <p># {formatNumber(blockNumber)}</p>
           </div>  
         )}
       />
@@ -37,7 +37,7 @@ export default function TableAccountStaking({loading, data, short, onChange }) {
         title="Amount"
         dataIndex="amount"
         render={amount => (
-          <p>{Number(amount)} SEL</p>
+          <p>{formatNumber(amount)} SEL</p>
         )}
       />
       <Table.Column 

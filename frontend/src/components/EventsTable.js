@@ -1,13 +1,14 @@
 import { Table, Row } from 'antd'
 import { CaretRightOutlined } from '@ant-design/icons'
 import React, { useState } from 'react'
-import { shortenAddress, timeDuration } from '../utils';
+import { formatNumber, shortenAddress, timeDuration } from '../utils';
 import { Link } from 'react-router-dom';
 
 export default function EventsTable({loading, data, onChange}) {
   return (
     <Table
       dataSource={data?.events}
+      rowKey={record => (record.blockNumber + ' ' + record.eventIndex)}
       loading={loading}
       className='table-styling'
       pagination={{
@@ -21,14 +22,14 @@ export default function EventsTable({loading, data, onChange}) {
       <Table.Column 
         title='Event ID'
         render={(text, record) => (
-          <p>#{record.blockNumber}-{record.eventIndex}</p>
+          <p>#{formatNumber(record.blockNumber)}-{record.eventIndex}</p>
         )}
       />
       <Table.Column 
         title='Block'
         render={(text, record) => (
           <Link to={`/blocks/${record.blockNumber}`}>
-            <p>#{record.blockNumber}</p>
+            <p>#{formatNumber(record.blockNumber)}</p>
           </Link>
         )}
       />

@@ -1,11 +1,12 @@
 import { Table } from 'antd';
 import { Link } from 'react-router-dom';
-import { shortenAddress, timeDuration } from '../utils';
+import { formatNumber, shortenAddress, timeDuration } from '../utils';
 
 export default function ExtrinsicsTable({short, loading, data, onChange}) {
   return (
     <Table
       dataSource={data?.extrinsics}
+      rowKey={record => record.hash}
       loading={loading}
       className='table-styling'
       // sortDirections='descend'
@@ -34,7 +35,7 @@ export default function ExtrinsicsTable({short, loading, data, onChange}) {
           render={blockNumber => (
             <Link to={`/blocks/${blockNumber}`}>
               <div className='blocks-height'>
-                <p>#{blockNumber}</p>
+                <p>#{formatNumber(blockNumber)}</p>
               </div>
             </Link>
           )}
@@ -43,7 +44,7 @@ export default function ExtrinsicsTable({short, loading, data, onChange}) {
       <Table.Column
         title='Extrinsic ID'
         render={(text, record) => (
-          <p>#{record.blockNumber}-{record.extrinsicIndex}</p>
+          <p>#{formatNumber(record.blockNumber)}-{record.extrinsicIndex}</p>
         )}
       />
       <Table.Column
