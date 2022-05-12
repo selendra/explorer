@@ -47,28 +47,76 @@ async function processAccountsChunk(client, api, accountId) {
     )
       .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
+    
+    
+    const vestBalance = new BigNumber(balances.vestingTotal)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+      .toNumber();
+    const vestedClaimable = new BigNumber(balances.vestedClaimable)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+      .toNumber();
+    const vestingTotal = new BigNumber(balances.vestingTotal)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+      .toNumber();
+    const vestingList = JSON.stringify(balances.vesting);
+
+    let vestingBetails = {
+      vestBalance: vestBalance,
+      vestedClaimable: vestedClaimable,
+      vestingTotal: vestingTotal,
+      vestingList: vestingList
+    };
 
     const identityDisplay = identity.display ? identity.display.toString() : "";
     const identityDisplayParent = identity.displayParent
       ? identity.displayParent.toString()
       : "";
-    const JSONIdentity = identity.display ? JSON.stringify(identity) : "";
-    const JSONbalances = JSON.stringify(balances);
-    const nonce = parseInt(balances.accountNonce);
+    const identityDisplaylegal = identity.legal
+      ? identity.legal.toString()
+      : "";
+    const identityDisplayEmail = identity.email
+      ? identity.email.toString()
+      : "";
+    const identityDisplayTwitter = identity.twitter
+      ? identity.twitter.toString()
+      : "";
+    const identityDisplayWeb = identity.web
+      ? identity.web.toString()
+      : "";
+    const identityDisplayRiot = identity.riot
+      ? identity.riot.toString()
+      : "";
+    const identityDisplayOther = JSON.stringify(identity.other);
 
+    const identityJudgements = identity.judgements
+      ? identity.judgements.toString()
+      : "";
+    
+    const identityDetail = {
+        identityDisplay: identityDisplay,
+        identityDisplaylegal: identityDisplaylegal,
+        identityDisplayEmail: identityDisplayEmail,
+        identityDisplayTwitter: identityDisplayTwitter,
+        identityDisplayWeb: identityDisplayWeb,
+        identityDisplayRiot: identityDisplayRiot,
+        identityDisplayOther: identityDisplayOther,
+        identityJudgements: identityJudgements,
+    };
+    
+    const nonce = parseInt(balances.accountNonce);
     const query = { accountId: accountId };
     const update = {
       $set: {
         accountId: accountId,
         identityDisplay: identityDisplay,
         identityDisplayParent: identityDisplayParent,
-        identityDetail: JSONIdentity,
+        identityDetail: identityDetail,
         availableBalance: availableBalance,
         freeBalance: freeBalance,
         lockedBalance: lockedBalance,
         reservedBalance: reservedBalance,
         totalBalance: totalBalance,
-        balancesDetail: JSONbalances,
+        vestingBetails: vestingBetails,
         nonce,
         timestamp,
         blockHeight: block,
@@ -117,20 +165,65 @@ async function updateAccountInfo(client, api, blockNumber, timestamp, address) {
     )
       .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
       .toNumber();
+    
+    
+    const vestBalance = new BigNumber(balances.vestingTotal)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+      .toNumber();
+    const vestedClaimable = new BigNumber(balances.vestedClaimable)
+      .dividedBy(Math.pow(10, backendConfig.TokenDecimal))
+      .toNumber();
+    const vestingTotal = JSON.stringify(balances.vestingTotal);
+    const vestingList = JSON.stringify(balances.vesting);
+
+    let vestingBetails = {
+      vestBalance: vestBalance,
+      vestedClaimable: vestedClaimable,
+      vestingTotal: vestingTotal,
+      vestingList: vestingList
+    };
 
     const identityDisplay = identity.display ? identity.display.toString() : "";
     const identityDisplayParent = identity.displayParent
       ? identity.displayParent.toString()
       : "";
-    const JSONIdentity = identity.display ? JSON.stringify(identity) : "";
-    const JSONbalances = JSON.stringify(balances);
-    const nonce = parseInt(balances.accountNonce);
+    const identityDisplaylegal = identity.legal
+      ? identity.legal.toString()
+      : "";
+    const identityDisplayEmail = identity.email
+      ? identity.email.toString()
+      : "";
+    const identityDisplayTwitter = identity.twitter
+      ? identity.twitter.toString()
+      : "";
+    const identityDisplayWeb = identity.web
+      ? identity.web.toString()
+      : "";
+    const identityDisplayRiot = identity.riot
+      ? identity.riot.toString()
+      : "";
+    const identityDisplayOther = JSON.stringify(identity.other);
+    const identityJudgements = identity.judgements
+      ? identity.judgements.toString()
+      : "";
+    
+    const identityDetail = {
+        identityDisplay: identityDisplay,
+        identityDisplaylegal: identityDisplaylegal,
+        identityDisplayEmail: identityDisplayEmail,
+        identityDisplayTwitter: identityDisplayTwitter,
+        identityDisplayWeb: identityDisplayWeb,
+        identityDisplayRiot: identityDisplayRiot,
+        identityDisplayOther: identityDisplayOther,
+        identityJudgements: identityJudgements,
+    };
 
+    const nonce = parseInt(balances.accountNonce);
     const addressQuery = { accountId: address };
     const update = {
       $set: {
         accountId: address,
-        identityDisplay: identityDisplay,
+        identityDisplay: identityDetail,
         identityDisplayParent: identityDisplayParent,
         identityDetail: JSONIdentity,
         availableBalance: availableBalance,
@@ -138,10 +231,10 @@ async function updateAccountInfo(client, api, blockNumber, timestamp, address) {
         lockedBalance: lockedBalance,
         reservedBalance: reservedBalance,
         totalBalance: totalBalance,
-        balancesBetail: JSONbalances,
+        vestingBetails: vestingBetails,
         nonce,
         timestamp,
-        blockHeight: blockNumber,
+        blockHeight: block,
       },
     };
     const options = { upsert: true };
