@@ -85,14 +85,14 @@ async function processAccountsChunk(client, api, accountId) {
     const identityDisplayRiot = identity.riot
       ? identity.riot.toString()
       : "";
-    const identityDisplayOther = JSON.stringify(identity.other);
-
+    const identityDisplayOther = identity.other ? JSON.stringify(identity.other) : "";
     const identityJudgements = identity.judgements
       ? identity.judgements.toString()
       : "";
     
     const identityDetail = {
         identityDisplay: identityDisplay,
+        identityDisplayParent: identityDisplayParent,
         identityDisplaylegal: identityDisplaylegal,
         identityDisplayEmail: identityDisplayEmail,
         identityDisplayTwitter: identityDisplayTwitter,
@@ -107,8 +107,6 @@ async function processAccountsChunk(client, api, accountId) {
     const update = {
       $set: {
         accountId: accountId,
-        identityDisplay: identityDisplay,
-        identityDisplayParent: identityDisplayParent,
         identityDetail: identityDetail,
         availableBalance: availableBalance,
         freeBalance: freeBalance,
@@ -201,13 +199,14 @@ async function updateAccountInfo(client, api, blockNumber, timestamp, address) {
     const identityDisplayRiot = identity.riot
       ? identity.riot.toString()
       : "";
-    const identityDisplayOther = JSON.stringify(identity.other);
+    const identityDisplayOther = identity.other ? JSON.stringify(identity.other) : "";
     const identityJudgements = identity.judgements
       ? identity.judgements.toString()
       : "";
     
     const identityDetail = {
         identityDisplay: identityDisplay,
+        identityDisplayParent: identityDisplayParent,
         identityDisplaylegal: identityDisplaylegal,
         identityDisplayEmail: identityDisplayEmail,
         identityDisplayTwitter: identityDisplayTwitter,
@@ -222,9 +221,7 @@ async function updateAccountInfo(client, api, blockNumber, timestamp, address) {
     const update = {
       $set: {
         accountId: address,
-        identityDisplay: identityDetail,
-        identityDisplayParent: identityDisplayParent,
-        identityDetail: JSONIdentity,
+        identityDetail: identityDetail,
         availableBalance: availableBalance,
         freeBalance: freeBalance,
         lockedBalance: lockedBalance,
