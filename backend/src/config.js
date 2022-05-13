@@ -24,6 +24,7 @@ module.exports.backendConfig = {
     signedExtrinsic: "signed_extrinsic",
     stakingReward: "staking_reward",
     stakingSlash: "staking_slash",
+    totalLock: "total_locks",
     transfer: "transfer",
     validator: "valaidator_status",
     validatorFeature: "valaidator_feature",
