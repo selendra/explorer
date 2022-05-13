@@ -24,21 +24,6 @@ async fn get_account(client: web::Data<Client>, address: web::Path<String>) -> H
     }
 }
 
-#[get("/detail/{address}")]
-async fn get_account_detail(client: web::Data<Client>, address: web::Path<String>) -> HttpResponse {
-    let address = address.into_inner();
-    if !(is_address(&address)) {
-        return HttpResponse::NotFound().body(format!("Invalid address {} type", address));
-    }
-
-    let collection: Collection<AccountDetail> = client.database(DATABASE).collection(ACCOUNT);
-    match collection.find_one(doc! { "accountId": &address }, None) {
-        Ok(Some(account)) => HttpResponse::Ok().json(account),
-        Ok(None) => HttpResponse::NotFound().body(format!("No account found with this address {}", address)),
-        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
-    }
-}
-
 #[get("/all/{page_number}")]
 async fn get_accounts(client: web::Data<Client>, page_number: web::Path<u64>) -> HttpResponse {
     let page_number = page_number.into_inner().saturating_sub(1);
@@ -92,7 +77,7 @@ async fn get_accounts(client: web::Data<Client>, page_number: web::Path<u64>) ->
 }
 
 #[get("/extrinsics/{address}/{page_number}")]
-async fn get_account_extrinisic(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
+async fn get_account_extrinsic(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
     let address = param.0.clone();
     let page_number = param.1.clone().saturating_sub(1);
 
@@ -135,10 +120,10 @@ async fn get_account_extrinisic(client: web::Data<Client>, param: web::Path<(Str
     }
 
     let account_page = AccountExtrinsicPage {
-        total_extriniscs: collection_count,
+        total_extrinsics: collection_count,
         at_page: page_number.saturating_add(1),
         total_page,
-        extriniscs: account_vec,
+        extrinsics: account_vec,
     };
 
     return HttpResponse::Ok().json(account_page);

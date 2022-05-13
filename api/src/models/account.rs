@@ -4,19 +4,35 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Account {
     pub accountId: String,
-    pub identityDisplay: String,
+	pub identityDetail: IdentityDetail,
     pub totalBalance: f32,
     pub availableBalance: f32,
     pub freeBalance: f32,
     pub lockedBalance: f32,
     pub reservedBalance: f32,
+	pub vestingDetails: VestingDetail,
     pub timestamp: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct AccountDetail {
-    pub balancesDetail: String,
-    pub identityDetail: String,
+pub struct IdentityDetail {
+	pub identityDisplay: String,
+	pub identityDisplayParent: String,
+	pub identityDisplaylegal: String,
+	pub identityDisplayEmail: String,
+	pub identityDisplayTwitter: String,
+	pub identityDisplayWeb: String,
+	pub identityDisplayRiot: String,
+	pub identityDisplayOther: String,
+	pub identityJudgements: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct VestingDetail {
+	pub vestBalance: f32,
+	pub vestedClaimable: f32,
+	pub vestingTotal: f32,
+	pub vestingList: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -62,10 +78,10 @@ pub struct AccountPage {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AccountExtrinsicPage {
-    pub total_extriniscs: u64,
+    pub total_extrinsics: u64,
     pub at_page: u64,
     pub total_page: u64,
-    pub extriniscs: Vec<AccountExtrinsic>,
+    pub extrinsics: Vec<AccountExtrinsic>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -94,3 +110,11 @@ pub struct AccountStakingPage {
     pub total_page: u64,
     pub staking_list: Vec<AccountStaking>,
 }
+
+
+// fn non_identity<'de, D>(d: D) -> Result<f32, D::Error>
+// where
+//     D: Deserializer<'de>,
+// {
+//     Deserialize::deserialize(d).map(|x: Option<_>| x.unwrap_or(0 as f32))
+// }

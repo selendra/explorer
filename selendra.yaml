@@ -826,7 +826,7 @@ components:
     AccountExtrinsics:
       type: object
       properties:
-        total_extriniscs:
+        total_extrinsics:
           type: integer
           format: int64
         at_page:
@@ -835,7 +835,7 @@ components:
         total_page:
           type: integer
           format: int64
-        extriniscs:
+        extrinsics:
           type: array
           items:
             $ref: '#/components/schemas/AccountExtrinsic'

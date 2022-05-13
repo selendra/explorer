@@ -59,7 +59,7 @@ async function processAccountsChunk(client, api, accountId) {
       .toNumber();
     const vestingList = JSON.stringify(balances.vesting);
 
-    let vestingBetails = {
+    let vestingDetails = {
       vestBalance: vestBalance,
       vestedClaimable: vestedClaimable,
       vestingTotal: vestingTotal,
@@ -113,7 +113,7 @@ async function processAccountsChunk(client, api, accountId) {
         lockedBalance: lockedBalance,
         reservedBalance: reservedBalance,
         totalBalance: totalBalance,
-        vestingBetails: vestingBetails,
+        vestingDetails: vestingDetails,
         nonce,
         timestamp,
         blockHeight: block,
@@ -173,7 +173,7 @@ async function updateAccountInfo(client, api, blockNumber, timestamp, address) {
     const vestingTotal = JSON.stringify(balances.vestingTotal);
     const vestingList = JSON.stringify(balances.vesting);
 
-    let vestingBetails = {
+    let vestingDetails = {
       vestBalance: vestBalance,
       vestedClaimable: vestedClaimable,
       vestingTotal: vestingTotal,
@@ -227,7 +227,7 @@ async function updateAccountInfo(client, api, blockNumber, timestamp, address) {
         lockedBalance: lockedBalance,
         reservedBalance: reservedBalance,
         totalBalance: totalBalance,
-        vestingBetails: vestingBetails,
+        vestingDetails: vestingDetails,
         nonce,
         timestamp,
         blockHeight: block,

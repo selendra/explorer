@@ -14,6 +14,12 @@ pub struct ValidatorStaking {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct StakValue {
-    pub totalStake: f64,
+pub struct NorminatorStaking {
+    pub otherStake: f64,
+}
+
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LockBalance {
+    pub totalLockBalances: f64,
 }

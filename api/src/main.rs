@@ -20,6 +20,7 @@ pub const REWARD: &str = "staking_reward";
 pub const RUNTIME: &str = "runtimes";
 pub const SLASH: &str = "staking_slash";
 pub const SIGNEDEXTRINSIC: &str = "signed_extrinsic";
+pub const LOCKBALANCE: &str = "total_locks";
 pub const TRANSFER: &str = "transfer";
 pub const VALIDATOR: &str = "valaidator_ranking";
 pub const VALIDATORFEATURE: &str = "valaidator_feature";
@@ -29,6 +30,8 @@ pub const VALIDATORSTATUS: &str = "valaidator_status";
 pub const MOGOURI: &str = dotenv!("MONGO_URI");
 pub const DATABASE: &str = dotenv!("DATABASE");
 pub const VALIDATORDATABASE: &str = dotenv!("VALIDATEDATABASE");
+// Sentry
+pub const SENTRY: &str = dotenv!("SENTRY");
 
 // server
 const HOST: &str = "127.0.0.1";
@@ -37,8 +40,7 @@ const PORT: u16 = 8080;
 // Page Size
 const PAGESIZE: u64 = 10;
 
-// Sentry
-pub const SENTRY: &str = dotenv!("SENTRY");
+
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -58,9 +60,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let account_controller = actix_web::web::scope("/account")
             .service(get_account)
-            .service(get_account_detail)
             .service(get_accounts)
-            .service(get_account_extrinisic)
+            .service(get_account_extrinsic)
             .service(get_account_transfer)
             .service(get_account_staking);
         let block_controller = actix_web::web::scope("/block").service(get_block).service(get_blocks);
@@ -86,6 +87,8 @@ async fn main() -> std::io::Result<()> {
             .service(get_status)
             .service(get_feature);
         let totals_controller = actix_web::web::scope("/totals")
+			.service(get_lock_value)
+			.service(get_norminate_value)
             .service(get_stake_value)
             .service(get_totals);
         let transfer_controller = actix_web::web::scope("/transfer")
