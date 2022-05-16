@@ -45,14 +45,14 @@ export default function Home() {
       fetch(`${process.env.REACT_APP_API}/transfer/all/1`),
       fetch(`${process.env.REACT_APP_API}/totals`),
       fetch(`${process.env.REACT_APP_API}/staking/status`),
-      fetch(`${process.env.REACT_APP_API}/totals/staking`)
+      fetch(`${process.env.REACT_APP_API}/totals/lock_balances`)
     ])
     .then(async([a, b, c, d, e]) => {
       const block = await a.json();
       const transfer = await b.json();
       const total = await c.json();
       const staking = await d.json();
-      const totalStaking = await e.json();
+      const totalLock = await e.json();
       
       setLoading(false);
       setOverview({
@@ -60,7 +60,7 @@ export default function Home() {
         transfer,
         total,
         staking,
-        totalStaking
+        totalLock
       })
     })
     .catch(err => {
@@ -91,17 +91,17 @@ export default function Home() {
             total_transfers={overview?.total.Transfers}
             total_issuance={overview?.block.blocks[0].totalIssuance}
             total_validators={validators.length}
-            total_staking={overview?.totalStaking.totalStake}
+            total_lockBalance={overview?.totalLock.totalLockBalances}
           />
         </div>
       </div>
       <div className="home-info">
         <Row gutter={[16, { xs: 8, sm: 16, md: 24, lg: 32 }]}>
-          <Col xs={24} md={12} lg={12} xl={12}>
+          <Col xs={24} md={24} lg={12} xl={12}>
             <p className="home-subTitle">Latest Blocks</p>
             <BlocksTable short data={overview?.block} />
           </Col>
-          <Col xs={24} md={12} lg={12} xl={12}>
+          <Col xs={24} md={24} lg={12} xl={12}>
             <p className="home-subTitle">Latest Transfers</p>
             <TransferTable short data={overview?.transfer} />
           </Col>

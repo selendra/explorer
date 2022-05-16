@@ -12,12 +12,8 @@ export default function Overview(props) {
         <DataField icon='/assets/icons/arrow-swap-horizontal.svg' title='Total Transfer' data={new Intl.NumberFormat().format(props.total_transfers)} />
         <DataField icon='/assets/icons/validator-white.svg' title='Validators' data={new Intl.NumberFormat().format(props.total_validators)} />
         <DataField icon='/assets/icons/profile-2user.svg' title='SEL Native Issued' data={new Intl.NumberFormat().format(props.total_issuance)} />
-        <DataField icon='/assets/icons/box-time.svg' title='Staking' data={new Intl.NumberFormat().format(props.total_staking)} />
-        <DataField icon='/assets/icons/box-time.svg' title='Vesting' data={new Intl.NumberFormat().format(props.total_staking)} />
-        
+        <DataField icon='/assets/icons/lock.svg' title='Lock Balances' data={new Intl.NumberFormat().format(props.total_lockBalance)} />
       </Row>
     </div>
   );
 }
-
-
