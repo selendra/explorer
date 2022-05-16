@@ -131,7 +131,7 @@ code {
 .blocks-bg {
   background-color: #012D41;
   padding: 40px 0;
-  height: 260px;
+  height: 300px;
 }
 .blocks-title {
   font-size: 20px;
@@ -208,6 +208,13 @@ code {
   margin-top: 8px;
   font-weight: 500!important;
   color: #03A9F4!important;
+}
+.staking {
+  border: none !important;
+  border-radius: 8px !important;
+  color: #FFF !important;
+  background: rgb(2,0,36) !important;
+  background: linear-gradient(141deg, rgba(2,0,36,1) 0%, rgba(1,63,91,1) 0%, rgba(3,169,244,0.5) 100%) !important;
 }
 /*  responsive */
 @media screen and (max-width: 1500px) {
