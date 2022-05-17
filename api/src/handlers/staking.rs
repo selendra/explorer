@@ -1,4 +1,4 @@
-use crate::{models::staking::*, VALIDATOR, VALIDATORDATABASE, VALIDATORFEATURE, VALIDATORSTATUS};
+use crate::{models::staking::*, utils::is_address, VALIDATOR, VALIDATORDATABASE, VALIDATORFEATURE, VALIDATORSTATUS};
 
 use actix_web::{get, web, HttpResponse};
 use mongodb::{
@@ -41,6 +41,21 @@ async fn get_validators(client: web::Data<Client>) -> HttpResponse {
     };
 
     return HttpResponse::Ok().json(transfer_page);
+}
+
+#[get("validators/{address}")]
+async fn get_validators_detail(client: web::Data<Client>, address: web::Path<String>) -> HttpResponse {
+    let address = address.into_inner();
+    if !(is_address(&address)) {
+        return HttpResponse::NotFound().body(format!("Invalid address {} type", address));
+    }
+
+    let collection: Collection<Validator> = client.database(VALIDATORDATABASE).collection(VALIDATOR);
+    match collection.find_one(doc! { "stashAddress": &address }, None) {
+        Ok(Some(account)) => HttpResponse::Ok().json(account),
+        Ok(None) => HttpResponse::NotFound().body(format!("No account found with this address {}", address)),
+        Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
+    }
 }
 
 #[get("/status")]
