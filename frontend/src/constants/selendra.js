@@ -1,4 +1,4 @@
 export const selendraNode = { 
   testnet: '',
-  mainnet: 'wss://rpc-mainnet.selendra.org'
+  mainnet: 'wss://api-mainnet.selendra.org'
 }

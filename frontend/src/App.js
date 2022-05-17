@@ -13,6 +13,7 @@ import TransferDetail from "./pages/transfers/transferDetail";
 import { useAPIState } from "./context/APIContext";
 import { Spin } from "antd";
 import Staking from "./pages/staking";
+import ValidatorDetail from "./pages/staking/validatorDetail";
 
 function App() {
   const { apiState } = useAPIState();
@@ -49,6 +50,7 @@ function App() {
         <Route path="/extrinsics/:id" element={<ExtrinsicDetail />} />
         <Route path="/events" element={<Events />} />
         <Route path="/staking" element={<Staking />} />
+        <Route path="/validator/:id" element={<ValidatorDetail />} />
       </Routes>
     </BrowserRouter>
   );
