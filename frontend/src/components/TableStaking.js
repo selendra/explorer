@@ -22,7 +22,7 @@ export default function TableStaking({loading, data, short, onChange }) {
         title="Validator"
         dataIndex="stashAddress" 
         render={stashAddress => (
-          <Link to={`/accounts/${stashAddress}`}>
+          <Link to={`/validator/${stashAddress}`}>
             <p>{shortenAddress(stashAddress)}</p>
           </Link>
         )}
@@ -38,11 +38,11 @@ export default function TableStaking({loading, data, short, onChange }) {
         title="Nominator"
         dataIndex="nominators" 
       />
-      <Table.Column 
+      {/* <Table.Column 
         title="Active Eras"
         responsive={['md']}
         dataIndex="activeEras" 
-      />
+      /> */}
     </Table>
   )
 }

@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Card, Col, Progress, Row } from 'antd'
-import TableStaking from '../components/TableStaking';
-import DataField from '../components/Overview/DataField';
-import { calcInflation } from '../utils/calcInflation';
-import { useAPIState } from '../context/APIContext';
+import TableStaking from '../../components/TableStaking';
+import DataField from '../../components/Overview/DataField';
+import { calcInflation } from '../../utils/calcInflation';
+import { useAPIState } from '../../context/APIContext';
 import { BigNumber } from 'bignumber.js'
-import Loading from '../components/Loading';
+import Loading from '../../components/Loading';
 
 export default function Staking() {
   const { api } = useAPIState();
@@ -32,7 +32,8 @@ export default function Staking() {
         status,
         norminate_balance,
         validators,
-        total_staking
+        total_staking,
+        self_staking: Number(total_staking.totalStake) - Number(norminate_balance.otherStake)
       })
     })
     .catch(err => {
@@ -77,7 +78,8 @@ export default function Staking() {
             <Card className='staking'>
               <Row justify='start' align='middle' gutter={[32, 32]}>
                 <DataField icon='/assets/icons/box-time.svg' title='Staking' data={new Intl.NumberFormat().format(data?.total_staking.totalStake)} />
-                <DataField icon='/assets/icons/norminate.svg' title='Norminate Balances' data={new Intl.NumberFormat().format(data?.norminate_balance.otherStake)} />
+                <DataField icon='/assets/icons/box-time.svg' title='Self-Staking' data={new Intl.NumberFormat().format(data?.self_staking)} />
+                <DataField icon='/assets/icons/norminate.svg' title='Norminate' data={new Intl.NumberFormat().format(data?.norminate_balance.otherStake)} />
                 <DataField icon='/assets/icons/validator-white.svg' title='Validator' data={new Intl.NumberFormat().format(data?.validators.total_valalidaors)} />
                 <DataField icon='/assets/icons/timer.svg' title='Waiting' data={new Intl.NumberFormat().format(data?.status.waitingValidatorCount)} />
                 <DataField icon='/assets/icons/candle.svg' title='Inflation Rate' data={new Intl.NumberFormat().format(inflation?.inflation)} isPercent/>
