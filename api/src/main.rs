@@ -84,6 +84,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_last_runtime);
         let staking_controller = actix_web::web::scope("/staking")
             .service(get_validators)
+			.service(get_validators_detail)
             .service(get_status)
             .service(get_feature);
         let totals_controller = actix_web::web::scope("/totals")
