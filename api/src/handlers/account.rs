@@ -191,7 +191,7 @@ async fn get_account_receive(client: web::Data<Client>, param: web::Path<(String
         return HttpResponse::NotFound().body(format!("Invalid address {} type", address));
     };
 
-    let collection: Collection<AccountTransfer> = client.database(DATABASE).collection(TRANSFER);
+    let collection: Collection<AccountRecieve> = client.database(DATABASE).collection(TRANSFER);
     let filter = doc! { "destination": &address };
     let collection_count = collection.count_documents(filter.clone(), None).unwrap();
 
@@ -204,7 +204,7 @@ async fn get_account_receive(client: web::Data<Client>, param: web::Path<(String
 
     let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
 
-    let mut transfer_vec: Vec<AccountTransfer> = Vec::new();
+    let mut transfer_vec: Vec<AccountRecieve> = Vec::new();
 
     match collection.find(filter, find_options) {
         Ok(mut cursor) => {
