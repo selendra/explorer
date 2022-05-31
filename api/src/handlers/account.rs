@@ -182,6 +182,59 @@ async fn get_account_transfer(client: web::Data<Client>, param: web::Path<(Strin
     return HttpResponse::Ok().json(account_page);
 }
 
+#[get("/receive/{address}/{page_number}")]
+async fn get_account_receive(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
+    let address = param.0.clone();
+    let page_number = param.1.clone().saturating_sub(1);
+
+    if !(is_address(&address)) {
+        return HttpResponse::NotFound().body(format!("Invalid address {} type", address));
+    };
+
+    let collection: Collection<AccountTransfer> = client.database(DATABASE).collection(TRANSFER);
+    let filter = doc! { "destination": &address };
+    let collection_count = collection.count_documents(filter.clone(), None).unwrap();
+
+    let page: u64 = PAGESIZE * page_number;
+    let mut page_size = PAGESIZE;
+
+    if collection_count < page {
+        page_size = page - collection_count;
+    }
+
+    let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
+
+    let mut transfer_vec: Vec<AccountTransfer> = Vec::new();
+
+    match collection.find(filter, find_options) {
+        Ok(mut cursor) => {
+            while let Some(doc) = cursor.next() {
+                match doc {
+                    Ok(db) => {
+                        transfer_vec.push(db);
+                    }
+                    Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+                }
+            }
+        }
+        Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
+    }
+
+    let mut total_page = collection_count / PAGESIZE;
+    if collection_count % PAGESIZE != 0 {
+        total_page = total_page + 1;
+    }
+
+    let account_page = AccountReceivePage {
+        total_receive: collection_count,
+        at_page: page_number.saturating_add(1),
+        total_page,
+        from: transfer_vec,
+    };
+
+    return HttpResponse::Ok().json(account_page);
+}
+
 #[get("/staking/{address}/{page_number}")]
 async fn get_account_staking(client: web::Data<Client>, param: web::Path<(String, u64)>) -> HttpResponse {
     let address = param.0.clone();
