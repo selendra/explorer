@@ -62,6 +62,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_account)
             .service(get_accounts)
             .service(get_account_extrinsic)
+			.service(get_account_receive)
             .service(get_account_transfer)
             .service(get_account_staking);
         let block_controller = actix_web::web::scope("/block").service(get_block).service(get_blocks);

@@ -93,6 +93,14 @@ pub struct AccountTransferPage {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct AccountReceivePage {
+    pub total_receive: u64,
+    pub at_page: u64,
+    pub total_page: u64,
+    pub from: Vec<AccountTransfer>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct AccountStaking {
     pub blockNumber: u64,
     pub eventIndex: u16,
