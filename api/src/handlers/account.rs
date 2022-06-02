@@ -142,14 +142,19 @@ async fn get_account_transfer(client: web::Data<Client>, param: web::Path<(Strin
     let filter = doc! { "source": &address };
     let collection_count = collection.count_documents(filter.clone(), None).unwrap();
 
-    let page: u64 = PAGESIZE * page_number;
-    let mut page_size = PAGESIZE;
+	let page_size: u64 = PAGESIZE;
+    let page = page_size * page_number.saturating_sub(1);
 
-    if collection_count < page {
-        page_size = page - collection_count;
+    let mut total_page = collection_count / PAGESIZE;
+    if collection_count % PAGESIZE != 0 {
+        total_page = total_page + 1;
     }
 
-    let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
+    let find_options = FindOptions::builder()
+		.sort(doc! { "blockNumber": -1 })
+		.skip(page)
+		.limit(page_size as i64)
+		.build();
 
     let mut transfer_vec: Vec<AccountTransfer> = Vec::new();
 
@@ -165,11 +170,6 @@ async fn get_account_transfer(client: web::Data<Client>, param: web::Path<(Strin
             }
         }
         Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
-    }
-
-    let mut total_page = collection_count / PAGESIZE;
-    if collection_count % PAGESIZE != 0 {
-        total_page = total_page + 1;
     }
 
     let account_page = AccountTransferPage {
@@ -195,14 +195,19 @@ async fn get_account_receive(client: web::Data<Client>, param: web::Path<(String
     let filter = doc! { "destination": &address };
     let collection_count = collection.count_documents(filter.clone(), None).unwrap();
 
-    let page: u64 = PAGESIZE * page_number;
-    let mut page_size = PAGESIZE;
+    let page_size: u64 = PAGESIZE;
+    let page = page_size * page_number.saturating_sub(1);
 
-    if collection_count < page {
-        page_size = page - collection_count;
+    let mut total_page = collection_count / PAGESIZE;
+    if collection_count % PAGESIZE != 0 {
+        total_page = total_page + 1;
     }
 
-    let find_options = FindOptions::builder().skip(page).limit(page_size as i64).build();
+    let find_options = FindOptions::builder()
+		.sort(doc! { "blockNumber": -1 })
+		.skip(page)
+		.limit(page_size as i64)
+		.build();
 
     let mut transfer_vec: Vec<AccountRecieve> = Vec::new();
 
@@ -218,11 +223,6 @@ async fn get_account_receive(client: web::Data<Client>, param: web::Path<(String
             }
         }
         Err(err) => return HttpResponse::InternalServerError().body(err.to_string()),
-    }
-
-    let mut total_page = collection_count / PAGESIZE;
-    if collection_count % PAGESIZE != 0 {
-        total_page = total_page + 1;
     }
 
     let account_page = AccountReceivePage {
