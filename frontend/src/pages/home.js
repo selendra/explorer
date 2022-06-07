@@ -6,6 +6,7 @@ import BlocksTable from "../components/BlocksTable";
 import TransferTable from "../components/TransferTable";
 import { useAPIState } from "../context/APIContext";
 import Loading from "../components/Loading";
+import bannerImg from "../assets/loading.png";
 
 export default function Home() {
   const { api } = useAPIState();
@@ -46,16 +47,19 @@ export default function Home() {
       fetch(`${process.env.REACT_APP_API}/totals`),
       fetch(`${process.env.REACT_APP_API}/staking/status`),
       fetch(`${process.env.REACT_APP_API}/totals/lock_balances`),
+      fetch(`${process.env.REACT_APP_API}/staking/status`),
     ])
-      .then(async ([a, b, c, d, e]) => {
+      .then(async ([a, b, c, d, e, f]) => {
         const block = await a.json();
         const transfer = await b.json();
         const total = await c.json();
         const staking = await d.json();
         const totalLock = await e.json();
+        const waitingCount = await f.json();
 
         setLoading(false);
         setOverview({
+          waitingCount,
           block,
           transfer,
           total,
@@ -75,6 +79,7 @@ export default function Home() {
         <Loading />
       </div>
     );
+  console.log(overview?.waitingCount.waitingValidatorCount);
 
   return (
     <div>
@@ -93,9 +98,11 @@ export default function Home() {
             total_issuance={overview?.block.blocks[0].totalIssuance}
             total_validators={validators.length}
             total_lockBalance={overview?.totalLock.totalLockBalances}
+            waitingCount={overview?.waitingCount.waitingValidatorCount}
           />
         </div>
       </div>
+      {/* <Loading /> */}
       <div className="home-info">
         <Row gutter={[16, { xs: 8, sm: 16, md: 24, lg: 32 }]}>
           <Col xs={24} md={24} lg={12} xl={12}>
