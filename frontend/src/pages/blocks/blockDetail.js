@@ -135,7 +135,7 @@ export default function BlockDetail() {
             </tr>
             <tr className="tr-style">
               <td>Block Time</td>
-              <td>{timeDuration(data?.timestamp)}</td>
+              <td>{timeDuration(data?.timestamp)} </td>
             </tr>
           </tbody>
         </table>
