@@ -14,25 +14,27 @@ import { useAPIState } from "./context/APIContext";
 import { Spin } from "antd";
 import Staking from "./pages/staking";
 import ValidatorDetail from "./pages/staking/validatorDetail";
+import Loading from "./components/Loading";
 
 function App() {
   const { apiState } = useAPIState();
 
-  if(apiState !== 'READY') {
+  if (apiState !== "READY") {
     return (
       <div className="wrap-loading">
-        <Spin />
-        <p>Please wait...</p>
+        <Loading />
+        {/* <Spin />
+        <p>Please wait...</p> */}
       </div>
-    )
-  }
-  else if(apiState === 'ERROR') {
+    );
+  } else if (apiState === "ERROR") {
     return (
       <div className="wrap-loading">
-        <Spin />
+        {/* <Spin /> */}
+        <Loading />
         <p>Something went wrong at our end.</p>
       </div>
-    )
+    );
   }
 
   return (

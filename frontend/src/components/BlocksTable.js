@@ -1,92 +1,94 @@
-import { Spin, Table } from 'antd'
-import { Link } from 'react-router-dom';
-import { formatNumber, shortenAddress, timeDuration } from '../utils';
+import { Spin, Table } from "antd";
+import { Link } from "react-router-dom";
+import { formatNumber, shortenAddress, timeDuration } from "../utils";
+import LaodingLogo from "../assets/loading.png";
 
 export default function BlocksTable({ short, loading, data, onChange }) {
   return (
-    <Table 
+    <Table
       dataSource={data?.blocks}
       loading={loading}
-      rowKey={record => record.blockNumber}
-      className='table-styling'
-      sortDirections='descend'
-      pagination={short ? false : {
-        pageSize: 10,
-        total: data?.total_page,
-        onChange:(page) => {
-          onChange(page);
-        } 
-      }}
+      rowKey={(record) => record.blockNumber}
+      className="table-styling"
+      sortDirections="descend"
+      pagination={
+        short
+          ? false
+          : {
+              pageSize: 10,
+              total: data?.total_page,
+              onChange: (page) => {
+                onChange(page);
+              },
+            }
+      }
     >
-      <Table.Column 
+      <Table.Column
         title="Block"
         dataIndex="blockNumber"
-        render={blockNumber => (
+        render={(blockNumber) => (
           <Link to={`/blocks/${blockNumber}`}>
-            <div className='blocks-height'>
+            <div className="blocks-height">
               <p># {formatNumber(blockNumber)}</p>
-            </div>  
+            </div>
           </Link>
         )}
       />
-      <Table.Column 
+      <Table.Column
         title="Status"
         dataIndex="finalized"
-        render={finalized => (
+        render={(finalized) => (
           <div>
-            {finalized ? 
+            {finalized ? (
               <div>
-                <img 
-                  src='/assets/icons/check.svg' 
-                  alt='finalized'
-                  width={18} 
+                <img
+                  src="/assets/icons/check.svg"
+                  alt="finalized"
+                  width={18}
                   height={18}
-                /> 
-                <span style={{marginLeft: '4px'}}>Finalized</span>
+                />
+                <span style={{ marginLeft: "4px" }}>Finalized</span>
               </div>
-              :
-              <Spin size='small'/> 
-            }
+            ) : (
+              // <Spin size="small" />
+              <div>
+                <img className="loading-img-block" src={LaodingLogo} />
+              </div>
+            )}
           </div>
         )}
       />
-      <Table.Column 
+      <Table.Column
         title="Hash"
-        dataIndex="blockHash" 
-        render={blockHash => (
-          <p>{shortenAddress(blockHash)}</p>
-        )}
+        dataIndex="blockHash"
+        render={(blockHash) => <p>{shortenAddress(blockHash)}</p>}
       />
-      { !short &&
-        <Table.Column 
+      {!short && (
+        <Table.Column
           title="Time"
-          responsive={['md']}
-          dataIndex="timestamp" 
-          render={timestamp => (
-            <p>{timeDuration(timestamp)}</p>
-          )}
+          responsive={["md"]}
+          dataIndex="timestamp"
+          render={(timestamp) => <p>{timeDuration(timestamp)}</p>}
         />
-      }
-      <Table.Column 
+      )}
+      <Table.Column
         title="Extrinsics"
-        responsive={['md']}
-        dataIndex="totalExtrinsics" 
+        responsive={["md"]}
+        dataIndex="totalExtrinsics"
       />
-      <Table.Column 
+      <Table.Column
         title="Events"
-        responsive={['md']}
-        dataIndex="totalEvents" 
+        responsive={["md"]}
+        dataIndex="totalEvents"
       />
-      {!short &&
-        <Table.Column 
+      {!short && (
+        <Table.Column
           title="Validator"
-          responsive={['md']}
-          dataIndex="blockAuthor" 
-          render={blockAuthor => (
-            <p>{shortenAddress(blockAuthor)}</p>
-          )}
+          responsive={["md"]}
+          dataIndex="blockAuthor"
+          render={(blockAuthor) => <p>{shortenAddress(blockAuthor)}</p>}
         />
-      }
+      )}
     </Table>
-  )
+  );
 }
