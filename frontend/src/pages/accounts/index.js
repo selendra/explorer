@@ -7,24 +7,22 @@ export default function Accounts() {
   const { loading, data = [] } = useFetch(
     `${process.env.REACT_APP_API}/account/all/${page}`
   );
-  const tableLoading = {
-    spinning: loading,
-    indicator: "helo",
-  };
+
   return (
     <div>
       <div className="blocks-bg">
         <div className="container">
           <p className="blocks-title">Accounts</p>
           <AccountsTable
-            loading={tableLoading}
-            // loading={{
-            // indicator: (
-            // <div>
-            //   <img className="loading-img-block" src={LaodingLogo} />.
-            // </div>
-            // ),
-            // }}
+            // loading={loading}
+            loading={{
+              indicator: (
+                <div>
+                  <img className="loading-img-block" src={LaodingLogo} />
+                </div>
+              ),
+              spinning: !data,
+            }}
             data={data}
             onChange={setPage}
           />

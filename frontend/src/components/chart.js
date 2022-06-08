@@ -104,28 +104,28 @@ import { Pie, measureTextWidth } from "@ant-design/plots";
 const Chart = ({ dataEra, datacurrentEra }) => {
   const data = [
     {
-      type: "Active",
+      type: "Ended",
       value: datacurrentEra,
-      color: "blue",
     },
     {
-      type: "Ended",
+      type: "Active",
       value: dataEra,
-      color: "red",
     },
   ];
+
   const config = {
     appendPadding: 10,
     data,
     legend: false,
-    fill: "red",
+    // fill: "red",
+    border: false,
     color: ["#ED1576", "#03A9F4"],
-    border: "1px solid blakc",
+    border: "6px solid black",
     // legend: { position: "top" },
     angleField: "value",
     colorField: "type",
     radius: 1,
-    innerRadius: 0.6,
+    innerRadius: 0.5,
     label: {
       type: "inner",
       offset: "-50%",

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import useFetch from "../../hooks/useFetch";
 import BlocksTable from "../../components/BlocksTable";
-
+import LaodingLogo from "../../assets/loading.png";
 export default function Blocks() {
   const [page, setPage] = useState(1);
   const { loading, data = [] } = useFetch(
@@ -16,7 +16,18 @@ export default function Blocks() {
           <p className="blocks-title">Blocks</p>
           <div className="spacing" />
           <div>
-            <BlocksTable loading={loading} data={data} onChange={setPage} />
+            <BlocksTable
+              loading={{
+                indicator: (
+                  <div>
+                    <img className="loading-img-block" src={LaodingLogo} />
+                  </div>
+                ),
+                spinning: !data,
+              }}
+              data={data}
+              onChange={setPage}
+            />
           </div>
         </div>
       </div>
