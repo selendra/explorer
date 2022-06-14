@@ -100,7 +100,7 @@
 // export default Chart;
 
 import React from "react";
-import { Pie, measureTextWidth } from "@ant-design/plots";
+import { Pie } from "@ant-design/plots";
 const Chart = ({ dataEra, datacurrentEra }) => {
   const data = [
     {
