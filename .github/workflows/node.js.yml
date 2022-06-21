@@ -1,7 +1,7 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Node.js CI
+name: Deploy Explorer
 
 on:
   push:
@@ -10,21 +10,36 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-
-    runs-on: self-hosted
-    defaults:
-       run:
-         working-directory: ./frontend/
+  Explorer:
+    name: Production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: 'https://explorer.selendra.org'
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: './frontend/package-lock.json'
-    - run: npm i
-    - run: CI= npm run build
-      env:
-          REACT_APP_API: https://scan-api.selendra.org
+      - name: Checkout Here
+        uses: actions/checkout@v2
+      - name: Create Directory
+        run: |
+          mkdir -p ${{ github.workspace }}/production
+      - name: Build
+        run: |
+          cd ${{ github.workspace }}/frontend
+          npm ci
+          CI= npm run build 
+          mv ${{ github.workspace }}/frontend/build ${{ github.workspace }}/production/frontend
+          mv ${{ github.workspace }}/.run.sh ${{ github.workspace }}/production/
+      - name: Install ssh key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}  
+      - name: Env
+        env:
+          BASH_SECRET: ${{ secrets.BASH_SHELL }}
+        run: |
+          echo "$BASH_SECRET" > ./deploy
+          chmod +x ./deploy
+      - name: Deploying to Production...     
+        run: |
+          ./deploy
