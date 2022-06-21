@@ -34,7 +34,7 @@
     "react-app-rewired": "^2.2.1"
   },
   "scripts": {
-    "start": "react-app-rewired start",
+    "start": "PORT=3004 react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "CI=true react-app-rewired test",
     "eject": "react-scripts eject"
