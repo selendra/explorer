@@ -15,6 +15,7 @@ import { Spin } from "antd";
 import Staking from "./pages/staking";
 import ValidatorDetail from "./pages/staking/validatorDetail";
 import Loading from "./components/Loading";
+import Footer from "./components/Footer";
 
 function App() {
   const { apiState } = useAPIState();
@@ -54,6 +55,7 @@ function App() {
         <Route path="/staking" element={<Staking />} />
         <Route path="/validator/:id" element={<ValidatorDetail />} />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }
