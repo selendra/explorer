@@ -5,6 +5,7 @@ import App from './App';
 import 'antd/dist/antd.variable.min.css';
 import { ConfigProvider } from 'antd';
 import { APIContextProvider } from './context/APIContext';
+import Footer from './components/Footer';
 
 ConfigProvider.config({
   theme: {
@@ -18,6 +19,7 @@ ReactDOM.render(
       <div className='app'>
         <App />
       </div>
+      <Footer />
     </ConfigProvider>
   </APIContextProvider>,
   document.getElementById('root')

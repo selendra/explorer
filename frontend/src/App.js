@@ -55,7 +55,6 @@ function App() {
         <Route path="/staking" element={<Staking />} />
         <Route path="/validator/:id" element={<ValidatorDetail />} />
       </Routes>
-      <Footer />
     </BrowserRouter>
   );
 }

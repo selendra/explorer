@@ -9,26 +9,31 @@ export default function Overview(props) {
           icon="/assets/icons/box.svg"
           title="Blocks"
           data={props.total_blocks}
+          isRoute='/blocks'
         />
         <DataField
           icon="/assets/icons/box-tick.svg"
           title="Finalized"
           data={props.total_blocksFinalized}
+          isRoute='/blocks'
         />
         <DataField
           icon="/assets/icons/edit.svg"
           title="Extrinsics"
           data={new Intl.NumberFormat().format(props.total_extrinsicSigned)}
+          isRoute='/extrinsics'
         />
         <DataField
           icon="/assets/icons/user-square.svg"
           title="Accounts"
           data={new Intl.NumberFormat().format(props.total_accounts)}
+          isRoute='/accounts'
         />
         <DataField
           icon="/assets/icons/arrow-swap-horizontal.svg"
           title="Transfers"
           data={new Intl.NumberFormat().format(props.total_transfers)}
+          isRoute='/transfers'
         />
         <DataField
           icon="/assets/icons/validator-white.svg"

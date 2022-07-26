@@ -31,6 +31,9 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+.app {
+  min-height: calc(100vh - 4rem) !important;
+}
 .container {
   max-width: 72rem;
   margin: 0 auto;
@@ -158,6 +161,9 @@ code {
   /* color: #90dcfe; */
   color: #03a9f4;
   font-weight: 600;
+}
+.home-all-data-route:hover {
+  text-decoration: underline;
 }
 .home-subTitle {
   color: #02628d;

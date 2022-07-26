@@ -47,7 +47,7 @@ export default function BlockDetail() {
     <div className="container">
       <div className="spacing" />
       <p className="block-title">Block #{id}</p>
-      <Card className="block-detail-card" style={{ borderRadius: "16px" }}>
+      <Card className="block-detail-card">
         <table className="table">
           <tbody>
             <tr className="tr-style">
