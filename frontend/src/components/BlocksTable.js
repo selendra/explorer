@@ -1,4 +1,4 @@
-import { Spin, Table } from "antd";
+import { Table } from "antd";
 import { Link } from "react-router-dom";
 import { formatNumber, shortenAddress, timeDuration } from "../utils";
 import LaodingLogo from "../assets/loading.png";
@@ -35,11 +35,16 @@ export default function BlocksTable({ short, loading, data, onChange }) {
         )}
       />
       <Table.Column
+        title="Hash"
+        dataIndex="blockHash"
+        render={(blockHash) => <p>{shortenAddress(blockHash)}</p>}
+      />
+      <Table.Column
         title="Status"
         dataIndex="finalized"
         render={(finalized) => (
           <div>
-            {finalized ? (
+            { finalized ?
               <div>
                 <img
                   src="/assets/icons/check.svg"
@@ -49,19 +54,13 @@ export default function BlocksTable({ short, loading, data, onChange }) {
                 />
                 <span style={{ marginLeft: "4px" }}>Finalized</span>
               </div>
-            ) : (
-              // <Spin size="small" />
+              :
               <div>
-                <img className="loading-img-block" src={LaodingLogo} />
+                <img className="loading-img-block" alt='' src={LaodingLogo} />
               </div>
-            )}
+            }
           </div>
         )}
-      />
-      <Table.Column
-        title="Hash"
-        dataIndex="blockHash"
-        render={(blockHash) => <p>{shortenAddress(blockHash)}</p>}
       />
       {!short && (
         <Table.Column
@@ -71,7 +70,7 @@ export default function BlocksTable({ short, loading, data, onChange }) {
           render={(timestamp) => <p>{timeDuration(timestamp)}</p>}
         />
       )}
-      <Table.Column
+      {/* <Table.Column
         title="Extrinsics"
         responsive={["md"]}
         dataIndex="totalExtrinsics"
@@ -88,7 +87,7 @@ export default function BlocksTable({ short, loading, data, onChange }) {
           dataIndex="blockAuthor"
           render={(blockAuthor) => <p>{shortenAddress(blockAuthor)}</p>}
         />
-      )}
+      )} */}
     </Table>
   );
 }
