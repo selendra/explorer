@@ -11,6 +11,7 @@ export default function BlocksTable({ short, loading, data, onChange }) {
       rowKey={(record) => record.blockNumber}
       className="table-styling"
       sortDirections="descend"
+      tableLayout="fixed"
       pagination={
         short
           ? false

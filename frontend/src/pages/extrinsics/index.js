@@ -34,7 +34,7 @@ export default function Extrinsics() {
       <div className="blocks-bg">
         <div className="container">
           <p className="blocks-title">Extrinsics</p>
-          <Card style={{ borderRadius: "8px" }}>
+          <div className="filter-bg">
             <Row align="middle" gutter={[32, 32]}>
               <Col>
                 <span style={{ paddingRight: "4px" }}>Sign</span>
@@ -63,17 +63,17 @@ export default function Extrinsics() {
                 </Select>
               </Col>
             </Row>
-          </Card>
+          </div>
           <div className="spacing" />
           <ExtrinsicsTable
             // loading={loading}
             loading={{
               indicator: (
                 <div>
-                  <img className="loading-img-block" src={LaodingLogo} />
+                  <img className="loading-img-block" alt='' src={LaodingLogo} />
                 </div>
               ),
-              spinning: !data,
+              spinning: loading,
             }}
             data={data}
             onChange={setPage}

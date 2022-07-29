@@ -1,4 +1,4 @@
-import { Table } from "antd";
+import { Avatar, Row, Table } from "antd";
 import React from "react";
 import { Link } from "react-router-dom";
 import { formatNumber, shortenAddress } from "../utils";
@@ -10,6 +10,7 @@ export default function TableStaking({ loading, data, short, onChange }) {
       rowKey={(record) => record.stashAddress}
       loading={loading}
       className="table-styling"
+      tableLayout="fixed"
       // pagination={short ? false : {
       //   pageSize: 10,
       //   total: data?.total_page,
@@ -23,7 +24,10 @@ export default function TableStaking({ loading, data, short, onChange }) {
         dataIndex="stashAddress"
         render={(stashAddress) => (
           <Link to={`/validator/${stashAddress}`}>
-            <p>{shortenAddress(stashAddress)}</p>
+            <Row>
+              <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${stashAddress}.svg`} />
+              <p>{shortenAddress(stashAddress)}</p>
+            </Row>
           </Link>
         )}
       />

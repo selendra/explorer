@@ -1,11 +1,12 @@
 import { Card, notification, message } from "antd";
 import React from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Loading from "../../components/Loading";
 import NotFound from "../../components/NotFound";
 import useFetch from "../../hooks/useFetch";
 import { formatNumber, timeDuration } from "../../utils";
 import { CopyOutlined } from "@ant-design/icons";
+import ReactJson from 'react-json-view';
 
 export default function ExtrinsicDetail() {
   const { id } = useParams();
@@ -40,8 +41,20 @@ export default function ExtrinsicDetail() {
         <table className="table">
           <tbody>
             <tr>
+              <td>Block Number</td>
+              <td>
+                <Link to={`/blocks/${data?.blockNumber}`}>
+                  #{formatNumber(data?.blockNumber)}
+                </Link>
+              </td>
+            </tr>
+            <tr>
               <td>Time</td>
               <td>{timeDuration(data?.timestamp)}</td>
+            </tr>
+            <tr>
+              <td>Extrinsic Index</td>
+              <td>{data?.extrinsicIndex}</td>
             </tr>
             <tr>
               <td>Hash</td>
@@ -80,14 +93,7 @@ export default function ExtrinsicDetail() {
                 )}
               </td>
             </tr>
-            <tr>
-              <td>Block Number</td>
-              <td>#{formatNumber(data?.blockNumber)}</td>
-            </tr>
-            <tr>
-              <td>Extrinsic Index</td>
-              <td>{data?.extrinsicIndex}</td>
-            </tr>
+            
             <tr>
               <td>Signed</td>
               <td>
@@ -110,7 +116,7 @@ export default function ExtrinsicDetail() {
             </tr>
             <tr>
               <td>Signer</td>
-              <td>{data?.signer || "null"}</td>
+              <td>{data?.signer || " "}</td>
             </tr>
             <tr>
               <td>Section and Method</td>
@@ -124,6 +130,14 @@ export default function ExtrinsicDetail() {
                 />{" "}
                 {data?.method}
               </td>
+            </tr>
+            <tr>
+              <td>Documentation</td>
+              <td>{data?.doc && <ReactJson collapsed={true} src={JSON.parse(data?.doc)} />}</td>
+            </tr>
+            <tr>
+              <td>Arguments</td>
+              <td>{data?.args && <ReactJson collapsed={true} src={JSON.parse(data?.args)} />}</td>
             </tr>
           </tbody>
         </table>

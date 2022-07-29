@@ -1,6 +1,6 @@
-import { Card, message, notification } from "antd";
+import { Avatar, Card, message, notification } from "antd";
 import React from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Loading from "../../components/Loading";
 import useFetch from "../../hooks/useFetch";
 import { formatNumber } from "../../utils";
@@ -43,18 +43,35 @@ export default function TransferDetail() {
         <table className="table">
           <tbody>
             <tr className="tr-style">
+              <td>Block</td>
+              <td>
+                <Link to={`/blocks/${data?.blockNumber}`}>
+                  <p>#{formatNumber(data?.blockNumber)}</p>
+                </Link>
+              </td>
+            </tr>
+            <tr className="tr-style">
               <td>Time</td>
               <td>
                 <Moment>{data?.timestamp}</Moment>
               </td>
             </tr>
             <tr className="tr-style">
-              <td>Block</td>
-              <td>#{formatNumber(data?.blockNumber)}</td>
+              <td>Extrinsic ID</td>
+              <td>
+                {data?.blockNumber}-{data?.extrinsicIndex}
+              </td>
+            </tr>
+            <tr>
+              <td>Hash</td>
+              <td>{data?.hash}</td>
             </tr>
             <tr className="tr-style">
               <td>Sender</td>
-              <td>{data?.source}</td>
+              <td>
+                <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${data?.source}.svg`} />
+                <Link to={`/accounts/${data?.source}`}>{data?.source}</Link>
+              </td>
               <CopyOutlined
                 style={{ fontSize: "20px", marginTop: "16px" }}
                 onClick={() =>
@@ -68,7 +85,10 @@ export default function TransferDetail() {
             </tr>
             <tr className="tr-style">
               <td>Destination</td>
-              <td>{data?.destination}</td>
+              <td>
+                <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${data?.destination}.svg`} />
+                <Link to={`/accounts/${data?.source}`}>{data?.destination}</Link>
+              </td>
               <CopyOutlined
                 style={{ fontSize: "20px", marginTop: "16px" }}
                 onClick={() =>

@@ -23,7 +23,7 @@ export default function Events() {
     <div className="blocks-bg">
       <div className="container">
         <p className="blocks-title">Events</p>
-        <Card style={{ borderRadius: "8px" }}>
+        <div className="filter-bg">
           <Row align="middle" gutter={[32, 32]}>
             <Col>
               <span style={{ paddingRight: "4px" }}>Module:</span>
@@ -41,7 +41,7 @@ export default function Events() {
               </Select>
             </Col>
           </Row>
-        </Card>
+        </div>
         <div className="spacing" />
         <EventsTable
           loading={{

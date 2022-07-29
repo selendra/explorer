@@ -1,4 +1,4 @@
-import { Card, Tabs } from 'antd';
+import { Avatar, Card, Tabs } from 'antd';
 import React, { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import ExtrinsicsTable from '../../components/ExtrinsicsTable';
@@ -38,21 +38,52 @@ export default function AccountDetail() {
       <Card className='block-detail-card' style={{borderRadius: '8px'}}>
         <table className='table'>
           <tbody>
+            { data?.identityDetail.identityDisplay &&
+              <tr>
+                <td>Identity Display</td>
+                <td>
+                  <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${data?.accountId}.svg`} />
+                  {data?.identityDetail.identityDisplay}
+                </td>
+              </tr>
+            }
             <tr>
               <td>Address</td>
-              <td>{data?.accountId}</td>
+              <td>
+                <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${data?.accountId}.svg`} />
+                {data?.accountId}
+              </td>
             </tr>
             <tr>
-              <td>Balance</td>
+              <td>Total Balance</td>
               <td>{formatNumber(data?.totalBalance)} SEL</td>
             </tr>
             <tr>
-              <td>Reserved</td>
+              <td>Available Balance</td>
+              <td>{formatNumber(data?.availableBalance)} SEL</td>
+            </tr>
+            <tr>
+              <td>Locked Balance</td>
+              <td>{formatNumber(data?.lockedBalance)} SEL</td>
+            </tr>
+            <tr>
+              <td>Reserved Balance</td>
               <td>{formatNumber(data?.reservedBalance)} SEL</td>
             </tr>
             <tr>
-              <td>Locked</td>
-              <td>{formatNumber(data?.lockedBalance)} SEL</td>
+              <td>Vest Details</td>
+              <tr>
+                <td>Vest Balance</td>
+                <td>{formatNumber(data?.vestingDetails.vestBalance)} SEL</td>
+              </tr>
+              <tr>
+                <td style={{paddingRight: '80px'}}>Vested Claimable</td>
+                <td>{formatNumber(data?.vestingDetails.vestedClaimable)} SEL</td>
+              </tr>
+              <tr>
+                <td>Vesting Total</td>
+                <td>{formatNumber(data?.vestingDetails.vestingTotal)} SEL</td>
+              </tr>
             </tr>
           </tbody>
         </table>

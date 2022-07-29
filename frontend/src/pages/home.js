@@ -4,6 +4,7 @@ import Search from "../components/Search";
 import Overview from "../components/Overview";
 import BlocksTable from "../components/BlocksTable";
 import TransferTable from "../components/TransferTable";
+import AccountsTable from "../components/AccountsTable";
 import { useAPIState } from "../context/APIContext";
 import Loading from "../components/Loading";
 import bannerImg from "../assets/loading.png";
@@ -48,14 +49,16 @@ export default function Home() {
       fetch(`${process.env.REACT_APP_API}/staking/status`),
       fetch(`${process.env.REACT_APP_API}/totals/lock_balances`),
       fetch(`${process.env.REACT_APP_API}/staking/status`),
+      fetch(`${process.env.REACT_APP_API}/account/all/1`),
     ])
-      .then(async ([a, b, c, d, e, f]) => {
+      .then(async ([a, b, c, d, e, f, g]) => {
         const block = await a.json();
         const transfer = await b.json();
         const total = await c.json();
         const staking = await d.json();
         const totalLock = await e.json();
         const waitingCount = await f.json();
+        const account = await g.json();
 
         setLoading(false);
         setOverview({
@@ -65,6 +68,7 @@ export default function Home() {
           total,
           staking,
           totalLock,
+          account
         });
       })
       .catch((err) => {
@@ -79,7 +83,6 @@ export default function Home() {
         <Loading />
       </div>
     );
-  console.log(overview?.waitingCount.waitingValidatorCount);
 
   return (
     <div>
@@ -110,10 +113,14 @@ export default function Home() {
             <BlocksTable short data={overview?.block} />
           </Col>
           <Col xs={24} md={24} lg={12} xl={12}>
-            <p className="home-subTitle">Latest Transfers</p>
-            <TransferTable short data={overview?.transfer} />
+            <p className="home-subTitle">Account Updates</p>
+            <AccountsTable short data={overview?.account} />
           </Col>
         </Row>
+      </div>
+      <div className="home-info">
+        <p className="home-subTitle">Latest Transactions</p>
+        <TransferTable short data={overview?.transfer} />
       </div>
     </div>
   );

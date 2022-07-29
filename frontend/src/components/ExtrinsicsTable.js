@@ -9,6 +9,7 @@ export default function ExtrinsicsTable({short, loading, data, onChange}) {
       rowKey={record => record.hash}
       loading={loading}
       className='table-styling'
+      tableLayout='fixed'
       // sortDirections='descend'
       pagination={short ? false : {
         pageSize: 10,
@@ -27,7 +28,7 @@ export default function ExtrinsicsTable({short, loading, data, onChange}) {
           </Link>
         )}
       />
-      { !short &&
+      {/* { !short &&
         <Table.Column
           title='Block'
           responsive={['md']}
@@ -40,7 +41,7 @@ export default function ExtrinsicsTable({short, loading, data, onChange}) {
             </Link>
           )}
         />
-      }
+      } */}
       <Table.Column
         title='Extrinsic ID'
         render={(text, record) => (

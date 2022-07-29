@@ -1,4 +1,4 @@
-import { Table } from "antd";
+import { Avatar, Row, Table } from "antd";
 import { Link } from "react-router-dom";
 import { formatNumber, shortenAddress, timeDuration } from "../utils";
 
@@ -9,6 +9,7 @@ export default function TransferTable({ short, loading, data, onChange }) {
       rowKey={(record) => record.blockNumber}
       loading={loading}
       className="table-styling"
+      tableLayout="fixed"
       pagination={
         short
           ? false
@@ -58,17 +59,46 @@ export default function TransferTable({ short, loading, data, onChange }) {
         title="From"
         responsive={["md"]}
         dataIndex="source"
-        render={(source) => <p>{shortenAddress(source)}</p>}
+        render={(source) => 
+          <Row>
+            <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${source}.svg`} />
+            <p>{shortenAddress(source)}</p>
+          </Row>
+        }
       />
       <Table.Column
         title="To"
         dataIndex="destination"
-        render={(destination) => <p>{shortenAddress(destination)}</p>}
+        render={(destination) => 
+          <Row>
+            <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${destination}.svg`} />
+            <p>{shortenAddress(destination)}</p>
+          </Row>
+        }
       />
       <Table.Column
         title="Amount"
         dataIndex="amount"
         render={(amount) => <p>{formatNumber(amount)} SEL</p>}
+      />
+      <Table.Column
+        title="Success"
+        dataIndex="success"
+        render={(success) => success ? 
+          <img
+            src="/assets/icons/check.svg"
+            alt="finalized"
+            width={18}
+            height={18}
+          /> 
+          :
+          <img
+            src="/assets/icons/x-circle.svg"
+            alt="finalized"
+            width={18}
+            height={18}
+          /> 
+        }
       />
     </Table>
   );

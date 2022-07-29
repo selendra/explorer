@@ -1,6 +1,6 @@
-import { Card, Table, Tabs } from 'antd'
+import { Avatar, Card, Row, Table, Tabs } from 'antd'
 import React from 'react'
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import useFetch from '../../hooks/useFetch';
 import Loading from '../../components/Loading';
 import { FormatBalance, formatNumber, shortenAddress, timeDuration } from '../../utils';
@@ -29,28 +29,45 @@ export default function ValidatorDetail() {
     <div className='container'>
       <div className='spacing' />
       <p className='block-title'>Validator #{id}</p>
-      <Card className='block-detail-card' style={{borderRadius: '8px'}}>
+      <Card className='block-detail-card'>
         <table className='table'>
           <tbody>
+            <tr>
+              <td>Block</td>
+              <td>
+                <Link to={`/blocks/${data?.blockHeight}`}>
+                  <p>#{formatNumber(data?.blockHeight)}</p>
+                </Link>
+              </td>
+            </tr>
             <tr>
               <td>Time</td>
               <td>{timeDuration(data?.timestamp)}</td>
             </tr>
             <tr>
-              <td>Block</td>
-              <td>#{formatNumber(data?.blockHeight)}</td>
-            </tr>
-            <tr>
               <td>Identity</td>
-              <td>{data?.name}</td>
+              <td>
+                <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${data?.stashAddress}.svg`} />
+                {data?.name}
+              </td>
             </tr>
             <tr>
               <td>Stash</td>
-              <td>{data?.stashAddress}</td>
+              <td>
+                <Link to={`/accounts/${data?.stashAddress}`}>
+                  <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${data?.stashAddress}.svg`} />
+                  {data?.stashAddress}
+                </Link>
+              </td>
             </tr>
             <tr>
               <td>Controller</td>
-              <td>{data?.controllerAddress}</td>
+              <td>
+                <Link to={`/accounts/${data?.controllerAddress}`}>
+                  <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${data?.controllerAddress}.svg`} />
+                  {data?.controllerAddress}
+                </Link>
+              </td>
             </tr>
             <tr>
               <td>Commission</td>
@@ -71,10 +88,16 @@ export default function ValidatorDetail() {
               loading={loading}
               pagination={false}
               dataSource={data?.nominations}
+              className='table-styling'
             >
               <Table.Column title='Address' dataIndex='staking' 
                 render={staking => (
-                  <p>{shortenAddress(staking)}</p>
+                  <Link to={`/accounts/${staking}`}>
+                    <Row>
+                      <Avatar style={{marginRight: '4px', backgroundColor: '#87d068'}} size="small" src={`https://avatars.dicebear.com/api/pixel-art/${staking}.svg`} />
+                      <p>{shortenAddress(staking)}</p>
+                    </Row>
+                  </Link>
                 )}
               />
               <Table.Column title='Amount' dataIndex='amount'
@@ -89,6 +112,7 @@ export default function ValidatorDetail() {
               loading={loading}
               pagination={false}
               dataSource={stakeHistory}
+              className='table-styling'
             >
               <Table.Column title='Era' dataIndex='era' />
               <Table.Column title='Self' dataIndex='self'
@@ -108,6 +132,7 @@ export default function ValidatorDetail() {
               loading={loading}
               pagination={false}
               dataSource={eraPointsHistory}
+              className='table-styling'
             >
               <Table.Column title='Era' dataIndex='era' />
               <Table.Column title='Point' dataIndex='points'

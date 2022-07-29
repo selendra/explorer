@@ -2,6 +2,7 @@ import { Table, Row } from 'antd'
 import { CaretRightOutlined } from '@ant-design/icons'
 import React, { useState } from 'react'
 import { formatNumber, shortenAddress, timeDuration } from '../utils';
+import { Link } from 'react-router-dom';
 
 export default function LogsTable({loading, data, onChange}) {
   return (
@@ -26,7 +27,9 @@ export default function LogsTable({loading, data, onChange}) {
       <Table.Column 
         title='Block'
         render={(text, record) => (
-          <p>#{formatNumber(record.blockNumber)}</p>
+          <Link to={`/blocks/${record?.blockNumber}`}>
+            <p>#{formatNumber(record.blockNumber)}</p>
+          </Link>
         )}
       />
       <Table.Column 
