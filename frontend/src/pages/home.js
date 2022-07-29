@@ -20,7 +20,6 @@ export default function Home() {
   const bestNumber = api.derive.chain.bestNumber;
   const bestNumberFinalized = api.derive.chain.bestNumberFinalized;
   const validatorsData = api.query.session.validators;
-
   useEffect(() => {
     let unsubscribeAll = null;
 
@@ -73,7 +72,6 @@ export default function Home() {
       })
       .catch((err) => {
         setLoading(false);
-        console.log(err);
       });
   }, [blockNumber]);
 
