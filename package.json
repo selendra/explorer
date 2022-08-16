@@ -5,6 +5,9 @@
   "main": "index.js",
   "author": "Selendra <info@selendra.org>",
   "license": "Apache-2.0",
-  "workspaces": ["crawler"],
+  "private": true,
+  "workspaces": [
+    "crawler"
+  ],
   "scripts": {}
 }

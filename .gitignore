@@ -7,3 +7,4 @@ crawler/reef-explorer.log
 /.idea/
 crawler/isolate-0x*.log
 crawler/.clinic
+.env
