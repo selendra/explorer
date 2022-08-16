@@ -1,0 +1,10 @@
+{
+  "name": "selendra-explorer",
+  "version": "1.0.0",
+  "description": "Selendra block explorer",
+  "main": "index.js",
+  "author": "Selendra <info@selendra.org>",
+  "license": "Apache-2.0",
+  "workspaces": ["crawler"],
+  "scripts": {}
+}
