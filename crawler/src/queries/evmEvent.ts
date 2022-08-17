@@ -3,7 +3,7 @@ import { utils as ethersUtils } from 'ethers/lib/ethers';
 import format from 'pg-format';
 import {
   BacktrackingEvmEvent, BytecodeLog, CompleteEvmData, Contract, DecodedEvmError, ERC20Token, EventBody, EVMEventData, VerifiedContract,
-} from '../types';
+} from '../crawler/types';
 import {
   insert, query, queryv2,
 } from '../utils/connector';

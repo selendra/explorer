@@ -1,5 +1,3 @@
-
-
 import { insertV2, query, queryv2 } from '../utils/connector';
 
 interface BlockID {

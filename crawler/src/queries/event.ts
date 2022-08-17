@@ -1,6 +1,4 @@
-
-
-import { AccountBody, EventBody } from '../types';
+import { AccountBody, EventBody } from '../crawler/types';
 import { insert } from '../utils/connector';
 
 const toEventValue = async ({

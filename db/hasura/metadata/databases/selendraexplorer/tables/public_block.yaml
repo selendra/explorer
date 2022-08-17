@@ -1,0 +1,25 @@
+table:
+  schema: public
+  name: block
+array_relationships:
+  - name: accounts
+    using:
+      foreign_key_constraint_on:
+        column: block_id
+        table:
+          schema: public
+          name: account
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - id
+        - hash
+        - author
+        - state_root
+        - parent_hash
+        - extrinsic_root
+        - finalized
+        - timestamp
+      filter: {}
+      allow_aggregations: true

@@ -1,0 +1,8 @@
+- name: selendraexplorer
+  kind: postgres
+  configuration:
+    connection_info:
+      use_prepared_statements: false
+      database_url: postgres://sgpostgres:U2_AUuv4eejT4qtS@SG-selendra-3856-pgsql-master.servers.mongodirector.com:5432/selendra
+      isolation_level: read-committed
+  tables: "!include selendraexplorer/tables/tables.yaml"

@@ -1,4 +1,4 @@
-import { TokenHolder } from '../types';
+import { TokenHolder } from '../crawler/types';
 import { insertV2 } from '../utils/connector';
 import logger from '../utils/logger';
 import { dropDuplicatesMultiKey } from '../utils/utils';

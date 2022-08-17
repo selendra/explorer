@@ -1,12 +1,12 @@
 import { utils } from 'ethers';
 import APP_CONFIG from '../config';
-import { ERC20Data } from '../types';
+import { ERC20Data } from '../crawler/types';
 
 export const SELENDRA_CONTRACT_ADDRESS = '0x0000000000000000000000000000000001000000';
 export const SELENDRA_DEFAULT_DATA: ERC20Data = {
   decimals: 18,
   symbol: 'SEL',
-  name: 'selendra',
+  name: 'Selendra',
 };
 
 /* eslint no-promise-executor-return: "off" */

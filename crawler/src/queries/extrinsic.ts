@@ -1,4 +1,4 @@
-import { SignedExtrinsicData, Transfer } from '../types';
+import { SignedExtrinsicData, Transfer } from '../crawler/types';
 import { insert, insertV2, query } from '../utils/connector';
 
 export interface InsertExtrinsic {

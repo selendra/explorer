@@ -1,0 +1,43 @@
+table:
+  schema: public
+  name: verified_pool_event
+object_relationships:
+  - name: evm_event
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: evm_event
+        insertion_order: null
+        column_mapping:
+          evm_event_id: id
+  - name: pool
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: pool
+        insertion_order: null
+        column_mapping:
+          pool_id: id
+select_permissions:
+  - role: public
+    permission:
+      columns:
+        - id
+        - pool_id
+        - evm_event_id
+        - to_address
+        - sender_address
+        - type
+        - amount_1
+        - amount_2
+        - amount_in_1
+        - amount_in_2
+        - reserved_1
+        - reserved_2
+        - supply
+        - total_supply
+        - timestamp
+      filter: {}
+      allow_aggregations: true
