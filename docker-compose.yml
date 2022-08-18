@@ -9,7 +9,7 @@ services:
     restart: always
     environment:
       ## postgres database to store Hasura metadata
-      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://sgpostgres:2ESx^6pM41oalz2e@SG-explorer-3866-pgsql-master.servers.mongodirector.com:5432/explorer
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://sgpostgres:2ESx^6pM41oalz2e@SG-explorer-3866-pgsql-master.servers.mongodirector.com:5432/explorer01
       ## this env var can be used to add the above postgres database to Hasura as a data source. this can be removed/updated based on your needs
       PG_DATABASE_URL: postgres://sgpostgres:2ESx^6pM41oalz2e@SG-explorer-3866-pgsql-master.servers.mongodirector.com:5432/explorer
       ## enable the console served by server
