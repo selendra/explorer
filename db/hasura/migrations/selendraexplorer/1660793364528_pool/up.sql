@@ -6,9 +6,9 @@ CREATE TABLE IF NOT EXISTS pool (
   id BIGSERIAL,
   
   evm_event_id BIGINT NOT NULL,
-  address VARCHAR(48) NOT NULL,
-  token_1 VARCHAR(48) NOT NULL,
-  token_2 VARCHAR(48) NOT NULL,
+  address VARCHAR(49) NOT NULL,
+  token_1 VARCHAR(49) NOT NULL,
+  token_2 VARCHAR(49) NOT NULL,
 
   pool_decimal INT NOT NULL,
   decimal_1 INT NOT NULL,
@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS pool_event (
   pool_id BIGINT NOT NULL,
   evm_event_id BIGINT NOT NULL,
 
-  to_address VARCHAR(48),
-  sender_address VARCHAR(48),
+  to_address VARCHAR(49),
+  sender_address VARCHAR(49),
   type PoolType NOT NULL,
 
   amount_1 NUMERIC(80, 0),

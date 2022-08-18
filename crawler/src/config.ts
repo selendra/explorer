@@ -8,7 +8,7 @@ const toNumber = (defaultValue: number, value?: string): number => {
 };
 
 const defaultNodeUrls = [
-  'ws://0.0.0.0:9944',
+  'wss://rpc-testnet.selendra.org',
 ];
 
 export default {

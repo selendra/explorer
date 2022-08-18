@@ -322,7 +322,7 @@ export default async (fromId: number, toId: number, save = true): Promise<number
 
   logger.info('Extracting, compressing and dropping duplicate accounts');
   let insertOrDeleteAccount = dropDuplicates(allAccounts, 'address').filter(
-    ({ address }) => address.length === 48,
+    ({ address }) => address.length === 49,
   );
 
   logger.info('Retrieving used account info');

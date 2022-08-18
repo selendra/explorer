@@ -131,7 +131,7 @@ CREATE FUNCTION public.transfer_count() RETURNS trigger
 END;$$;
 CREATE TABLE public.account (
     block_id bigint,
-    address character varying(48) NOT NULL,
+    address character varying(49) NOT NULL,
     evm_address character varying(42),
     identity json,
     active boolean NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE public.chain_info (
     count numeric(80,0) NOT NULL
 );
 CREATE TABLE public.contract (
-    address character varying(48) NOT NULL,
+    address character varying(49) NOT NULL,
     extrinsic_id bigint,
     signer character varying NOT NULL,
     bytecode text NOT NULL,
@@ -224,7 +224,7 @@ CREATE TABLE public.extrinsic (
     "timestamp" timestamp with time zone NOT NULL
 );
 CREATE TABLE public.newly_verified_contract_queue (
-    address character varying(48)
+    address character varying(49)
 );
 CREATE TABLE public.staking (
     id bigint NOT NULL,
@@ -278,7 +278,7 @@ CREATE SEQUENCE public.transfer_id_seq
 ALTER SEQUENCE public.transfer_id_seq OWNED BY public.transfer.id;
 CREATE TABLE public.verification_request (
     id bigint NOT NULL,
-    address character varying(48),
+    address character varying(49),
     name text NOT NULL,
     filename text NOT NULL,
     source json NOT NULL,
@@ -299,7 +299,7 @@ CREATE SEQUENCE public.verification_request_id_seq
     CACHE 1;
 ALTER SEQUENCE public.verification_request_id_seq OWNED BY public.verification_request.id;
 CREATE TABLE public.verified_contract (
-    address character varying(48),
+    address character varying(49),
     name text NOT NULL,
     filename text NOT NULL,
     source json NOT NULL,
