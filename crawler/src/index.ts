@@ -3,8 +3,11 @@ import { RewriteFrames } from '@sentry/integrations';
 import * as Sentry from '@sentry/node';
 import config from './config';
 import { lastBlockInDatabase, deleteUnfinishedBlocks } from './crud';
+import { promiseWithTimeout, nodeProvider, wait } from './utils';
+import Queue from './utils/Queue';
 import logger from './utils/logger';
-import { promiseWithTimeout, nodeProvider } from './utils';
+import Performance from './utils/Performance';
+import { processBlock, processUnfinalizedBlock } from './crawler';
 
 /* eslint "no-underscore-dangle": "off" */
 Sentry.init({
@@ -25,9 +28,38 @@ Sentry.setTag('network', config.network);
 console.warn = () => {};
 
 const crawler = async () => {
-  // eslint-disable-next-line prefer-const
   let currentBlockIndex = await lastBlockInDatabase();
-  console.log(currentBlockIndex);
+  currentBlockIndex++;
+  const queue = new Queue<Promise<void>>(config.maxBlocksPerStep);
+  const per = new Performance(config.maxBlocksPerStep);
+
+  nodeProvider.getProvider().api.rpc.chain.subscribeNewHeads(async (header) => {
+    await processUnfinalizedBlock(header.number.toNumber());
+  });
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const finalizedHead = nodeProvider.lastFinalizedBlockId();
+
+    // Starting to process some amount of blocks
+    while (currentBlockIndex <= finalizedHead && !queue.isFull()) {
+      queue.push(processBlock(currentBlockIndex));
+      currentBlockIndex++;
+    }
+
+    // If queue is empty crawler has nothing to do
+    if (queue.isEmpty()) {
+      await wait(config.pollInterval);
+      continue;
+    }
+
+    // Waiting for the first block to finish and measuring performance
+    const start = Date.now();
+    await queue.pop();
+    const diff = Date.now() - start;
+    per.push(diff);
+    per.log();
+  }
 };
 
 Promise.resolve()
@@ -36,9 +68,9 @@ Promise.resolve()
     logger.info('Removing unfinished blocks...');
     await deleteUnfinishedBlocks();
   })
-  .then(() => {
-    logger.info(`Contract verification sync: ${config.verifiedContractSync}`);
-  })
+  // .then(() => {
+  //   logger.info(`Contract verification sync: ${config.verifiedContractSync}`);
+  // })
   .then(crawler)
   .then(async () => {
     await nodeProvider.closeProviders();
