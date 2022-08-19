@@ -1,1 +1,0 @@
-{"version":3,"file":"EndowedEvent.js","sourceRoot":"/","sources":["crawlerv2/extrinsic/event/EndowedEvent.ts"],"names":[],"mappings":";;;;;AAAA,kFAA0D;AAE1D,MAAM,YAAa,SAAQ,8BAAoB;CAAI;AAEnD,kBAAe,YAAY,CAAC","sourcesContent":["import SignerAddressCapture from './SignerAddressCapture';\n\nclass EndowedEvent extends SignerAddressCapture { }\n\nexport default EndowedEvent;\n"]}
