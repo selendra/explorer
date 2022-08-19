@@ -1,7 +1,41 @@
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
+import { Block } from '../types';
 import { insertBlock } from '../crud';
 import { nodeProvider } from '../utils';
 import logger from '../utils/logger';
+
+const blockBody = async (id: number, hash: BlockHash): Promise<Block> => {
+  const provider = nodeProvider.getProvider();
+  const [signedBlock, extendedHeader, events] = await Promise.all([
+    provider.api.rpc.chain.getBlock(hash),
+    provider.api.derive.chain.getHeader(hash),
+    provider.api.query.system.events.at(hash),
+  ]);
+
+  // Parse the timestamp from the `timestamp.set` extrinsic
+  const firstExtrinsic = signedBlock.block.extrinsics[0];
+
+  let timestamp;
+  if (
+    firstExtrinsic
+    && firstExtrinsic.method.section === 'timestamp'
+    && firstExtrinsic.method.method === 'set'
+  ) {
+    timestamp = new Date(Number(firstExtrinsic.method.args)).toUTCString();
+  } else {
+    timestamp = await provider.api.query.timestamp.now.at(hash);
+    timestamp = new Date(timestamp.toJSON()).toUTCString();
+  }
+
+  return {
+    id,
+    hash,
+    signedBlock,
+    extendedHeader,
+    events,
+    timestamp,
+  };
+};
 
 const formatUnfinalizedBlock = (id: number, hash: BlockHash) => ({
   id,
@@ -18,6 +52,12 @@ export const processBlock = async (blockId: number): Promise<void> => {
   logger.info('--------------------------------');
   // Load block hash
   logger.info(`Loading block hash for: ${blockId}`);
+
+  const hash = await nodeProvider.query((provider) => provider.api.rpc.chain.getBlockHash(blockId));
+
+  // Load block
+  logger.info(`Loading block for: ${blockId}`);
+  const block = await blockBody(blockId, hash);
 };
 
 // eslint-disable-next-line import/prefer-default-export
