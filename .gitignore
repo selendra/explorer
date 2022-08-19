@@ -8,3 +8,4 @@ crawler/selendra-explorer.log
 crawler/isolate-0x*.log
 crawler/.clinic
 .env
+crawler_old
