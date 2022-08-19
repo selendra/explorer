@@ -1,0 +1,1 @@
+{"version":3,"file":"ReservedEvent.js","sourceRoot":"/","sources":["crawlerv2/extrinsic/event/ReservedEvent.ts"],"names":[],"mappings":";;;;;AAAA,kFAA0D;AAE1D,MAAM,aAAc,SAAQ,8BAAoB;CAAI;AAEpD,kBAAe,aAAa,CAAC","sourcesContent":["import SignerAddressCapture from './SignerAddressCapture';\n\nclass ReservedEvent extends SignerAddressCapture { }\n\nexport default ReservedEvent;\n"]}

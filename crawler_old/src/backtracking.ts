@@ -4,7 +4,7 @@ import { nodeProvider, queryv2 } from './utils/connector';
 import logger from './utils/logger';
 import config from './config';
 import { wait } from './utils/utils';
-import backtractContractEvents from './backtracking/';
+import backtractContractEvents from './backtracking';
 
 /* eslint "no-underscore-dangle": "off" */
 Sentry.init({
