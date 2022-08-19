@@ -37,6 +37,23 @@ const blockBody = async (id: number, hash: BlockHash): Promise<Block> => {
   };
 };
 
+const formateBlockBody = ({
+  id,
+  hash,
+  extendedHeader,
+  signedBlock,
+  timestamp,
+}: Block) => ({
+  id,
+  timestamp,
+  finalized: false,
+  hash: hash.toString(),
+  author: extendedHeader?.author?.toString() || '',
+  parentHash: signedBlock.block.header.parentHash.toString(),
+  stateRoot: signedBlock.block.header.stateRoot.toString(),
+  extrinsicRoot: signedBlock.block.header.extrinsicsRoot.toString(),
+});
+
 const formatUnfinalizedBlock = (id: number, hash: BlockHash) => ({
   id,
   finalized: false,
@@ -58,6 +75,10 @@ export const processBlock = async (blockId: number): Promise<void> => {
   // Load block
   logger.info(`Loading block for: ${blockId}`);
   const block = await blockBody(blockId, hash);
+
+  // Inserting initial block and marking it as unfinalized
+  logger.info(`Inserting unfinalized block: ${blockId}`);
+  await insertBlock(formateBlockBody(block));
 };
 
 // eslint-disable-next-line import/prefer-default-export
