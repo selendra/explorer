@@ -7,7 +7,7 @@ import { promiseWithTimeout, nodeProvider, wait } from './utils';
 import Queue from './utils/Queue';
 import logger from './utils/logger';
 import Performance from './utils/Performance';
-import { processBlock, processUnfinalizedBlock } from './crawler';
+import { processBlock, processUnfinalizedBlock } from './process';
 
 /* eslint "no-underscore-dangle": "off" */
 Sentry.init({
