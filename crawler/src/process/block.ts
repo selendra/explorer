@@ -1,7 +1,7 @@
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { Block } from '../types';
 import { insertBlock, updateBlockFinalized } from '../crud';
-import { nodeProvider } from '../utils';
+import { nodeProvider, queryv2 } from '../utils';
 import logger from '../utils/logger';
 
 const blockBody = async (id: number, hash: BlockHash): Promise<Block> => {
@@ -65,6 +65,13 @@ const formatUnfinalizedBlock = (id: number, hash: BlockHash) => ({
   extrinsicRoot: '',
 });
 
+const waitForBlockToFinish = async (id: number): Promise<void> => {
+  let res = await queryv2<{id: number}>('SELECT id FROM block WHERE id = $1 AND finalized = true;', [id]);
+  while (res.length === 0) {
+    res = await queryv2<{id: number}>('SELECT id FROM block WHERE id = $1 AND finalized = true;', [id]);
+  }
+};
+
 export const processBlock = async (blockId: number): Promise<void> => {
   logger.info('--------------------------------');
   // Load block hash
@@ -79,6 +86,9 @@ export const processBlock = async (blockId: number): Promise<void> => {
   // Inserting initial block and marking it as unfinalized
   logger.info(`Inserting unfinalized block: ${blockId}`);
   await insertBlock(formateBlockBody(block));
+
+  logger.info('Waiting for the previous block to finish');
+  await waitForBlockToFinish(blockId - 1);
 
   // Updating block finalization
   logger.info(`Finalizing block ${blockId}`);
