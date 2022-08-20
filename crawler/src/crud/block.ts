@@ -52,4 +52,8 @@ export const lastBlockInDatabase = async (): Promise<number> => {
   return result.length === 0 ? -1 : parseInt(result[0].id, 10);
 };
 
+export const updateBlockFinalized = async (id: number) => query(
+  `UPDATE block SET finalized = true WHERE id = ${id};`,
+);
+
 export const deleteUnfinishedBlocks = async () => query('DELETE FROM block WHERE finalized = false;');

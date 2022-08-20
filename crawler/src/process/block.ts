@@ -1,6 +1,6 @@
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { Block } from '../types';
-import { insertBlock } from '../crud';
+import { insertBlock, updateBlockFinalized } from '../crud';
 import { nodeProvider } from '../utils';
 import logger from '../utils/logger';
 
@@ -79,6 +79,10 @@ export const processBlock = async (blockId: number): Promise<void> => {
   // Inserting initial block and marking it as unfinalized
   logger.info(`Inserting unfinalized block: ${blockId}`);
   await insertBlock(formateBlockBody(block));
+
+  // Updating block finalization
+  logger.info(`Finalizing block ${blockId}`);
+  await updateBlockFinalized(blockId);
 };
 
 // eslint-disable-next-line import/prefer-default-export
