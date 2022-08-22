@@ -199,6 +199,7 @@ CREATE TABLE public.evm_event (
     topic_2 character varying,
     topic_3 character varying
 );
+CREATE SEQUENCE event_sequence START 1;
 CREATE SEQUENCE public.evm_event_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -223,6 +224,7 @@ CREATE TABLE public.extrinsic (
     inherent_data json,
     "timestamp" timestamp with time zone NOT NULL
 );
+CREATE SEQUENCE extrinsic_sequence START 1;
 CREATE TABLE public.newly_verified_contract_queue (
     address character varying(49)
 );
