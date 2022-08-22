@@ -4,6 +4,10 @@ import { ERC20Data } from '../types';
 
 export * from './connector';
 export * from './NodeProvider';
+export * from './crawler';
+export { default as logger } from './logger';
+export { default as Queue } from './Queue';
+export { default as Performance } from './Performance';
 
 export const SELENDRA_CONTRACT_ADDRESS = '0x0000000000000000000100000000000000000000';
 export const SELENDRA_DEFAULT_DATA: ERC20Data = {

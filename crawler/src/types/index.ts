@@ -122,6 +122,29 @@ export interface Transfer {
   timestamp: string;
 }
 
+export interface Transferv2 {
+  blockId: number;
+  extrinsicId: number;
+
+  denom?: string;
+  nftId?: string;
+
+  amount: string;
+  feeAmount: string;
+  type: 'Native' | 'ERC20' | 'ERC721' | 'ERC1155';
+
+  toAddress: string;
+  fromAddress: string;
+  tokenAddress: string;
+  fromEvmAddress: string;
+  toEvmAddress: string;
+
+  success: boolean;
+  errorMessage: string;
+
+  timestamp: string;
+}
+
 export interface Contract {
   address: string;
   extrinsicId: number;

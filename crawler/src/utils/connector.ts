@@ -14,6 +14,10 @@ export const liveGraphqlServer: GraphqlServer = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
+export const insertOne = async (statement: string): Promise<void> => {
+  await dbProvider.query(statement);
+};
+
 export const insert = async (statement: string, args: any[]) => {
   if (args.length === 0) { return; }
   await dbProvider.query(format(statement, args));

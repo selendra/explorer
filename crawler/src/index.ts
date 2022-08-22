@@ -1,12 +1,11 @@
-/* eslint-disable no-console */
+/* eslint-disable */
 import { RewriteFrames } from '@sentry/integrations';
 import * as Sentry from '@sentry/node';
 import config from './config';
 import { lastBlockInDatabase, deleteUnfinishedBlocks } from './crud';
-import { promiseWithTimeout, nodeProvider, wait } from './utils';
-import Queue from './utils/Queue';
-import logger from './utils/logger';
-import Performance from './utils/Performance';
+import { promiseWithTimeout, nodeProvider, wait, logger } from './utils';
+import { Queue } from './utils';
+import { Performance } from './utils';
 import { processBlock, processUnfinalizedBlock } from './process';
 
 /* eslint "no-underscore-dangle": "off" */
