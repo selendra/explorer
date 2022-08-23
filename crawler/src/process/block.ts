@@ -1,4 +1,5 @@
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
+import processLog from './Log';
 import { Block } from '../types';
 import { insertBlock, updateBlockFinalized } from '../crud';
 import { nodeProvider, queryv2, logger } from '../utils';
@@ -147,6 +148,9 @@ export const processBlock = async (blockId: number): Promise<void> => {
   // Chain saving all extrinsic and events
   logger.info('Saving extrinsic & their events');
   await Promise.all(extrinsics.map(async (extrinisc) => extrinisc.save()));
+
+  logger.info('Saving Log');
+  await Promise.all(block.signedBlock.block.header.digest.logs.map((log, index) => processLog(blockId, log, index, block.timestamp)));
 
   // Updating block finalization
   logger.info(`Finalizing block ${blockId}`);
