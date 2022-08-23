@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public.log  (
   type TEXT,
   engine TEXT DEFAULT NULL,
   data TEXT DEFAULT NULL,
-  timestamp BIGINT NOT NULL,
+  "timestamp" timestamp with time zone NOT NULL,
   PRIMARY KEY ( block_id, index ),
   CONSTRAINT fk_block
     FOREIGN KEY (block_id)
