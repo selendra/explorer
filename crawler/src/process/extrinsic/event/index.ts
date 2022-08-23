@@ -1,7 +1,8 @@
 import DefaultEvent from './DefaultEvent';
 import EndowedEvent from './EndowedEvent';
 import ReservedEvent from './ReservedEvent';
-import StakingEvent from './StakingEvent';
+import StakingReward from './staking/RewardEvent';
+import StakingSlash from './staking/SlashEvent';
 import ClaimEvmAccountEvent from './ClaimEvmAccountEvent';
 import KillAccountEvent from './KillAccountEvent';
 import { NativeTransferEvent } from './transfer';
@@ -17,7 +18,8 @@ const resolveEvent = async (head: EventData): Promise<DefaultEvent> => {
     case 'balances.Endowed': return new EndowedEvent(head);
     case 'balances.Reserved': return new ReservedEvent(head);
     case 'balances.Transfer': return new NativeTransferEvent(head);
-    case 'staking.Rewarded': return new StakingEvent(head);
+    case 'staking.Slash' || 'staking.Slashed' || 'balances.Slash' || 'balances.Slashed': return new StakingSlash(head);
+    case 'staking.Rewarded': return new StakingReward(head);
     case 'system.KilledAccount': return new KillAccountEvent(head);
     default: return new DefaultEvent(head);
   }
