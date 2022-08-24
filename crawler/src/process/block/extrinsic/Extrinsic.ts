@@ -1,10 +1,10 @@
 import { GenericExtrinsic } from '@polkadot/types/extrinsic';
 import { SpRuntimeDispatchError } from '@polkadot/types/lookup';
 import { AnyTuple } from '@polkadot/types/types';
-import { nodeProvider, queryv2 } from '../../utils/connector';
-import logger from '../../utils/logger';
-import AccountManager from '../managers/AccountManager';
-import { ExtrinsicData, ExtrinsicStatus, SignedExtrinsicData } from '../../types';
+import { nodeProvider, queryv2 } from '../../../utils/connector';
+import logger from '../../../utils/logger';
+import AccountManager from '../../managers/AccountManager';
+import { ExtrinsicData, ExtrinsicStatus, SignedExtrinsicData } from '../../../types';
 import DefaultEvent from './event/DefaultEvent';
 
 type Extr = GenericExtrinsic<AnyTuple>

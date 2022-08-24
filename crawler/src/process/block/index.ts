@@ -1,10 +1,10 @@
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
-import processLog from './Log';
-import { Block } from '../types';
-import { insertBlock, updateBlockFinalized } from '../crud';
-import { nodeProvider, queryv2, logger } from '../utils';
+import processLog from './log';
+import { Block } from '../../types';
+import { insertBlock, updateBlockFinalized } from '../../crud';
+import { nodeProvider, queryv2, logger } from '../../utils';
 import { resolveEvent, DefaultEvent, Extrinsic } from './extrinsic';
-import { AccountManager } from './managers';
+import { AccountManager } from '../managers';
 
 type EventMap = {[extrinsicId: number]: DefaultEvent[]};
 

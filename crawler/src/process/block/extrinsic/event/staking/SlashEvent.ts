@@ -1,7 +1,7 @@
-import { queryv2 } from '../../../../utils/connector';
-import logger from '../../../../utils/logger';
-import AccountManager from '../../../managers/AccountManager';
-import { ExtrinsicData } from '../../../../types';
+import { queryv2 } from '../../../../../utils/connector';
+import logger from '../../../../../utils/logger';
+import AccountManager from '../../../../managers/AccountManager';
+import { ExtrinsicData } from '../../../../../types';
 import DefaultEvent from '../DefaultEvent';
 
 class SlashEvent extends DefaultEvent {

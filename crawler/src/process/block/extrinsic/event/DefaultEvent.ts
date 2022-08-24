@@ -1,7 +1,7 @@
-import { insertEvent } from '../../../crud/event';
-import { queryv2, logger } from '../../../utils';
-import AccountManager from '../../managers/AccountManager';
-import { EventData, ExtrinsicData } from '../../../types';
+import { insertEvent } from '../../../../crud/event';
+import { queryv2, logger } from '../../../../utils';
+import AccountManager from '../../../managers/AccountManager';
+import { EventData, ExtrinsicData } from '../../../../types';
 
 class DefaultEvent {
   id: number|undefined;

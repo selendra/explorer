@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node';
-import config from '../../config';
-import { logger, queryv2 } from '../../utils';
+import config from '../../../config';
+import { logger, queryv2 } from '../../../utils';
 
 Sentry.init({
   dsn: config.sentryDns,

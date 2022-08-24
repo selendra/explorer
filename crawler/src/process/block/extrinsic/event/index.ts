@@ -6,7 +6,7 @@ import StakingSlash from './staking/SlashEvent';
 import ClaimEvmAccountEvent from './ClaimEvmAccountEvent';
 import KillAccountEvent from './KillAccountEvent';
 import { NativeTransferEvent } from './transfer';
-import { EventData } from '../../../types';
+import { EventData } from '../../../../types';
 
 const resolveEvent = async (head: EventData): Promise<DefaultEvent> => {
   // Compressing event section and method

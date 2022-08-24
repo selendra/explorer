@@ -1,4 +1,4 @@
-import { AccountManager } from '../../managers';
+import { AccountManager } from '../../../managers';
 import DefaultEvent from './DefaultEvent';
 
 class SignerAddressCapture extends DefaultEvent {
