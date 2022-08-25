@@ -1,6 +1,6 @@
 import { Provider } from '@selendra/selendra_evm';
 import { WsProvider } from '@polkadot/api';
-import { max, wait } from './utils';
+import { max, wait } from './index';
 import logger from './logger';
 
 export default class NodeProvider {

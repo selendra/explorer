@@ -199,6 +199,7 @@ CREATE TABLE public.evm_event (
     topic_2 character varying,
     topic_3 character varying
 );
+CREATE SEQUENCE event_sequence START 1;
 CREATE SEQUENCE public.evm_event_id_seq
     START WITH 1
     INCREMENT BY 1
@@ -223,6 +224,7 @@ CREATE TABLE public.extrinsic (
     inherent_data json,
     "timestamp" timestamp with time zone NOT NULL
 );
+CREATE SEQUENCE extrinsic_sequence START 1;
 CREATE TABLE public.newly_verified_contract_queue (
     address character varying(49)
 );
@@ -471,7 +473,14 @@ INSERT INTO chain_info (name, count) VALUES
   ('accounts', 0),
   ('contracts', 0),
   ('transfers', 0),
-  ('extrinsics', 0);
+  ('extrinsics', 0),
+  ('logs', 0),
+  ('active_validator_count', 0),
+  ('waiting_validator_count', 0),
+  ('nominator_count', 0),
+  ('current_era', 0),
+  ('active_era', 0),
+  ('minimum_stake', 0);
 
 -- Genisis contract insert
 INSERT INTO contract

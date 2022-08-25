@@ -3,6 +3,6 @@
   configuration:
     connection_info:
       use_prepared_statements: false
-      database_url: postgres://sgpostgres:2ESx^6pM41oalz2e@SG-explorer-3866-pgsql-master.servers.mongodirector.com:5432/explorer01
+      database_url: postgres://sgpostgres:2ESx^6pM41oalz2e@SG-explorer-3866-pgsql-master.servers.mongodirector.com:5432/test1
       isolation_level: read-committed
   tables: "!include selendraexplorer/tables/tables.yaml"
