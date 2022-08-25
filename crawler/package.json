@@ -11,6 +11,7 @@
     "dev:validator": "npx ts-node src/validator.ts",
     "dev:watch": "NODE_OPTIONS=--max-old-space-size=16384 nodemon ./src/index.ts",
     "start": "node --max-old-space-size=16384 ./dist/index.js",
+    "start:validator": "node --max-old-space-size=16384 ./dist/validator.js",
     "prod": "tsc -p tsconfig.production.json && node --max-old-space-size=16384 ./dist/index.js",
     "lint": "eslint --fix --ext .ts ./src/"
   },
