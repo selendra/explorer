@@ -12,6 +12,28 @@ CREATE TABLE IF NOT EXISTS public.log  (
       ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS log_block_id ON public.log (block_id);
-CREATE INDEX IF NOT EXISTS log_index ON public.log (index);
-CREATE INDEX IF NOT EXISTS log_type ON public.log (type);
+CREATE FUNCTION public.log_count() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE chain_info SET count = count + 1 WHERE name = 'logs';
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE chain_info SET count = count - 1 WHERE name = 'logs';
+    RETURN OLD;
+  ELSE
+    UPDATE chain_info SET count = 0 WHERE name = 'logs';
+    RETURN NULL;
+  END IF;
+
+END;$$;
+CREATE CONSTRAINT TRIGGER log_count_mod
+  AFTER INSERT OR DELETE ON log
+  DEFERRABLE INITIALLY DEFERRED
+  FOR EACH ROW EXECUTE PROCEDURE log_count();
+-- TRUNCATE triggers must be FOR EACH STATEMENT
+CREATE TRIGGER log_count_trunc AFTER TRUNCATE ON log
+  FOR EACH STATEMENT EXECUTE PROCEDURE log_count();
+-- initialize the counter table
+UPDATE chain_info SET count = (SELECT count(*) FROM log) WHERE name = 'logs';
+COMMIT;

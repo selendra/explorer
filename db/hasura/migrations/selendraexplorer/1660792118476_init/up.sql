@@ -473,7 +473,14 @@ INSERT INTO chain_info (name, count) VALUES
   ('accounts', 0),
   ('contracts', 0),
   ('transfers', 0),
-  ('extrinsics', 0);
+  ('extrinsics', 0),
+  ('logs', 0),
+  ('active_validator_count', 0),
+  ('waiting_validator_count', 0),
+  ('nominator_count', 0),
+  ('current_era', 0),
+  ('active_era', 0),
+  ('minimum_stake', 0);
 
 -- Genisis contract insert
 INSERT INTO contract
