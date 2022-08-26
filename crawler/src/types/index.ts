@@ -27,6 +27,7 @@ export interface Block extends BlockHash {
   extendedHeader?: HeaderExtended;
   events: Vec<Event>;
   timestamp: string;
+  totalIssuance: any,
 }
 
 interface ExtrinsicUnknown {
