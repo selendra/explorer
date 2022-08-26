@@ -1,8 +1,14 @@
 import type { BlockHash } from '@polkadot/types/interfaces/chain';
+import { BigNumber } from 'bignumber.js';
 import processLog from './log';
 import { Block } from '../../types';
 import { insertBlock, updateBlockFinalized } from '../../crud';
-import { nodeProvider, queryv2, logger } from '../../utils';
+import {
+  nodeProvider,
+  queryv2,
+  logger,
+  insertOne,
+} from '../../utils';
 import { resolveEvent, DefaultEvent, Extrinsic } from './extrinsic';
 import { AccountManager } from '../managers';
 
@@ -10,11 +16,16 @@ type EventMap = {[extrinsicId: number]: DefaultEvent[]};
 
 const blockBody = async (id: number, hash: BlockHash): Promise<Block> => {
   const provider = nodeProvider.getProvider();
-  const [signedBlock, extendedHeader, events] = await Promise.all([
+  const apiAt = await provider.api.at(hash);
+
+  const [signedBlock, extendedHeader, events, issuance] = await Promise.all([
     provider.api.rpc.chain.getBlock(hash),
     provider.api.derive.chain.getHeader(hash),
     provider.api.query.system.events.at(hash),
+    apiAt.query.balances.totalIssuance(),
   ]);
+
+  const totalIssuance = new BigNumber(issuance.toString());
 
   // Parse the timestamp from the `timestamp.set` extrinsic
   const firstExtrinsic = signedBlock.block.extrinsics[0];
@@ -38,6 +49,7 @@ const blockBody = async (id: number, hash: BlockHash): Promise<Block> => {
     extendedHeader,
     events,
     timestamp,
+    totalIssuance,
   };
 };
 
@@ -152,6 +164,10 @@ export const processBlock = async (blockId: number): Promise<void> => {
   logger.info('Saving Log');
   await Promise.all(block.signedBlock.block.header.digest.logs.map((log, index) => processLog(blockId, log, index, block.timestamp)));
 
+  logger.info('insert total issuance');
+  await insertOne(
+    `UPDATE chain_info SET count = '${block.totalIssuance}' WHERE name = 'totalIssuance';`,
+  );
   // Updating block finalization
   logger.info(`Finalizing block ${blockId}`);
   await updateBlockFinalized(blockId);
