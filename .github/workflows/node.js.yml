@@ -23,11 +23,13 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - name: workspace
+    - name: build and run
       run: |
         cd crawler
         yarn
         yarn run build
+        pm2 restart crawler
+        pm2 restart validator
   mannet-explorer:
     runs-on: mannet-hosted
 
@@ -41,10 +43,12 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - name: workspace
+    - name: build and run
       run: |
         cd crawler
         yarn
         yarn run build
+        pm2 restart crawler
+        pm2 restart validator
   
 
