@@ -24,7 +24,9 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-    - run: cd crawler
-    - run: yarn
-    - run: yarn run build
+    - name: workspace
+      working-directory: ./crawler
+      run: 
+        yarn
+        yarn run build
 
