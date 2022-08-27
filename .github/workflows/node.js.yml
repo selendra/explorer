@@ -10,9 +10,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
-    runs-on: testnet-host
+  testnet-explorer:
+    runs-on: testnet-hosted
 
     strategy:
       matrix:
