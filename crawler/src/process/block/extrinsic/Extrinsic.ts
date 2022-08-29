@@ -1,3 +1,4 @@
+import type { BlockHash } from '@polkadot/types/interfaces/chain';
 import { GenericExtrinsic } from '@polkadot/types/extrinsic';
 import { SpRuntimeDispatchError } from '@polkadot/types/lookup';
 import { AnyTuple } from '@polkadot/types/types';
@@ -54,18 +55,21 @@ class Extrinsic {
 
   signedData?: SignedExtrinsicData;
 
-  constructor(blockId: number, index: number, timestamp: string, extrinsic: Extr, events: DefaultEvent[]) {
+  blockHash: BlockHash;
+
+  constructor(blockId: number, index: number, timestamp: string, extrinsic: Extr, events: DefaultEvent[], blockHash: BlockHash) {
     this.events = events;
     this.blockId = blockId;
     this.index = index;
     this.timestamp = timestamp;
     this.extrinsic = extrinsic;
+    this.blockHash = blockHash;
   }
 
-  private static async getSignedData(hash: string): Promise<SignedExtrinsicData> {
+  private static async getSignedData(extrinsicHex: string, blockHash: BlockHash): Promise<SignedExtrinsicData> {
     const [fee, feeDetails] = await Promise.all([
-      nodeProvider.query((provider) => provider.api.rpc.payment.queryInfo(hash)),
-      nodeProvider.query((provider) => provider.api.rpc.payment.queryFeeDetails(hash)),
+      nodeProvider.query((provider) => provider.api.rpc.payment.queryInfo(extrinsicHex, blockHash)),
+      nodeProvider.query((provider) => provider.api.rpc.payment.queryFeeDetails(extrinsicHex, blockHash)),
     ]);
 
     return {
@@ -97,7 +101,7 @@ class Extrinsic {
 
     // Extracting signed data
     this.signedData = this.extrinsic.isSigned
-      ? await Extrinsic.getSignedData(this.extrinsic.toHex())
+      ? await Extrinsic.getSignedData(this.extrinsic.toHex(), this.blockHash)
       : undefined;
 
     this.status = extrinsicStatus(this.events);
