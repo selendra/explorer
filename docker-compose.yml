@@ -4,14 +4,12 @@ services:
     image: hasura/graphql-engine:v2.10.0
     ports:
     - "8080:8080"
-    depends_on:
-    - "postgres"
     restart: always
     environment:
       ## postgres database to store Hasura metadata
-      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://sgpostgres:2ESx^6pM41oalz2e@SG-explorer-3866-pgsql-master.servers.mongodirector.com:5432/test1
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
       ## this env var can be used to add the above postgres database to Hasura as a data source. this can be removed/updated based on your needs
-      PG_DATABASE_URL: postgres://sgpostgres:2ESx^6pM41oalz2e@SG-explorer-3866-pgsql-master.servers.mongodirector.com:5432/test1
+      PG_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DATABASE}
       ## enable the console served by server
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true" # set to "false" to disable console
       ## enable debugging mode. It is recommended to disable this in production
