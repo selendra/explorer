@@ -146,6 +146,7 @@ export const processBlock = async (blockId: number): Promise<void> => {
     block.timestamp,
     extr,
     mappedEvents[index],
+    hash,
   ));
 
   logger.info('Processing extrinsics & events');
