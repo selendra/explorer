@@ -1,8 +1,8 @@
-import { insertOne, toChecksumAddress } from '../../../../utils';
+import { insertOne, toChecksumAddress, logger } from '../../../../utils';
 import { ExtrinsicData } from '../../../../types';
 import DefaultEvent from './DefaultEvent';
 
-class ContractCreateEvent extends DefaultEvent {
+class PublicContractEvent extends DefaultEvent {
   skip = false;
 
   address?: string;
@@ -17,10 +17,12 @@ class ContractCreateEvent extends DefaultEvent {
 
     const publicCoinract: boolean = true;
 
+    logger.info(`Publish contract with address: ${this.address}`);
+
     await insertOne(
       `UPDATE contract SET public = '${publicCoinract}' WHERE address = '${this.address}';`,
     );
   }
 }
 
-export default ContractCreateEvent;
+export default PublicContractEvent;

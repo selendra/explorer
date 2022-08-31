@@ -66,11 +66,11 @@ class ContractCreateEvent extends DefaultEvent {
     await insert(
       `
       INSERT INTO contract
-        (address, extrinsic_id, signer, bytecode, bytecode_context, bytecode_arguments, public, timestamp)
+        (address, extrinsic_id, signer, owner, bytecode, bytecode_context, bytecode_arguments, public, timestamp)
       VALUES
         %L
       ON CONFLICT (address) DO NOTHING;`,
-      [[this.address, extrinsicData.id, this.maintainer, bytecode, context, args, false, this.head.timestamp]],
+      [[this.address, extrinsicData.id, this.maintainer, this.maintainer, bytecode, context, args, false, this.head.timestamp]],
     );
   }
 }
