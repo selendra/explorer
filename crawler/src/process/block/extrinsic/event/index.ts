@@ -19,7 +19,7 @@ const resolveEvent = async (head: EventData): Promise<DefaultEvent> => {
   switch (eventCompression) {
     case 'evmAccounts.ClaimAccount': return new ClaimEvmAccountEvent(head);
     case 'evm.Created': return new ContractCreateEvent(head);
-    case 'evm.ContractPublished': return new PublicContractEvent(head);
+    case 'evm.ContractPublished' || 'evm.publishFree': return new PublicContractEvent(head);
     case 'evm.TransferredMaintainer': return new TransferredOwnerContractEvent(head);
     case 'balances.Endowed': return new EndowedEvent(head);
     case 'balances.Reserved': return new ReservedEvent(head);
