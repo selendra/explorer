@@ -310,7 +310,13 @@ export interface EventData {
   timestamp: string;
 }
 
-export interface CompleteEvmData {
+export interface CompleteEvmDataV1 {
+  raw: RawEventData;
+  parsed?: any;
+  status: 'Success' | 'Error';
+  type: 'Verified' | 'Unverified';
+}
+export interface CompleteEvmDataV2 {
   raw: RawEventData;
   parsed?: any;
 }
