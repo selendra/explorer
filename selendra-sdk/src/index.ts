@@ -1,8 +1,8 @@
 export { SelendraApi } from './api';
-export { EvmBlock } from './block';
+export { EvmChainState } from './chain_state';
 
 import { SelendraApi } from './api';
-import { SubstrateBlock } from './block';
+import { SubstrateChainState } from './chain_state';
 
 
 
@@ -10,7 +10,7 @@ import { SubstrateBlock } from './block';
 async function main() {
   const selendraApi = new SelendraApi('https://rpc.selendra.org');
   let api = await selendraApi.subtrateProvider();
-  const block = new SubstrateBlock(api);
+  const block = new SubstrateChainState(api);
 
   await block.getBlockDetails(7_411_438);
 }

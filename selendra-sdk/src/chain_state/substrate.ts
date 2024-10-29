@@ -2,7 +2,7 @@ import { logger } from '../utils/logger';
 import { ApiPromise } from '@polkadot/api';
 import { BlockDetail } from '../interface';
 
-export class SubstrateBlock {
+export class SubstrateChainState {
   private api: ApiPromise;
   
   constructor(provider: ApiPromise) {
