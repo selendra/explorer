@@ -100,4 +100,57 @@ export class SubstrateChainState {
       logger.error('Error fetching block details', error);
     }
   }
+
+  async getBlockEvent(blockNumber: number) {
+    try {
+      await this.getBlockHash(blockNumber);
+      const { events: blockEvents } = await this.api.derive.chain.getBlock(this.blockHash);
+
+      const IndexedBlockEvents = blockEvents.map(
+        (event, index) => [index, event],
+      );
+
+      let events: EventDetail[] = [];
+      const chunks = chunker(IndexedBlockEvents, blockEvents.length);
+      for (const chunk of chunks) {
+        await Promise.all(
+          chunk.map((indexedEvent: IndexedBlockEvent) => {
+            const [eventIndex, { event, phase }] = indexedEvent;
+            const doc = JSON.stringify(event.meta.docs.toJSON());
+            const types = JSON.stringify(event.typeDef);
+
+            events.push({
+              event_index: eventIndex,
+              section: event.section,
+              method: event.method,
+              phase: phase.toString(),
+              types: types,
+              doc: doc,
+              data: JSON.stringify(event.data),
+            });
+          }),
+        );
+      }
+      console.log(events);
+
+    } catch (error) {
+      logger.error('Error fetching event details', error);
+    }
+  }
+
+  // getExtrinsicDetails(hexExtrinsic: string, blockhash?: string) {
+  //   try {
+  //     if (!blockhash) {
+  //       blockhash = this.blockhash;
+  //     }
+
+  //     let extrinsicSuccess = false;
+  //     let extrinsicErrorMessage = '';
+      
+  //     // return this.api
+  //   } catch (error) {
+  //     logger.error('Error fetching extrinsic fee details details', error);
+  //     return 0;
+  //   }
+  // }
 }

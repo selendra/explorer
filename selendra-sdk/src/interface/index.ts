@@ -1,3 +1,7 @@
+import { AnyTuple } from '@polkadot/types/types';
+import { GenericExtrinsic } from '@polkadot/types';
+import { EventRecord } from '@polkadot/types/interfaces';
+
 export interface RuntimeVersion {
   spec_name: string,
   impl_name: string,
@@ -21,3 +25,6 @@ export interface BlockDetail {
   total_extrinsics: number,
   timestamp: number,
 }
+
+export type IndexedBlockEvent = [number, EventRecord];
+export type IndexedBlockExtrinsic = [number, GenericExtrinsic<AnyTuple>];

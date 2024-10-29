@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@polkadot/api": "^14.1.1",
+    "@polkadot/types": "^14.2.1",
     "dotenv": "^16.4.5",
     "ethers": "^6.13.4",
     "lodash": "^4.17.21",
