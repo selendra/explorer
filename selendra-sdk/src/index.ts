@@ -1,11 +1,22 @@
-export class Block {
-  public rpc: string;
+export { SelendraApi } from './api';
+export { EvmBlock } from './block';
 
-  constructor(rpc: string) {
-    this.rpc = rpc;
-  }
+import { SelendraApi } from './api';
+import { SubstrateBlock } from './block';
 
-  getRpc() {
-    console.log(this.rpc);
-  }
+
+
+// eslint-disable-next-line @typescript-eslint/no-empty-function
+async function main() {
+  const selendraApi = new SelendraApi('https://rpc.selendra.org');
+  let api = await selendraApi.subtrateProvider();
+  const block = new SubstrateBlock(api);
+
+  await block.getBlockDetails(7_411_438);
 }
+
+// Execute the main function and handle any errors
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
