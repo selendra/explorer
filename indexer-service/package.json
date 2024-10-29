@@ -14,12 +14,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@selendrachain/selendra-sdk": "file:../selendra-sdk",
     "@polkadot/api": "^14.1.1",
+    "@selendrachain/selendra-sdk": "file:../selendra-sdk",
     "@sentry/node": "^8.35.0",
     "@sentry/tracing": "^7.114.0",
     "dotenv": "^16.4.5",
+    "ethers": "^6.13.4",
     "lodash": "^4.17.21",
+    "mongodb": "^6.10.0",
     "pino": "^9.5.0"
   },
   "devDependencies": {
