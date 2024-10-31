@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 
 export class EvmChainState {
   public provider: ethers.Provider;
-  
+
   constructor(provider: ethers.Provider) {
     this.provider = provider;
   }

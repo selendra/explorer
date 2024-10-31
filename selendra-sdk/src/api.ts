@@ -14,11 +14,10 @@ export class SelendraApi {
     const rpcOrWs = this.convertWstoHttp(this.rpcOrWs);
 
     try {
-      return  new ethers.JsonRpcProvider(rpcOrWs);
+      return new ethers.JsonRpcProvider(rpcOrWs);
     } catch (error) {
       logger.error('Error connecting ...', error);
     }
-    
   }
 
   evmWebSocketProvider() {
@@ -51,17 +50,13 @@ export class SelendraApi {
         const types = JSON.parse(
           fs.readFileSync(`./src/types/${apiCustomTypes}`, 'utf8'),
         );
-        api = new ApiPromise({ provider, types });
+        api = await ApiPromise.create({ provider, types });
       } else {
-        api = new ApiPromise({ provider, noInitWarn: true });
+        api = await ApiPromise.create({ provider, noInitWarn: true });
       }
 
-      api.on('disconnected', () =>
-        logger.error('Got disconnected from API!'),
-      );
-      api.on('error', (error) =>
-        logger.error(`Got error from API: ${error}`),
-      );
+      api.on('disconnected', () => logger.error('Got disconnected from API!'));
+      api.on('error', (error) => logger.error(`Got error from API: ${error}`));
 
       return await api.isReady;
     } catch (error) {
@@ -80,7 +75,8 @@ export class SelendraApi {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    return url.replace(/^ws(s?):\/\//, (_, p1) => (p1 ? 'https://' : 'http://'));
+    return url.replace(/^ws(s?):\/\//, (_, p1) =>
+      p1 ? 'https://' : 'http://',
+    );
   }
 }
-

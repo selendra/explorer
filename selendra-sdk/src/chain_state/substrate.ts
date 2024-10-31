@@ -1,22 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // /* eslint-disable @typescript-eslint/no-unused-vars */
 import { logger } from '../utils/logger';
 import { ApiPromise } from '@polkadot/api';
-import { BlockDetail, IndexedBlockEvent } from '../interface';
+import { BlockDetail, EventDetail, ExtrinsicDetail, ExtrinsicsStatus, IndexedBlockEvent, IndexedBlockExtrinsic, SubstrateTransfer } from '../interface';
 import { chunker } from '../utils';
-
-
-export interface EventDetail {
-  event_index: number,
-  section: string,
-  method: string,
-  phase: string,
-  types: string
-  doc: string,
-  data: string,
-}
+import { has } from 'lodash';
 
 export class SubstrateChainState {
-  private api: ApiPromise;
+  public api: ApiPromise;
 
   public blockHash: string; 
   
@@ -28,12 +19,13 @@ export class SubstrateChainState {
     try {
       return (await this.api.derive.accounts.info(blockAuthor)).identity;
     } catch (error) {
-      logger.error('Error fetching Identity details', error);
+      logger.error(`Error fetching Identity details ${error}`);
     }
   }
 
   async getBlockHash(blockNumber: number) {
     this.blockHash = (await (this.api.rpc.chain.getBlockHash(blockNumber))).toString();
+    return this.blockHash;
   }
 
   async getBlockDetails(blockNumber: number): Promise<BlockDetail> {
@@ -72,7 +64,6 @@ export class SubstrateChainState {
           )
           : 0;
 
-      // // Totals
       const totalEvents = blockEvents.length;
       const totalExtrinsics = block.extrinsics.length;
 
@@ -98,11 +89,11 @@ export class SubstrateChainState {
         timestamp: timestamp,
       };
     } catch (error) {
-      logger.error('Error fetching block details', error);
+      logger.error(`Error fetching block details: ${error}`);
     }
   }
 
-  async getBlockEvent(blockNumber: number) {
+  async getBlockEvent(blockNumber: number): Promise<EventDetail[]> {
     try {
       await this.getBlockHash(blockNumber);
       const { events: blockEvents } = await this.api.derive.chain.getBlock(this.blockHash);
@@ -133,26 +124,178 @@ export class SubstrateChainState {
           }),
         );
       }
-
       return events;
     } catch (error) {
-      logger.error('Error fetching event details', error);
+      logger.error(`Error fetching event details ${error}`);
     }
   }
 
-  // getExtrinsicDetails(hexExtrinsic: string, blockhash?: string) {
-  //   try {
-  //     if (!blockhash) {
-  //       blockhash = this.blockhash;
-  //     }
+  async getExtrinsicDetails(blockNumber: number): Promise<ExtrinsicDetail[]> {
+    try {
+      await this.getBlockHash(blockNumber);
 
-  //     let extrinsicSuccess = false;
-  //     let extrinsicErrorMessage = '';
-      
-  //     // return this.api
-  //   } catch (error) {
-  //     logger.error('Error fetching extrinsic fee details details', error);
-  //     return 0;
-  //   }
-  // }
+      const { block, events: blockEvents } = await this.api.derive.chain.getBlock(this.blockHash);
+
+      const indexedExtrinsics = block.extrinsics.map(
+        (extrinsic, index) => [index, extrinsic],
+      );
+
+      let extrinsicData: ExtrinsicDetail[] = [];
+      const chunks = chunker(indexedExtrinsics, block.extrinsics.length);
+
+      for (const chunk of chunks) {
+        await Promise.all(
+          chunk.map(async (indexedExtrinsic: IndexedBlockExtrinsic) => {
+            const [extrinsicIndex, extrinsic] = indexedExtrinsic;
+            const { isSigned } = extrinsic;
+
+            const signer = isSigned ? extrinsic.signer.toString() : '';
+            const section = extrinsic.method.section;
+            const method = extrinsic.method.method;
+            const args = JSON.stringify(extrinsic.method.args);
+            const argsDef = JSON.stringify(extrinsic.argsDef);
+            const hash = extrinsic.hash.toHex();
+            const doc = JSON.stringify(extrinsic.meta.docs.toJSON());
+
+            const extrinsicsStatus = await this.checkExtrinsicStatus(
+              blockEvents, 
+              Number(indexedExtrinsic.toString()),
+            );
+
+            const transfer = this.processTransferExtrinsics(
+              blockEvents,
+              method,
+              signer,
+              args,
+              extrinsicsStatus.success,
+              extrinsicIndex,
+            );
+
+            const data: ExtrinsicDetail = {
+              extrinsic_index: extrinsicIndex,
+              hash,
+              section,
+              method,
+              isSigned,
+              signer,
+              args,
+              argsDef,
+              doc,
+              extrinsics_status: extrinsicsStatus,
+              transfer,
+            };
+            extrinsicData.push(data);
+          }),          
+        );
+      }
+
+      return extrinsicData;
+    }  catch (error) {
+      logger.error(`Error fetching extrinsic details ${error}`);
+      console.log(error);
+    }
+  }
+
+  private processTransferExtrinsics(
+    blockEvents: any[],
+    method: string,
+    signer: string,
+    args: string,
+    success: boolean,
+    extrinsicIndex: number,
+  ): SubstrateTransfer  {
+    const fromSource = signer;
+    let toDestination = '';
+
+    if (JSON.parse(args)[0].id) {
+      toDestination = JSON.parse(args)[0].id;
+    } else if (JSON.parse(args)[0].address20) {
+      toDestination = JSON.parse(args)[0].address20;
+    } else {
+      toDestination = JSON.parse(args)[0];
+    }
+    
+    let amount;
+    if (method === 'transferAll' && success) {
+      // Equal source and destination addres doesn't trigger a balances.Transfer event
+      amount =
+        fromSource === toDestination
+          ? 0
+          : this.getTransferAllAmount(blockEvents, extrinsicIndex);
+    } else if (method === 'transferAll' && !success) {
+      // no event is emitted so we can't get amount
+      amount = 0;
+    } else if (method === 'forceTransfer') {
+      amount = JSON.parse(args)[2];
+    } else {
+      amount = JSON.parse(args)[1]; // 'transfer' and 'transferKeepAlive' methods
+    }
+
+    return {
+      from: fromSource,
+      to: toDestination,
+      amount: BigInt(amount ? amount : 0),
+    };
+  }
+
+  private getTransferAllAmount(
+    blockEvents: any[],
+    index: number,
+  ): string {
+    try {
+      return blockEvents
+        .find(
+          ({ event, phase }) =>
+            phase.isApplyExtrinsic &&
+            phase.asApplyExtrinsic.eq(index) &&
+            event.section === 'balances' &&
+            event.method === 'Transfer',
+        )
+        .event.data[2].toString();
+    } catch (error) {
+      logger.error(`Error fetching transfer amount: ${error}`);
+    }
+  }
+
+  private async checkExtrinsicStatus(
+    blockEvents: any[],
+    index: number,
+  ): Promise<ExtrinsicsStatus> {
+    let extrinsicSuccess: boolean = false;
+    let extrinsicErrorMessage: string = '';
+
+    try {
+      const apiAt = await this.api.at(this.blockHash);
+
+      blockEvents
+        .filter(
+          ({ phase }) =>
+            phase.isApplyExtrinsic && phase.asApplyExtrinsic.eq(index),
+        ).forEach(({ event }) => {
+          if (apiAt.events.system.ExtrinsicSuccess.is(event)) {
+            extrinsicSuccess = true;
+          } else if (apiAt.events.system.ExtrinsicFailed.is(event)) {
+            const [ dispatchError ] = event.data.toJSON() as any;
+            if (dispatchError.isModule) {
+              let decoded;
+              try {
+                decoded = apiAt.registry.findMetaError(dispatchError.asModule);
+                extrinsicErrorMessage = `${decoded.name}: ${decoded.docs}`;
+              } catch (_) {
+                extrinsicErrorMessage = 'Unknow error';
+              }
+            } else {
+              extrinsicErrorMessage = dispatchError.toString();
+            }
+          }
+         
+        });
+      return { 
+        success: extrinsicSuccess,
+        error_message: extrinsicErrorMessage,
+      };
+    } catch (error) {
+      logger.error(`Error fetching extrinsic success or error message: ${error}`);
+    }
+  }
 }
