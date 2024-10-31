@@ -11,7 +11,8 @@ async function main() {
   const block = new SubstrateChainState(api);
 
   // console.log(await block.getBlockEvent(7_424_891));
-  console.log(await block.getBlockEvent(7_431_654));
+  // await block.getBlockEvent(7_431_654);
+  console.log(await block.getBlockEvent(7577752));
 }
 
 // Execute the main function and handle any errors

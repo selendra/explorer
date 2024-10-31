@@ -1,12 +1,13 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+// /* eslint-disable @typescript-eslint/no-unused-vars */
 import { logger } from '../utils/logger';
 import { ApiPromise } from '@polkadot/api';
 import { BlockDetail, IndexedBlockEvent } from '../interface';
 import { chunker } from '../utils';
 
+
 export interface EventDetail {
-  event_index: number;
-  section: string;
+  event_index: number,
+  section: string,
   method: string,
   phase: string,
   types: string
@@ -114,28 +115,39 @@ export class SubstrateChainState {
       const chunks = chunker(IndexedBlockEvents, blockEvents.length);
       for (const chunk of chunks) {
         await Promise.all(
-          chunk.map((indexedEvent: IndexedBlockEvent) => {
-            const [eventIndex, { event, phase }] = indexedEvent;
-            const doc = JSON.stringify(event.meta.docs.toJSON());
-            const types = JSON.stringify(event.typeDef);
-
-            events.push({
-              event_index: eventIndex,
-              section: event.section,
-              method: event.method,
-              phase: phase.toString(),
-              types: types,
-              doc: doc,
-              data: JSON.stringify(event.data),
-            });
+          chunk.map(async (indexedEvent: IndexedBlockEvent) => {
+            const event = await this.processEvent(
+              indexedEvent,
+            );
+            events.push(event);
           }),
         );
       }
-      console.log(events);
 
+      return events;
     } catch (error) {
       logger.error('Error fetching event details', error);
     }
+  }
+
+  private async processEvent(
+    indexedEvent: IndexedBlockEvent,
+  ) {
+    const [eventIndex, { event, phase }] = indexedEvent;
+    const doc = JSON.stringify(event.meta.docs.toJSON());
+    const types = JSON.stringify(event.typeDef);
+
+    const eventData: EventDetail = {
+      event_index: eventIndex,
+      section: event.section,
+      method: event.method,
+      phase: phase.toString(),
+      types: types,
+      doc: doc,
+      data: JSON.stringify(event.data),
+    };
+
+    return eventData;
   }
 
   // getExtrinsicDetails(hexExtrinsic: string, blockhash?: string) {
