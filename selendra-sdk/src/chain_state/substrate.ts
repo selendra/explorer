@@ -4,7 +4,24 @@ import { logger } from '../utils/logger';
 import { ApiPromise } from '@polkadot/api';
 import { BlockDetail, EventDetail, ExtrinsicDetail, ExtrinsicsStatus, IndexedBlockEvent, IndexedBlockExtrinsic, SubstrateTransfer } from '../interface';
 import { chunker } from '../utils';
-import { has } from 'lodash';
+
+export interface IdentityDetail {
+  display_name: string
+  legal_name: string
+  displayParent: string
+  parent_account: string
+  discord: string
+  email: string
+  github: string
+  matrix: string
+  riot: string
+  twitter: string
+  web: string
+  image: string
+  judgements: string[]
+  pgp_fingerprint: string
+  other: string
+}
 
 export class SubstrateChainState {
   public api: ApiPromise;
@@ -15,9 +32,32 @@ export class SubstrateChainState {
     this.api = provider;
   }
 
-  async getIdentityInfo(blockAuthor: string) {
+  async getIdentityInfo(address: string): Promise<IdentityDetail> {
     try {
-      return (await this.api.derive.accounts.info(blockAuthor)).identity;
+      const identity = (await this.api.derive.accounts.info(address)).identity;
+
+      const judgments = identity.judgements.map((judgement) => {
+        return judgement[1].toString();
+      });
+
+      return {
+        display_name: identity.display ? identity.display : '',
+        legal_name: identity.legal ? identity.legal : '',
+        displayParent: identity.displayParent ? identity.displayParent : '',
+        parent_account: JSON.stringify(identity.parent),
+        discord: identity.discord ? identity.discord : '',
+        email: identity.email ? identity.email : '',
+        github: identity.github ? identity.github : '',
+        matrix: identity.matrix ? identity.discord : '',
+        riot: identity.riot ? identity.riot : '',
+        twitter: identity.twitter ? identity.twitter : '',
+        web: identity.web ? identity.web : '',
+        image: identity.image ? identity.image : '',
+        judgements: judgments,
+        pgp_fingerprint: identity.pgp ? JSON.stringify(identity.pgp) : '',
+        other: identity.other ? JSON.stringify(identity.other) : '',
+      };
+      
     } catch (error) {
       logger.error(`Error fetching Identity details ${error}`);
     }

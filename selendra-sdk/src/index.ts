@@ -12,7 +12,8 @@ async function main() {
 
   // console.log(await block.getExtrinsicDetails(7_424_891));
   // await block.getBlockEvent(7_431_654);
-  console.log(await block.getExtrinsicDetails(7577752));
+  // console.log(await block.getExtrinsicDetails(7577752));
+  block.getIdentityInfo('5D2zu5mBct9CwjLhCMkz2xTXHWzG2GmDk4tYeBjm5MaYwuV7');
 }
 
 // Execute the main function and handle any errors
