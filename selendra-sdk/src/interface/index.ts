@@ -21,6 +21,7 @@ export interface BlockDetail {
   active_era: number
   session_index: number
   runtimeVersion: RuntimeVersion
+  total_issuance: BigInt
   total_events: number
   total_extrinsics: number
   timestamp: number
@@ -48,6 +49,40 @@ export interface ExtrinsicDetail {
   doc: string
   extrinsics_status: ExtrinsicsStatus,
   transfer?: SubstrateTransfer,
+}
+
+export interface AccountBalance {
+  availableBalance: BigInt
+  freeBalance: BigInt
+  lockedBalance: BigInt
+  reservedBalance: BigInt
+  totalBalance: BigInt
+}
+
+export interface SubIdentity {
+  displayParent: string
+  parent_account: string
+}
+
+export interface Contact {
+  email: string
+  discord: string
+  matrix: string
+  riot: string
+  twitter: string
+  github: string
+  web: string
+}
+
+export interface IdentityDetail {
+  display_name: string
+  legal_name: string
+  sub_identity: SubIdentity
+  contact: Contact
+  image: string
+  judgements: string[]
+  pgp_fingerprint: string
+  other: string
 }
 
 export interface ExtrinsicsStatus {

@@ -10,10 +10,12 @@ async function main() {
   let api = await selendraApi.subtrateProvider();
   const block = new SubstrateChainState(api);
 
-  // console.log(await block.getExtrinsicDetails(7_424_891));
+  // console.log(await block.getBlockData(7_424_891));
   // await block.getBlockEvent(7_431_654);
   // console.log(await block.getExtrinsicDetails(7577752));
-  block.getIdentityInfo('5D2zu5mBct9CwjLhCMkz2xTXHWzG2GmDk4tYeBjm5MaYwuV7');
+  // console.log(await block.getAccontBalanceInfo('5D2zu5mBct9CwjLhCMkz2xTXHWzG2GmDk4tYeBjm5MaYwuV7'));
+  console.log(await block.getAllAccounts());
+  api.disconnect();
 }
 
 // Execute the main function and handle any errors

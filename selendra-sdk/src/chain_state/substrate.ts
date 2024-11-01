@@ -1,27 +1,18 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// /* eslint-disable @typescript-eslint/no-unused-vars */
-import { logger } from '../utils/logger';
 import { ApiPromise } from '@polkadot/api';
-import { BlockDetail, EventDetail, ExtrinsicDetail, ExtrinsicsStatus, IndexedBlockEvent, IndexedBlockExtrinsic, SubstrateTransfer } from '../interface';
+import { DeriveAccountRegistration } from '@polkadot/api-derive/types';
+import { 
+  AccountBalance,
+  BlockDetail,
+  EventDetail,
+  ExtrinsicDetail,
+  ExtrinsicsStatus,
+  IdentityDetail,
+  IndexedBlockEvent,
+  IndexedBlockExtrinsic,
+  SubstrateTransfer,
+} from '../interface';
 import { chunker } from '../utils';
-
-export interface IdentityDetail {
-  display_name: string
-  legal_name: string
-  displayParent: string
-  parent_account: string
-  discord: string
-  email: string
-  github: string
-  matrix: string
-  riot: string
-  twitter: string
-  web: string
-  image: string
-  judgements: string[]
-  pgp_fingerprint: string
-  other: string
-}
+import { logger } from '../utils/logger';
 
 export class SubstrateChainState {
   public api: ApiPromise;
@@ -32,43 +23,12 @@ export class SubstrateChainState {
     this.api = provider;
   }
 
-  async getIdentityInfo(address: string): Promise<IdentityDetail> {
-    try {
-      const identity = (await this.api.derive.accounts.info(address)).identity;
-
-      const judgments = identity.judgements.map((judgement) => {
-        return judgement[1].toString();
-      });
-
-      return {
-        display_name: identity.display ? identity.display : '',
-        legal_name: identity.legal ? identity.legal : '',
-        displayParent: identity.displayParent ? identity.displayParent : '',
-        parent_account: JSON.stringify(identity.parent),
-        discord: identity.discord ? identity.discord : '',
-        email: identity.email ? identity.email : '',
-        github: identity.github ? identity.github : '',
-        matrix: identity.matrix ? identity.discord : '',
-        riot: identity.riot ? identity.riot : '',
-        twitter: identity.twitter ? identity.twitter : '',
-        web: identity.web ? identity.web : '',
-        image: identity.image ? identity.image : '',
-        judgements: judgments,
-        pgp_fingerprint: identity.pgp ? JSON.stringify(identity.pgp) : '',
-        other: identity.other ? JSON.stringify(identity.other) : '',
-      };
-      
-    } catch (error) {
-      logger.error(`Error fetching Identity details ${error}`);
-    }
-  }
-
   async getBlockHash(blockNumber: number) {
     this.blockHash = (await (this.api.rpc.chain.getBlockHash(blockNumber))).toString();
     return this.blockHash;
   }
 
-  async getBlockDetails(blockNumber: number): Promise<BlockDetail> {
+  async getBlockData(blockNumber: number): Promise<BlockDetail> {
     try {
       await this.getBlockHash(blockNumber);
       const apiAt = await this.api.at(this.blockHash);
@@ -77,15 +37,17 @@ export class SubstrateChainState {
         derivedBlock,
         runtimeVersion,
         currentIndex,
+        totalIssuance,
       ] = await Promise.all([
         this.api.derive.chain.getBlock(this.blockHash),
         this.api.rpc.state.getRuntimeVersion(this.blockHash),
         apiAt.query.session.currentIndex(),
+        apiAt.query.balances.totalIssuance(),
       ]);
       const { block, author, events: blockEvents } = derivedBlock;
 
       // genesis block doesn't have author
-      const blockAuthor = author ? JSON.stringify(author) : '';
+      const blockAuthor = author ? author.toString() : '';
 
       const { parentHash, extrinsicsRoot, stateRoot } = block.header;
       
@@ -110,20 +72,21 @@ export class SubstrateChainState {
       return {
         block_hash: this.blockHash,
         block_author: blockAuthor,
-        block_parentHash: JSON.stringify(parentHash),
-        extrinsics_root: JSON.stringify(extrinsicsRoot),
-        state_root: JSON.stringify(stateRoot),
+        block_parentHash: parentHash.toString(),
+        extrinsics_root: extrinsicsRoot.toString(),
+        state_root: stateRoot.toString(),
         active_era: activeEra.index,
         session_index: Number(JSON.stringify(currentIndex)),
         runtimeVersion: {
-          spec_name: JSON.stringify(runtimeVersion.specName),
-          impl_name: JSON.stringify(runtimeVersion.implName),
+          spec_name: (runtimeVersion.specName).toString(),
+          impl_name: (runtimeVersion.implName).toString(),
           authoring_version: Number(JSON.stringify(runtimeVersion.authoringVersion)),
           spec_version: Number(JSON.stringify(runtimeVersion.specVersion)),
           impl_version: Number(JSON.stringify(runtimeVersion.implVersion)),
           transaction_version: Number(JSON.stringify(runtimeVersion.transactionVersion)),
           stateVersion: Number(JSON.stringify(runtimeVersion.stateVersion)),
         },
+        total_issuance: BigInt(totalIssuance.toString()),
         total_events: totalEvents,
         total_extrinsics: totalExtrinsics,
         timestamp: timestamp,
@@ -170,7 +133,7 @@ export class SubstrateChainState {
     }
   }
 
-  async getExtrinsicDetails(blockNumber: number): Promise<ExtrinsicDetail[]> {
+  async getBlockExtrinsic(blockNumber: number): Promise<ExtrinsicDetail[]> {
     try {
       await this.getBlockHash(blockNumber);
 
@@ -234,6 +197,73 @@ export class SubstrateChainState {
       logger.error(`Error fetching extrinsic details ${error}`);
       console.log(error);
     }
+  }
+
+  async getIdentityInfo(address: string): Promise<IdentityDetail> {
+    try {
+      const identity = (await this.api.derive.accounts.info(address)).identity;
+
+      const judgements = this.isVerifiedIdentity(identity);
+
+      return {
+        display_name: identity.display ? identity.display : '',
+        legal_name: identity.legal ? identity.legal : '',
+        sub_identity: {
+          displayParent: identity.displayParent ? identity.displayParent : '',
+          parent_account: JSON.stringify(identity.parent),
+        },
+        contact: {
+          discord: identity.discord ? identity.discord : '',
+          email: identity.email ? identity.email : '',
+          github: identity.github ? identity.github : '',
+          matrix: identity.matrix ? identity.discord : '',
+          riot: identity.riot ? identity.riot : '',
+          twitter: identity.twitter ? identity.twitter : '',
+          web: identity.web ? identity.web : '',
+        },
+        image: identity.image ? identity.image : '',
+        judgements: judgements,
+        pgp_fingerprint: identity.pgp ? JSON.stringify(identity.pgp) : '',
+        other: identity.other ? JSON.stringify(identity.other) : '',
+      };
+      
+    } catch (error) {
+      logger.error(`Error fetching Identity details ${error}`);
+    }
+  }
+
+  async getAccontBalanceInfo(accountId: string): Promise<AccountBalance> {
+    const balances = await this.api.derive.balances.all(accountId);
+
+    const availableBalance = BigInt(balances.availableBalance.toString());
+    const freeBalance = BigInt(balances.freeBalance.toString());
+    const lockedBalance = BigInt(balances.lockedBalance.toString());
+    const reservedBalance = BigInt(balances.reservedBalance.toString());
+    const totalBalance = BigInt(balances.freeBalance
+      .add(balances.reservedBalance)
+      .toString());
+
+    return {
+      availableBalance,
+      freeBalance,
+      lockedBalance,
+      reservedBalance,
+      totalBalance,
+    };
+  }
+
+  async getAllAccounts(): Promise<any[]> {
+    const account = await this.api.query.system.account.keys();
+    return account.map(({ args }) => args).map(([e]) => e.toHuman());
+  }
+
+  private isVerifiedIdentity(identity: DeriveAccountRegistration): string[] {
+    if (identity.judgements.length === 0) {
+      return [];
+    }
+    return identity.judgements.map((judgement) => {
+      return judgement[1].toString();
+    });
   }
 
   private processTransferExtrinsics(
