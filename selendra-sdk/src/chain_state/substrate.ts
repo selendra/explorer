@@ -266,10 +266,6 @@ export class SubstrateChainState {
     }
   }
 
-  // async isMutisig() {
-
-  // }
-
   private isVerifiedIdentity(identity: DeriveAccountRegistration): string[] {
     try {
       if (identity.judgements.length === 0) {
