@@ -1,20 +1,23 @@
 export { SelendraApi } from './api';
-export { EvmChainState } from './chain_state';
+export { EvmChainState, SubstrateChainState } from './chain_state';
 
 import { SelendraApi } from './api';
-import { SubstrateChainState } from './chain_state';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { SubstrateChainState, EvmChainState } from './chain_state';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-function
 async function main() {
   const selendraApi = new SelendraApi('https://rpc.selendra.org');
   let api = await selendraApi.subtrateProvider();
-  const block = new SubstrateChainState(api);
+  const substrate = new SubstrateChainState(api);
+  // const evm = new EvmChainState(api);
+  // console.log(evm);
 
-  // console.log(await block.getBlockData(7_424_891));
-  // await block.getBlockEvent(7_431_654);
-  // console.log(await block.getExtrinsicDetails(7577752));
-  // console.log(await block.getAccontBalanceInfo('5D2zu5mBct9CwjLhCMkz2xTXHWzG2GmDk4tYeBjm5MaYwuV7'));
-  console.log(await block.getAllAccounts());
+  // console.log(await substrate.getBlockData(7_424_891));
+  // await substrate.getBlockEvent(7_431_654);
+  // console.log(await substrate.getExtrinsicDetails(7577752));
+  // console.log(await substrate.getAccontBalanceInfo('5D2zu5mBct9CwjLhCMkz2xTXHWzG2GmDk4tYeBjm5MaYwuV7'));
+  console.log(await substrate.getAllAccounts());
   api.disconnect();
 }
 

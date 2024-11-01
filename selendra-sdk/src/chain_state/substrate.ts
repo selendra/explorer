@@ -232,38 +232,55 @@ export class SubstrateChainState {
     }
   }
 
-  async getAccontBalanceInfo(accountId: string): Promise<AccountBalance> {
-    const balances = await this.api.derive.balances.all(accountId);
-
-    const availableBalance = BigInt(balances.availableBalance.toString());
-    const freeBalance = BigInt(balances.freeBalance.toString());
-    const lockedBalance = BigInt(balances.lockedBalance.toString());
-    const reservedBalance = BigInt(balances.reservedBalance.toString());
-    const totalBalance = BigInt(balances.freeBalance
-      .add(balances.reservedBalance)
-      .toString());
-
-    return {
-      availableBalance,
-      freeBalance,
-      lockedBalance,
-      reservedBalance,
-      totalBalance,
-    };
-  }
-
   async getAllAccounts(): Promise<any[]> {
-    const account = await this.api.query.system.account.keys();
-    return account.map(({ args }) => args).map(([e]) => e.toHuman());
+    try {
+      const account = await this.api.query.system.account.keys();
+      return account.map(({ args }) => args).map(([e]) => e.toHuman());
+    } catch (error) {
+      logger.error(`Error fetching all account ${error}`);
+    }
+    
   }
+
+  async getAccontBalanceInfo(accountId: string): Promise<AccountBalance> {
+    try {
+      const balances = await this.api.derive.balances.all(accountId);
+
+      const availableBalance = BigInt(balances.availableBalance.toString());
+      const freeBalance = BigInt(balances.freeBalance.toString());
+      const lockedBalance = BigInt(balances.lockedBalance.toString());
+      const reservedBalance = BigInt(balances.reservedBalance.toString());
+      const totalBalance = BigInt(balances.freeBalance
+        .add(balances.reservedBalance)
+        .toString());
+
+      return {
+        availableBalance,
+        freeBalance,
+        lockedBalance,
+        reservedBalance,
+        totalBalance,
+      };
+    } catch (error) {
+      logger.error(`Error fetching account balance ${error}`);
+    }
+  }
+
+  // async isMutisig() {
+
+  // }
 
   private isVerifiedIdentity(identity: DeriveAccountRegistration): string[] {
-    if (identity.judgements.length === 0) {
-      return [];
+    try {
+      if (identity.judgements.length === 0) {
+        return [];
+      }
+      return identity.judgements.map((judgement) => {
+        return judgement[1].toString();
+      });
+    } catch (error) {
+      logger.error(`Error checking account is verify ${error}`);
     }
-    return identity.judgements.map((judgement) => {
-      return judgement[1].toString();
-    });
   }
 
   private processTransferExtrinsics(
@@ -274,38 +291,42 @@ export class SubstrateChainState {
     success: boolean,
     extrinsicIndex: number,
   ): SubstrateTransfer  {
-    const fromSource = signer;
-    let toDestination = '';
+    try {
+      const fromSource = signer;
+      let toDestination = '';
 
-    if (JSON.parse(args)[0].id) {
-      toDestination = JSON.parse(args)[0].id;
-    } else if (JSON.parse(args)[0].address20) {
-      toDestination = JSON.parse(args)[0].address20;
-    } else {
-      toDestination = JSON.parse(args)[0];
-    }
-    
-    let amount;
-    if (method === 'transferAll' && success) {
-      // Equal source and destination addres doesn't trigger a balances.Transfer event
-      amount =
-        fromSource === toDestination
-          ? 0
-          : this.getTransferAllAmount(blockEvents, extrinsicIndex);
-    } else if (method === 'transferAll' && !success) {
-      // no event is emitted so we can't get amount
-      amount = 0;
-    } else if (method === 'forceTransfer') {
-      amount = JSON.parse(args)[2];
-    } else {
-      amount = JSON.parse(args)[1]; // 'transfer' and 'transferKeepAlive' methods
-    }
+      if (JSON.parse(args)[0].id) {
+        toDestination = JSON.parse(args)[0].id;
+      } else if (JSON.parse(args)[0].address20) {
+        toDestination = JSON.parse(args)[0].address20;
+      } else {
+        toDestination = JSON.parse(args)[0];
+      }
+      
+      let amount;
+      if (method === 'transferAll' && success) {
+        // Equal source and destination addres doesn't trigger a balances.Transfer event
+        amount =
+          fromSource === toDestination
+            ? 0
+            : this.getTransferAllAmount(blockEvents, extrinsicIndex);
+      } else if (method === 'transferAll' && !success) {
+        // no event is emitted so we can't get amount
+        amount = 0;
+      } else if (method === 'forceTransfer') {
+        amount = JSON.parse(args)[2];
+      } else {
+        amount = JSON.parse(args)[1]; // 'transfer' and 'transferKeepAlive' methods
+      }
 
-    return {
-      from: fromSource,
-      to: toDestination,
-      amount: BigInt(amount ? amount : 0),
-    };
+      return {
+        from: fromSource,
+        to: toDestination,
+        amount: BigInt(amount ? amount : 0),
+      };
+    } catch (error) {
+      logger.error(`Error proccessing transfer extrinsic: ${error}`);
+    }
   }
 
   private getTransferAllAmount(
