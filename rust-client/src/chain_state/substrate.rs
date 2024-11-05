@@ -12,7 +12,11 @@ use frame_system::Phase;
 use selendra_primitives::{Hash, Signature};
 use selendra_runtime::{Address, RuntimeCall, RuntimeEvent, SignedExtra};
 use sp_core::{blake2_256, crypto::Ss58Codec};
-use sp_runtime::{generic::{Block, Header, UncheckedExtrinsic}, traits::BlakeTwo256, OpaqueExtrinsic};
+use sp_runtime::{
+	generic::{Block, Header, UncheckedExtrinsic},
+	traits::BlakeTwo256,
+	OpaqueExtrinsic,
+};
 
 use crate::models::{
 	block::{BlockDetail, SubstrateRuntimeVersion},
@@ -81,9 +85,7 @@ impl SubstrateClient {
 
 			let block_events = match events {
 				Some(event_data) => self.process_event(event_data)?,
-				None => {
-					Vec::new()
-				}
+				None => Vec::new(),
 			};
 
 			let block_data = BlockDetail {
@@ -126,7 +128,7 @@ impl SubstrateClient {
 	async fn process_extrinsics(
 		&self,
 		api: &Api<DefaultRuntimeConfig, JsonrpseeClient>,
-		block:Block<Header<u32, BlakeTwo256>, OpaqueExtrinsic>,
+		block: Block<Header<u32, BlakeTwo256>, OpaqueExtrinsic>,
 		block_hash: Option<Hash>,
 	) -> Result<Vec<ExtrinsicDetail>> {
 		let mut block_extrinsics = Vec::new();
