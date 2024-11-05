@@ -1,1 +1,0 @@
-# Selendra Explorer Indexing Service

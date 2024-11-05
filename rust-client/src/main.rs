@@ -1,4 +1,5 @@
 pub mod chain_state;
+pub mod models;
 
 use chain_state::substrate::SubstrateClient;
 
@@ -9,12 +10,12 @@ async fn main() -> Result<()> {
 	let mut substrate_client = SubstrateClient::new("wss://rpc.selendra.org:443");
 
 	substrate_client.connect().await?;
+	// substrate_client.get_event(8018912).await.unwrap();
 
-	let block = substrate_client.get_block(7687398).await?.unwrap();
-	// let extrinsic = block.extrinsics.extrinsic;
-	// let _result = substrate_client.process_extrinsic(extrinsic.byte).await?;
-
-	println!("{:?}", block);
-
+	// let block = substrate_client.get_block(8018912).await?.unwrap();
+	// let extrinsics = block.extrinsics.extrinsic;
+	// for extrinsic in extrinsics {
+	// 	substrate_client.process_extrinsic(extrinsic.byte).unwrap();
+	// }
 	Ok(())
 }
