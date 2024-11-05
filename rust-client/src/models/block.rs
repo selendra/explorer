@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use super::{event::BlockEvent, extrinsic::BlockExtrinsic, Balance};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct RuntimeVersion {
+pub struct SubstrateRuntimeVersion {
 	pub spec_name: String,
 	pub impl_name: String,
 	pub authoring_version: u32,
@@ -23,7 +23,7 @@ pub struct BlockDetail {
 	pub activ_era: u32,
 	pub session_index: u32,
 	pub state_root: String,
-	pub runtime_version: RuntimeVersion,
+	pub runtime_version: SubstrateRuntimeVersion,
 	pub total_issuance: Balance,
 	pub events: BlockEvent,
 	pub extrinsics: BlockExtrinsic,
