@@ -1,29 +1,38 @@
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
+use futures::{
+	stream::{FuturesUnordered, StreamExt},
+	try_join,
+};
 
-use pallet_staking::{ActiveEraInfo, EraRewardPoints, ValidatorPrefs};
-use sp_staking::PagedExposureMetadata;
 use substrate_api_client::{
 	ac_primitives::{Bytes, DefaultRuntimeConfig, RuntimeVersion},
 	rpc::JsonrpseeClient,
 	Api, GetChainInfo, GetStorage, GetTransactionPayment,
 };
 
-use frame_system::Phase;
 use selendra_primitives::{Hash, Signature};
 use selendra_runtime::{Address, RuntimeCall, RuntimeEvent, SignedExtra};
+
+use frame_system::Phase;
 use sp_core::{blake2_256, crypto::Ss58Codec};
 use sp_runtime::{
 	generic::{Block, Header, UncheckedExtrinsic},
 	traits::BlakeTwo256,
 	AccountId32, OpaqueExtrinsic,
 };
+use sp_staking::PagedExposureMetadata;
+
+use pallet_identity::{legacy::IdentityInfo, Data, Judgement, Registration};
+use pallet_staking::{ActiveEraInfo, EraRewardPoints, ValidatorPrefs};
 
 use crate::models::{
 	block::{BlockDetail, SubstrateRuntimeVersion},
 	event::{BlockEvent, EventDetail, StakingSlash, SubstrateEventRecord, TransferEvent},
 	extrinsic::{BlockExtrinsic, ExtrinsicDetail, ProcessExtrinsic},
-	Balance,
+	identity::SubstrateIdentity,
+	staking::{EraStaking, ValidatorDetail},
+	Balance, MaxAdditionalFields, MaxJudgements,
 };
 
 pub struct SubstrateClient {
@@ -50,63 +59,42 @@ impl SubstrateClient {
 		Ok(())
 	}
 
-	pub async fn get_validator(&self, block_number: Option<u32>) -> Result<()> {
+	pub async fn get_account_identity(&self, address: &str) -> Result<Option<SubstrateIdentity>> {
 		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
+		let account = self.convert_ss58_to_account_id32(address)?;
 
-		let mut block_hash: Option<Hash> = None;
-		if block_number.is_some() {
-			block_hash = self.get_block_hash(api, block_number.map_or(0, |b| b)).await?;
-		};
+		if let Some(identity_info) = api.get_storage_map::<AccountId32, Registration<Balance, MaxJudgements, IdentityInfo<MaxAdditionalFields>>>
+				("Identity", "IdentityOf", account, None)
+				.await.map_err(|e| anyhow!("Failed to get account identity: {:?}", e))? 
+		{
+			let mut judgement_str: String = String::from("");
+			for (_, judgement) in identity_info.judgements {
+				judgement_str = match judgement {
+					Judgement::Erroneous => "Erroneous".to_string(),
+					Judgement::Unknown => "Unknown".to_string(),
+					Judgement::FeePaid(_) => "FeePaid".to_string(),
+					Judgement::Reasonable => "Reasonable".to_string(),
+					Judgement::KnownGood => "KnownGood".to_string(),
+					Judgement::OutOfDate => "OutOfDate".to_string(),
+					Judgement::LowQuality => "LowQuality".to_string(),
 
-		let current_era = api
-			.get_storage::<ActiveEraInfo>("Staking", "ActiveEra", block_hash)
-			.await
-			.unwrap()
-			.unwrap();
-		let validators = api
-			.get_storage_map::<u32, EraRewardPoints<AccountId32>>(
-				"Staking",
-				"ErasRewardPoints",
-				10,
-				None,
-			)
-			.await
-			.unwrap();
+				};
+			};
 
-		for validator in validators.unwrap().individual {
-			let validators_commission = api
-				.get_storage_map::<AccountId32, ValidatorPrefs>(
-					"Staking",
-					"Validators",
-					validator.0.clone(),
-					None,
-				)
-				.await
-				.unwrap()
-				.unwrap();
-
-			let validators_detail = api
-				.get_storage_double_map::<u32, AccountId32, PagedExposureMetadata<Balance>>(
-					"Staking",
-					"ErasStakersOverview",
-					current_era.index.clone(),
-					validator.0.clone(),
-					block_hash,
-				)
-				.await
-				.unwrap();
-
-			println!(
-				"Era: {:?} \n, validator: {:?} \n detail: {:?} \n commission: {:?} point: {:?}",
-				current_era.index,
-				validator.0.to_ss58check(),
-				validators_detail,
-				validators_commission,
-				validator.1
-			);
+			let info = identity_info.info;
+			Ok(Some(SubstrateIdentity {
+				display_name: self.data_to_string(info.display),
+				legal_name: self.data_to_string(info.legal),
+				web: self.data_to_string(info.web),
+				riot: self.data_to_string(info.riot),
+				email: self.data_to_string(info.email),
+				twitter: self.data_to_string(info.twitter),
+				image: self.data_to_string(info.image),
+				judgement: Some(judgement_str),
+			}))
+		} else {
+			Ok(None)
 		}
-
-		Ok(())
 	}
 
 	/// Retrieves the block details for the given block number.
@@ -124,7 +112,7 @@ impl SubstrateClient {
 			event_count,
 			extrinsic_count,
 			timestamp,
-		) = futures::try_join!(
+		) = try_join!(
 			api.get_block(block_hash),
 			api.get_storage::<ActiveEraInfo>("Staking", "ActiveEra", block_hash),
 			api.get_storage::<u32>("Session", "CurrentIndex", block_hash),
@@ -173,6 +161,97 @@ impl SubstrateClient {
 		} else {
 			Ok(None)
 		}
+	}
+	pub async fn get_validator(&self, block_number: Option<u32>) -> Result<EraStaking> {
+		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
+
+		let mut block_hash: Option<Hash> = None;
+		if block_number.is_some() {
+			block_hash = self.get_block_hash(api, block_number.map_or(0, |b| b)).await?;
+		};
+
+		// Fetch current era
+		let current_era = api
+			.get_storage::<ActiveEraInfo>("Staking", "ActiveEra", block_hash)
+			.await
+			.map_err(|e| anyhow!("{:?}", e))?
+			.map_or(0, |era| era.index);
+
+		// Fetch other staking-related details concurrently
+		let (validators, mini_active_stake, total_validator, active_validators, active_nominators) =
+			try_join!(
+				api.get_storage_map::<u32, EraRewardPoints<AccountId32>>(
+					"Staking",
+					"ErasRewardPoints",
+					current_era,
+					block_hash,
+				),
+				api.get_storage::<u128>("Staking", "MinimumActiveStake", block_hash),
+				api.get_storage::<u32>("Staking", "ValidatorCount", block_hash),
+				api.get_storage::<u32>("Staking", "CounterForValidators", block_hash),
+				api.get_storage::<u32>("Staking", "CounterForNominators", block_hash),
+			)
+			.map_err(|e| anyhow!("fetch validator data error: {:?}", e))?;
+
+		// Collect validator details concurrently
+		let futures = FuturesUnordered::new();
+		if let Some(validators) = validators {
+			for (account_id, points) in validators.individual {
+				let api = api.clone();
+				futures.push(async move {
+					let (validators_commission, validators_info) = try_join!(
+						api.get_storage_map::<AccountId32, ValidatorPrefs>(
+							"Staking",
+							"Validators",
+							account_id.clone(),
+							None,
+						),
+						api.get_storage_double_map::<u32, AccountId32, PagedExposureMetadata<Balance>>(
+							"Staking",
+							"ErasStakersOverview",
+							current_era,
+							account_id.clone(),
+							block_hash,
+						),
+					)
+					.map_err(|e| anyhow!("fetch validator data error: {:?}", e))?;
+
+					let info = validators_info.unwrap_or(PagedExposureMetadata {
+						total: 0,
+						own: 0,
+						nominator_count: 0,
+						page_count: 0,
+					});
+
+					Ok(ValidatorDetail {
+						account: account_id.to_ss58check(),
+						validators_commission: validators_commission
+							.map_or("0%".to_string(), |vc| format!("{:?}", vc.commission)),
+						nominator_count: info.nominator_count,
+						total_staking: info.total,
+						own_staking: info.own,
+						active_point: points,
+					})
+				});
+			}
+		}
+
+		let era_validators: Vec<ValidatorDetail> = futures
+			.filter_map(|result: Result<ValidatorDetail, anyhow::Error>| async move { result.ok() })
+			.collect()
+			.await;
+
+		// Construct EraStaking
+		let era_staking = EraStaking {
+			era: current_era,
+			minimum_stake: mini_active_stake.unwrap_or(0),
+			total_validators: total_validator.unwrap_or(0),
+			active_validators: active_validators.unwrap_or(0),
+			active_mominators: active_nominators.unwrap_or(0),
+			validators: era_validators,
+		};
+
+		Ok(era_staking)
 	}
 
 	async fn get_block_hash(
@@ -284,6 +363,19 @@ impl SubstrateClient {
 			impl_version: runtime_version.impl_version,
 			transaction_version: runtime_version.transaction_version,
 			state_version: runtime_version.state_version,
+		}
+	}
+
+	fn convert_ss58_to_account_id32(&self, ss58_address: &str) -> Result<AccountId32> {
+		AccountId32::from_ss58check(ss58_address)
+			.map_err(|e| anyhow!("Failed to convert SS58 to AccountId32: {:?}", e))
+	}
+
+	fn data_to_string(&self, data: Data) -> Option<String> {
+		if let Data::Raw(bound_vec) = data {
+			String::from_utf8(bound_vec.to_vec()).ok()
+		} else {
+			None
 		}
 	}
 }
