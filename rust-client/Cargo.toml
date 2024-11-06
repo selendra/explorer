@@ -13,15 +13,18 @@ futures = "0.3.28"
 tokio = { version = "1.24", features = ["rt-multi-thread", "macros", "time"] }
 hex = { version = "0.4.3" }
 
-substrate-api-client = { git = "https://github.com/selendra/substrate-api-client.git", branch = "selendra", default-features = false, features = ["jsonrpsee-client"] }
-
 sp-core = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
 sp-runtime = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
 sp-staking = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
+
 frame-support = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
 frame-system = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
+
 pallet-balances = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
 pallet-staking = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
 pallet-session = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
+pallet-identity = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
+
+substrate-api-client = { git = "https://github.com/selendra/substrate-api-client.git", branch = "selendra", default-features = false, features = ["jsonrpsee-client"] }
 selendra-runtime = { git = "https://github.com/selendra/selendra", tag = "v2.0.0" }
 selendra-primitives = { git = "https://github.com/selendra/selendra", tag = "v2.0.0" }
