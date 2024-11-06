@@ -17,6 +17,7 @@ substrate-api-client = { git = "https://github.com/selendra/substrate-api-client
 
 sp-core = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
 sp-runtime = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
+sp-staking = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
 frame-support = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
 frame-system = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
 pallet-balances = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }

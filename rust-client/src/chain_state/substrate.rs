@@ -1,7 +1,8 @@
 use anyhow::{anyhow, Result};
 use codec::{Decode, Encode};
 
-use pallet_staking::ActiveEraInfo;
+use pallet_staking::{ActiveEraInfo, EraRewardPoints, ValidatorPrefs};
+use sp_staking::PagedExposureMetadata;
 use substrate_api_client::{
 	ac_primitives::{Bytes, DefaultRuntimeConfig, RuntimeVersion},
 	rpc::JsonrpseeClient,
@@ -15,7 +16,7 @@ use sp_core::{blake2_256, crypto::Ss58Codec};
 use sp_runtime::{
 	generic::{Block, Header, UncheckedExtrinsic},
 	traits::BlakeTwo256,
-	OpaqueExtrinsic,
+	AccountId32, OpaqueExtrinsic,
 };
 
 use crate::models::{
@@ -45,6 +46,65 @@ impl SubstrateClient {
 				.await
 				.map_err(|e| anyhow!("Failed to create API client: {:?}", e))?,
 		);
+
+		Ok(())
+	}
+
+	pub async fn get_validator(&self, block_number: Option<u32>) -> Result<()> {
+		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
+
+		let mut block_hash: Option<Hash> = None;
+		if block_number.is_some() {
+			block_hash = self.get_block_hash(api, block_number.map_or(0, |b| b)).await?;
+		};
+
+		let current_era = api
+			.get_storage::<ActiveEraInfo>("Staking", "ActiveEra", block_hash)
+			.await
+			.unwrap()
+			.unwrap();
+		let validators = api
+			.get_storage_map::<u32, EraRewardPoints<AccountId32>>(
+				"Staking",
+				"ErasRewardPoints",
+				10,
+				None,
+			)
+			.await
+			.unwrap();
+
+		for validator in validators.unwrap().individual {
+			let validators_commission = api
+				.get_storage_map::<AccountId32, ValidatorPrefs>(
+					"Staking",
+					"Validators",
+					validator.0.clone(),
+					None,
+				)
+				.await
+				.unwrap()
+				.unwrap();
+
+			let validators_detail = api
+				.get_storage_double_map::<u32, AccountId32, PagedExposureMetadata<Balance>>(
+					"Staking",
+					"ErasStakersOverview",
+					current_era.index.clone(),
+					validator.0.clone(),
+					block_hash,
+				)
+				.await
+				.unwrap();
+
+			println!(
+				"Era: {:?} \n, validator: {:?} \n detail: {:?} \n commission: {:?} point: {:?}",
+				current_era.index,
+				validator.0.to_ss58check(),
+				validators_detail,
+				validators_commission,
+				validator.1
+			);
+		}
 
 		Ok(())
 	}
