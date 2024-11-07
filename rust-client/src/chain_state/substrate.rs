@@ -34,7 +34,6 @@ use crate::models::{
 	staking::{EraStaking, ValidatorDetail},
 	Balance, MaxAdditionalFields, MaxJudgements,
 };
-
 pub struct SubstrateClient {
 	ws_url: String,
 	api: Option<Api<DefaultRuntimeConfig, JsonrpseeClient>>,
@@ -57,65 +56,6 @@ impl SubstrateClient {
 		);
 
 		Ok(())
-	}
-
-	pub async fn get_accounts(
-		&self,
-		query_size: u32,
-		start_at: Option<StorageKey>,
-	) -> Result<Vec<String>> {
-		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
-
-		// Get the prefix key for system account storage
-		let prefix_key = api
-			.get_storage_map_key_prefix("System", "Account")
-			.await
-			.map_err(|e| anyhow!("{:?}", e))?;
-
-		// Retrieve keys from `system.account`
-		let account_keys = api
-			.get_storage_keys_paged(Some(prefix_key), query_size, start_at, None)
-			.await
-			.map_err(|e| anyhow!("{:?}", e))?;
-
-		// Decode each account key directly into SS58 address
-		account_keys
-			.into_iter()
-			.map(|key| {
-				let account_id = AccountId32::decode(&mut &key.0[48..])
-					.map_err(|_| anyhow!("Failed to decode account ID"))?;
-				Ok(account_id.to_ss58check())
-			})
-			.collect()
-	}
-
-	pub async fn get_all_accounts(&self) -> Result<Vec<String>> {
-		let mut account_addresses = Vec::new();
-		let mut start_key: Option<StorageKey> = None;
-		let page_size = 1000;
-
-		// Loop through pages and collect account addresses
-		loop {
-			let page_accounts = self.get_accounts(page_size, start_key.clone()).await?;
-			if page_accounts.is_empty() {
-				break;
-			}
-
-			account_addresses.extend(page_accounts);
-
-			// Set start_key to the last key of the current page for the next iteration
-			start_key = self
-				.api
-				.as_ref()
-				.unwrap()
-				.get_storage_keys_paged(None, page_size, start_key.clone(), None)
-				.await
-				.map_err(|_| anyhow!("Failed to decode account ID"))?
-				.last()
-				.cloned();
-		}
-
-		Ok(account_addresses)
 	}
 
 	/// Retrieves the block details for the given block number.
@@ -312,6 +252,65 @@ impl SubstrateClient {
 		} else {
 			Ok(None)
 		}
+	}
+
+	pub async fn get_accounts(
+		&self,
+		query_size: u32,
+		start_at: Option<StorageKey>,
+	) -> Result<Vec<String>> {
+		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
+
+		// Get the prefix key for system account storage
+		let prefix_key = api
+			.get_storage_map_key_prefix("System", "Account")
+			.await
+			.map_err(|e| anyhow!("{:?}", e))?;
+
+		// Retrieve keys from `system.account`
+		let account_keys = api
+			.get_storage_keys_paged(Some(prefix_key), query_size, start_at, None)
+			.await
+			.map_err(|e| anyhow!("{:?}", e))?;
+
+		// Decode each account key directly into SS58 address
+		account_keys
+			.into_iter()
+			.map(|key| {
+				let account_id = AccountId32::decode(&mut &key.0[48..])
+					.map_err(|_| anyhow!("Failed to decode account ID"))?;
+				Ok(account_id.to_ss58check())
+			})
+			.collect()
+	}
+
+	pub async fn get_all_accounts(&self) -> Result<Vec<String>> {
+		let mut account_addresses = Vec::new();
+		let mut start_key: Option<StorageKey> = None;
+		let page_size = 1000;
+
+		// Loop through pages and collect account addresses
+		loop {
+			let page_accounts = self.get_accounts(page_size, start_key.clone()).await?;
+			if page_accounts.is_empty() {
+				break;
+			}
+
+			account_addresses.extend(page_accounts);
+
+			// Set start_key to the last key of the current page for the next iteration
+			start_key = self
+				.api
+				.as_ref()
+				.unwrap()
+				.get_storage_keys_paged(None, page_size, start_key.clone(), None)
+				.await
+				.map_err(|_| anyhow!("Failed to decode account ID"))?
+				.last()
+				.cloned();
+		}
+
+		Ok(account_addresses)
 	}
 
 	async fn get_block_hash(
