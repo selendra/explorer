@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Ok, Result};
 use codec::{Decode, Encode};
 use futures::{
 	stream::{FuturesUnordered, StreamExt},
@@ -15,7 +15,7 @@ use selendra_primitives::{Hash, Signature};
 use selendra_runtime::{Address, RuntimeCall, RuntimeEvent, SignedExtra};
 
 use frame_system::Phase;
-use sp_core::{blake2_256, crypto::Ss58Codec};
+use sp_core::{blake2_256, crypto::Ss58Codec, storage::StorageKey};
 use sp_runtime::{
 	generic::{Block, Header, UncheckedExtrinsic},
 	traits::BlakeTwo256,
@@ -59,43 +59,55 @@ impl SubstrateClient {
 		Ok(())
 	}
 
-	pub async fn get_account_identity(&self, address: &str) -> Result<Option<SubstrateIdentity>> {
-		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
-		let account = self.convert_ss58_to_account_id32(address)?;
+	pub async fn get_accounts(&self, query_size: u32, start_at: Option<StorageKey>) -> Result<Vec<String>> {
+        let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
 
-		if let Some(identity_info) = api.get_storage_map::<AccountId32, Registration<Balance, MaxJudgements, IdentityInfo<MaxAdditionalFields>>>
-				("Identity", "IdentityOf", account, None)
-				.await.map_err(|e| anyhow!("Failed to get account identity: {:?}", e))? 
-		{
-			let mut judgement_str: String = String::from("");
-			for (_, judgement) in identity_info.judgements {
-				judgement_str = match judgement {
-					Judgement::Erroneous => "Erroneous".to_string(),
-					Judgement::Unknown => "Unknown".to_string(),
-					Judgement::FeePaid(_) => "FeePaid".to_string(),
-					Judgement::Reasonable => "Reasonable".to_string(),
-					Judgement::KnownGood => "KnownGood".to_string(),
-					Judgement::OutOfDate => "OutOfDate".to_string(),
-					Judgement::LowQuality => "LowQuality".to_string(),
+        // Get the prefix key for system account storage
+        let prefix_key = api
+            .get_storage_map_key_prefix("System", "Account")
+            .await
+            .map_err(|e| anyhow!("{:?}", e))?;
 
-				};
-			};
+        // Retrieve keys from `system.account`
+        let account_keys = api
+            .get_storage_keys_paged(Some(prefix_key), query_size, start_at, None)
+            .await
+            .map_err(|e| anyhow!("{:?}", e))?;
 
-			let info = identity_info.info;
-			Ok(Some(SubstrateIdentity {
-				display_name: self.data_to_string(info.display),
-				legal_name: self.data_to_string(info.legal),
-				web: self.data_to_string(info.web),
-				riot: self.data_to_string(info.riot),
-				email: self.data_to_string(info.email),
-				twitter: self.data_to_string(info.twitter),
-				image: self.data_to_string(info.image),
-				judgement: Some(judgement_str),
-			}))
-		} else {
-			Ok(None)
-		}
-	}
+        // Decode each account key directly into SS58 address
+        account_keys
+            .into_iter()
+            .map(|key| {
+                let account_id = AccountId32::decode(&mut &key.0[48..]).map_err(|_| anyhow!("Failed to decode account ID"))?;
+                Ok(account_id.to_ss58check())
+            })
+            .collect()
+    }
+
+    pub async fn get_all_accounts(&self) -> Result<Vec<String>> {
+        let mut account_addresses = Vec::new();
+        let mut start_key: Option<StorageKey> = None;
+        let page_size = 1000;
+
+        // Loop through pages and collect account addresses
+        loop {
+            let page_accounts = self.get_accounts(page_size, start_key.clone()).await?;
+            if page_accounts.is_empty() {
+                break;
+            }
+
+            account_addresses.extend(page_accounts);
+
+            // Set start_key to the last key of the current page for the next iteration
+            start_key = self.api.as_ref().unwrap()
+                .get_storage_keys_paged(None, page_size, start_key.clone(), None)
+                .await.map_err(|_| anyhow!("Failed to decode account ID"))?
+                .last()
+                .cloned();
+        }
+
+        Ok(account_addresses)
+    }
 
 	/// Retrieves the block details for the given block number.
 	pub async fn get_block(&self, block_number: u32) -> Result<Option<BlockDetail>> {
@@ -162,6 +174,7 @@ impl SubstrateClient {
 			Ok(None)
 		}
 	}
+
 	pub async fn get_validator(&self, block_number: Option<u32>) -> Result<EraStaking> {
 		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
 
@@ -252,6 +265,44 @@ impl SubstrateClient {
 		};
 
 		Ok(era_staking)
+	}
+
+	pub async fn get_account_identity(&self, address: &str) -> Result<Option<SubstrateIdentity>> {
+		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
+		let account = self.convert_ss58_to_account_id32(address)?;
+
+		if let Some(identity_info) = api.get_storage_map::<AccountId32, Registration<Balance, MaxJudgements, IdentityInfo<MaxAdditionalFields>>>
+				("Identity", "IdentityOf", account, None)
+				.await.map_err(|e| anyhow!("Failed to get account identity: {:?}", e))? 
+		{
+			let mut judgement_str: String = String::from("");
+			for (_, judgement) in identity_info.judgements {
+				judgement_str = match judgement {
+					Judgement::Erroneous => "Erroneous".to_string(),
+					Judgement::Unknown => "Unknown".to_string(),
+					Judgement::FeePaid(_) => "FeePaid".to_string(),
+					Judgement::Reasonable => "Reasonable".to_string(),
+					Judgement::KnownGood => "KnownGood".to_string(),
+					Judgement::OutOfDate => "OutOfDate".to_string(),
+					Judgement::LowQuality => "LowQuality".to_string(),
+
+				};
+			};
+
+			let info = identity_info.info;
+			Ok(Some(SubstrateIdentity {
+				display_name: self.data_to_string(info.display),
+				legal_name: self.data_to_string(info.legal),
+				web: self.data_to_string(info.web),
+				riot: self.data_to_string(info.riot),
+				email: self.data_to_string(info.email),
+				twitter: self.data_to_string(info.twitter),
+				image: self.data_to_string(info.image),
+				judgement: Some(judgement_str),
+			}))
+		} else {
+			Ok(None)
+		}
 	}
 
 	async fn get_block_hash(
