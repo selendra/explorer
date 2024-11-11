@@ -1,7 +1,12 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
-use super::{event::BlockEvent, extrinsic::BlockExtrinsic, Balance};
+use super::{
+	event::BlockEvent,
+	extrinsic::{BlockExtrinsic, TransactionDetail},
+	gas::BlockGas,
+	Balance,
+};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SubstrateRuntimeVersion {
@@ -28,4 +33,15 @@ pub struct BlockDetail {
 	pub events: BlockEvent,
 	pub extrinsics: BlockExtrinsic,
 	pub timestamp: u64,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EvmBlock {
+	pub block_numer: u64,
+	pub block_hash: String,
+	pub transactions: Vec<TransactionDetail>,
+	pub timestamp: u64,
+	pub size: u64,
+	pub nonce: String,
+	pub gas: BlockGas,
 }

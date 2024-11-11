@@ -1,6 +1,8 @@
 pub mod block;
+pub mod contract;
 pub mod event;
 pub mod extrinsic;
+pub mod gas;
 pub mod identity;
 pub mod staking;
 
