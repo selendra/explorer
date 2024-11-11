@@ -23,7 +23,7 @@ pub struct ProcessExtrinsic {
 	pub function: RuntimeCall,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct TransactionDetail {
 	pub transaction_hash: String, // hash
 	pub status: bool,             // self.provider.get_transaction_receipt(hash).status
@@ -36,7 +36,7 @@ pub struct TransactionDetail {
 	pub other: OtherTx,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct OtherTx {
 	pub transation_type: u32, // transaction_type
 	pub nonce: u64,

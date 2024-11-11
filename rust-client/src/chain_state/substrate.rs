@@ -36,7 +36,7 @@ use pallet_identity::{legacy::IdentityInfo, Data, Judgement, Registration};
 use pallet_staking::{ActiveEraInfo, EraRewardPoints, ValidatorPrefs};
 
 pub struct SubstrateClient {
-	api: Api<DefaultRuntimeConfig, JsonrpseeClient>,
+	pub api: Api<DefaultRuntimeConfig, JsonrpseeClient>,
 }
 
 impl SubstrateClient {
@@ -85,12 +85,12 @@ impl SubstrateClient {
 			let block_events = self.process_event(events)?;
 			let block_data = BlockDetail {
 				block_number: block.header.number,
-				block_hash: block.header.hash().to_string(),
-				parent_hash: block.header.parent_hash.to_string(),
-				extrinsics_root: block.header.extrinsics_root.to_string(),
+				block_hash: format!("0x{}", hex::encode(block.header.hash())),
+				parent_hash: format!("0x{}", hex::encode(block.header.parent_hash)),
+				extrinsics_root: format!("0x{}", hex::encode(block.header.extrinsics_root)),
 				activ_era: era_info.map_or(0, |era| era.index),
 				session_index: session_index.unwrap_or_default(),
-				state_root: block.header.state_root.to_string(),
+				state_root: format!("0x{}", hex::encode(block.header.state_root)),
 				runtime_version: self.build_runtime_version(&runtime_version),
 				events: BlockEvent {
 					total: event_count.unwrap_or_default(),
@@ -257,27 +257,28 @@ impl SubstrateClient {
 	}
 
 	pub async fn get_all_accounts(&self) -> Result<Vec<String>> {
-        let mut accounts = Vec::new();
-        let mut start_key: Option<StorageKey> = None;
-        let page_size = 1000;
+		let mut accounts = Vec::new();
+		let mut start_key: Option<StorageKey> = None;
+		let page_size = 1000;
 
-        loop {
-            let page_accounts = self.get_accounts(page_size, start_key.clone()).await?;
-            if page_accounts.is_empty() {
-                break;
-            }
-            accounts.extend(page_accounts);
+		loop {
+			let page_accounts = self.get_accounts(page_size, start_key.clone()).await?;
+			if page_accounts.is_empty() {
+				break;
+			}
+			accounts.extend(page_accounts);
 
-            start_key = self.api
-                .get_storage_keys_paged(None, page_size, start_key.clone(), None)
-                .await
-                .map_err(|_| anyhow!("Error fetching storage keys"))?
-                .last()
-                .cloned();
-        }
+			start_key = self
+				.api
+				.get_storage_keys_paged(None, page_size, start_key.clone(), None)
+				.await
+				.map_err(|_| anyhow!("Error fetching storage keys"))?
+				.last()
+				.cloned();
+		}
 
-        Ok(accounts)
-    }
+		Ok(accounts)
+	}
 
 	async fn get_block_hash(&self, block_number: u32) -> Result<Option<Hash>> {
 		self.api
