@@ -1,3 +1,12 @@
+use crate::models::{
+	block::{BlockDetail, SubstrateRuntimeVersion},
+	event::{BlockEvent, EventDetail, StakingSlash, SubstrateEventRecord, TransferEvent},
+	extrinsic::{BlockExtrinsic, ExtrinsicDetail, ProcessExtrinsic},
+	identity::SubstrateIdentity,
+	staking::{EraStaking, ValidatorDetail},
+	Balance, MaxAdditionalFields, MaxJudgements,
+};
+
 use anyhow::{anyhow, Ok, Result};
 use codec::{Decode, Encode};
 use futures::{
@@ -26,44 +35,24 @@ use sp_staking::PagedExposureMetadata;
 use pallet_identity::{legacy::IdentityInfo, Data, Judgement, Registration};
 use pallet_staking::{ActiveEraInfo, EraRewardPoints, ValidatorPrefs};
 
-use crate::models::{
-	block::{BlockDetail, SubstrateRuntimeVersion},
-	event::{BlockEvent, EventDetail, StakingSlash, SubstrateEventRecord, TransferEvent},
-	extrinsic::{BlockExtrinsic, ExtrinsicDetail, ProcessExtrinsic},
-	identity::SubstrateIdentity,
-	staking::{EraStaking, ValidatorDetail},
-	Balance, MaxAdditionalFields, MaxJudgements,
-};
 pub struct SubstrateClient {
-	ws_url: String,
-	api: Option<Api<DefaultRuntimeConfig, JsonrpseeClient>>,
+	api: Api<DefaultRuntimeConfig, JsonrpseeClient>,
 }
 
 impl SubstrateClient {
-	pub fn new(ws_url: &str) -> Self {
-		Self { ws_url: ws_url.to_string(), api: None }
+	pub async fn new(ws_url: &str) -> Result<Self> {
+		let client = JsonrpseeClient::new(ws_url)
+			.map_err(|e| anyhow!("Failed to connect to WebSocket at {}: {:?}", ws_url, e))?;
+		let api = Api::<DefaultRuntimeConfig, _>::new(client)
+			.await
+			.map_err(|e| anyhow!("Failed to create API client: {:?}", e))?;
+
+		Ok(Self { api })
 	}
 
-	/// Connects to the Substrate node via WebSocket and initializes the API.
-	pub async fn connect(&mut self) -> Result<()> {
-		let client = JsonrpseeClient::new(&self.ws_url)
-			.map_err(|e| anyhow!("Failed to connect to WebSocket at {}: {:?}", self.ws_url, e))?;
-
-		self.api = Some(
-			Api::<DefaultRuntimeConfig, _>::new(client)
-				.await
-				.map_err(|e| anyhow!("Failed to create API client: {:?}", e))?,
-		);
-
-		Ok(())
-	}
-
-	/// Retrieves the block details for the given block number.
 	pub async fn get_block(&self, block_number: u32) -> Result<Option<BlockDetail>> {
-		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
-
-		let block_hash = self.get_block_hash(api, block_number).await?;
-		let runtime_version = api.runtime_version();
+		let block_hash = self.get_block_hash(block_number).await?;
+		let runtime_version = self.api.runtime_version();
 
 		let (
 			block,
@@ -74,29 +63,26 @@ impl SubstrateClient {
 			extrinsic_count,
 			timestamp,
 		) = try_join!(
-			api.get_block(block_hash),
-			api.get_storage::<ActiveEraInfo>("Staking", "ActiveEra", block_hash),
-			api.get_storage::<u32>("Session", "CurrentIndex", block_hash),
-			api.get_storage::<Balance>("Balances", "TotalIssuance", block_hash),
-			api.get_storage::<u32>("System", "EventCount", block_hash),
-			api.get_storage::<u32>("System", "ExtrinsicCount", block_hash),
-			api.get_storage::<u64>("Timestamp", "Now", block_hash),
+			self.api.get_block(block_hash),
+			self.api.get_storage::<ActiveEraInfo>("Staking", "ActiveEra", block_hash),
+			self.api.get_storage::<u32>("Session", "CurrentIndex", block_hash),
+			self.api.get_storage::<Balance>("Balances", "TotalIssuance", block_hash),
+			self.api.get_storage::<u32>("System", "EventCount", block_hash),
+			self.api.get_storage::<u32>("System", "ExtrinsicCount", block_hash),
+			self.api.get_storage::<u64>("Timestamp", "Now", block_hash),
 		)
-		.map_err(|e| anyhow!("feching data error: {:?}", e))?;
+		.map_err(|e| anyhow!("Error fetching block data: {:?}", e))?;
 
 		if let Some(block) = block {
-			let block_extrinsics = self.process_extrinsics(api, block.clone(), block_hash).await?;
-
-			let events = api
+			let block_extrinsics = self.process_extrinsics(&block, block_hash).await?;
+			let events = self
+				.api
 				.get_storage::<Vec<SubstrateEventRecord>>("System", "Events", block_hash)
 				.await
-				.map_err(|e| anyhow!("Failed to create API client: {:?}", e))?;
+				.map_err(|e| anyhow!("Error fetching events: {:?}", e))?
+				.unwrap_or_default();
 
-			let block_events = match events {
-				Some(event_data) => self.process_event(event_data)?,
-				None => Vec::new(),
-			};
-
+			let block_events = self.process_event(events)?;
 			let block_data = BlockDetail {
 				block_number: block.header.number,
 				block_hash: block.header.hash().to_string(),
@@ -105,7 +91,7 @@ impl SubstrateClient {
 				activ_era: era_info.map_or(0, |era| era.index),
 				session_index: session_index.unwrap_or_default(),
 				state_root: block.header.state_root.to_string(),
-				runtime_version: self.build_runtime_version(runtime_version),
+				runtime_version: self.build_runtime_version(&runtime_version),
 				events: BlockEvent {
 					total: event_count.unwrap_or_default(),
 					extrinsic: block_events,
@@ -125,129 +111,118 @@ impl SubstrateClient {
 	}
 
 	pub async fn get_validator(&self, block_number: Option<u32>) -> Result<EraStaking> {
-		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
-
-		let mut block_hash: Option<Hash> = None;
-		if block_number.is_some() {
-			block_hash = self.get_block_hash(api, block_number.map_or(0, |b| b)).await?;
+		let block_hash = if let Some(block_number) = block_number {
+			self.get_block_hash(block_number).await?
+		} else {
+			None
 		};
 
-		// Fetch current era
-		let current_era = api
+		let current_era = self
+			.api
 			.get_storage::<ActiveEraInfo>("Staking", "ActiveEra", block_hash)
 			.await
-			.map_err(|e| anyhow!("{:?}", e))?
+			.map_err(|e| anyhow!("Error fetching active era: {:?}", e))?
 			.map_or(0, |era| era.index);
 
-		// Fetch other staking-related details concurrently
 		let (validators, mini_active_stake, total_validator, active_validators, active_nominators) =
 			try_join!(
-				api.get_storage_map::<u32, EraRewardPoints<AccountId32>>(
+				self.api.get_storage_map::<u32, EraRewardPoints<AccountId32>>(
 					"Staking",
 					"ErasRewardPoints",
 					current_era,
 					block_hash,
 				),
-				api.get_storage::<u128>("Staking", "MinimumActiveStake", block_hash),
-				api.get_storage::<u32>("Staking", "ValidatorCount", block_hash),
-				api.get_storage::<u32>("Staking", "CounterForValidators", block_hash),
-				api.get_storage::<u32>("Staking", "CounterForNominators", block_hash),
+				self.api.get_storage::<u128>("Staking", "MinimumActiveStake", block_hash),
+				self.api.get_storage::<u32>("Staking", "ValidatorCount", block_hash),
+				self.api.get_storage::<u32>("Staking", "CounterForValidators", block_hash),
+				self.api.get_storage::<u32>("Staking", "CounterForNominators", block_hash),
 			)
-			.map_err(|e| anyhow!("fetch validator data error: {:?}", e))?;
+			.map_err(|e| anyhow!("Error fetching validator data: {:?}", e))?;
 
-		// Collect validator details concurrently
-		let futures = FuturesUnordered::new();
-		if let Some(validators) = validators {
-			for (account_id, points) in validators.individual {
-				let api = api.clone();
-				futures.push(async move {
-					let (validators_commission, validators_info) = try_join!(
-						api.get_storage_map::<AccountId32, ValidatorPrefs>(
-							"Staking",
-							"Validators",
-							account_id.clone(),
-							None,
-						),
-						api.get_storage_double_map::<u32, AccountId32, PagedExposureMetadata<Balance>>(
-							"Staking",
-							"ErasStakersOverview",
-							current_era,
-							account_id.clone(),
-							block_hash,
-						),
-					)
-					.map_err(|e| anyhow!("fetch validator data error: {:?}", e))?;
+		let era_validators = if let Some(validators) = validators {
+			let futures: FuturesUnordered<_> = validators.individual.into_iter().map(|(account_id, points)| {
+                let api = self.api.clone();
+                async move {
+                    let (validator_commission, validator_info) = try_join!(
+                        api.get_storage_map::<AccountId32, ValidatorPrefs>(
+                            "Staking",
+                            "Validators",
+                            account_id.clone(),
+                            None,
+                        ),
+                        api.get_storage_double_map::<u32, AccountId32, PagedExposureMetadata<Balance>>(
+                            "Staking",
+                            "ErasStakersOverview",
+                            current_era,
+                            account_id.clone(),
+                            block_hash,
+                        ),
+                    )
+                    .map_err(|e| anyhow!("Error fetching validator data: {:?}", e))?;
 
-					let info = validators_info.unwrap_or(PagedExposureMetadata {
-						total: 0,
-						own: 0,
-						nominator_count: 0,
-						page_count: 0,
-					});
+                    let info = validator_info.unwrap_or(PagedExposureMetadata { total: 0, own: 0, nominator_count: 0, page_count: 0 });
+                    Ok(ValidatorDetail {
+                        account: account_id.to_ss58check(),
+                        validators_commission: validator_commission.map_or("0%".to_string(), |vc| format!("{:?}", vc.commission)),
+                        nominator_count: info.nominator_count,
+                        total_staking: info.total,
+                        own_staking: info.own,
+                        active_point: points,
+                    })
+                }
+            }).collect();
 
-					Ok(ValidatorDetail {
-						account: account_id.to_ss58check(),
-						validators_commission: validators_commission
-							.map_or("0%".to_string(), |vc| format!("{:?}", vc.commission)),
-						nominator_count: info.nominator_count,
-						total_staking: info.total,
-						own_staking: info.own,
-						active_point: points,
-					})
-				});
-			}
-		}
+			futures
+				.filter_map(|result: Result<ValidatorDetail>| async { result.ok() })
+				.collect()
+				.await
+		} else {
+			Vec::new()
+		};
 
-		let era_validators: Vec<ValidatorDetail> = futures
-			.filter_map(|result: Result<ValidatorDetail, anyhow::Error>| async move { result.ok() })
-			.collect()
-			.await;
-
-		// Construct EraStaking
-		let era_staking = EraStaking {
+		Ok(EraStaking {
 			era: current_era,
 			minimum_stake: mini_active_stake.unwrap_or(0),
 			total_validators: total_validator.unwrap_or(0),
 			active_validators: active_validators.unwrap_or(0),
 			active_mominators: active_nominators.unwrap_or(0),
 			validators: era_validators,
-		};
-
-		Ok(era_staking)
+		})
 	}
 
 	pub async fn get_account_identity(&self, address: &str) -> Result<Option<SubstrateIdentity>> {
-		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
-		let account = self.convert_ss58_to_account_id32(address)?;
+		let account_id = self.convert_ss58_to_account_id32(address)?;
+		let identity_info = self.api
+            .get_storage_map::<AccountId32, Registration<Balance, MaxJudgements, IdentityInfo<MaxAdditionalFields>>>("Identity", "IdentityOf", account_id, None)
+            .await
+            .map_err(|e| anyhow!("Failed to get account identity: {:?}", e))?;
 
-		if let Some(identity_info) = api.get_storage_map::<AccountId32, Registration<Balance, MaxJudgements, IdentityInfo<MaxAdditionalFields>>>
-				("Identity", "IdentityOf", account, None)
-				.await.map_err(|e| anyhow!("Failed to get account identity: {:?}", e))? 
-		{
-			let mut judgement_str: String = String::from("");
-			for (_, judgement) in identity_info.judgements {
-				judgement_str = match judgement {
-					Judgement::Erroneous => "Erroneous".to_string(),
-					Judgement::Unknown => "Unknown".to_string(),
-					Judgement::FeePaid(_) => "FeePaid".to_string(),
-					Judgement::Reasonable => "Reasonable".to_string(),
-					Judgement::KnownGood => "KnownGood".to_string(),
-					Judgement::OutOfDate => "OutOfDate".to_string(),
-					Judgement::LowQuality => "LowQuality".to_string(),
+		if let Some(info) = identity_info {
+			let judgement = info
+				.judgements
+				.into_iter()
+				.map(|(_, j)| match j {
+					Judgement::Erroneous => "Erroneous",
+					Judgement::Unknown => "Unknown",
+					Judgement::FeePaid(_) => "FeePaid",
+					Judgement::Reasonable => "Reasonable",
+					Judgement::KnownGood => "KnownGood",
+					Judgement::OutOfDate => "OutOfDate",
+					Judgement::LowQuality => "LowQuality",
+				})
+				.next()
+				.unwrap_or("Unknown")
+				.to_string();
 
-				};
-			};
-
-			let info = identity_info.info;
 			Ok(Some(SubstrateIdentity {
-				display_name: self.data_to_string(info.display),
-				legal_name: self.data_to_string(info.legal),
-				web: self.data_to_string(info.web),
-				riot: self.data_to_string(info.riot),
-				email: self.data_to_string(info.email),
-				twitter: self.data_to_string(info.twitter),
-				image: self.data_to_string(info.image),
-				judgement: Some(judgement_str),
+				display_name: self.data_to_string(info.info.display),
+				legal_name: self.data_to_string(info.info.legal),
+				web: self.data_to_string(info.info.web),
+				riot: self.data_to_string(info.info.riot),
+				email: self.data_to_string(info.info.email),
+				twitter: self.data_to_string(info.info.twitter),
+				image: self.data_to_string(info.info.image),
+				judgement: Some(judgement),
 			}))
 		} else {
 			Ok(None)
@@ -259,21 +234,18 @@ impl SubstrateClient {
 		query_size: u32,
 		start_at: Option<StorageKey>,
 	) -> Result<Vec<String>> {
-		let api = self.api.as_ref().ok_or_else(|| anyhow!("API client not initialized"))?;
-
-		// Get the prefix key for system account storage
-		let prefix_key = api
+		let prefix_key = self
+			.api
 			.get_storage_map_key_prefix("System", "Account")
 			.await
-			.map_err(|e| anyhow!("{:?}", e))?;
+			.map_err(|e| anyhow!("Error fetching storage prefix: {:?}", e))?;
 
-		// Retrieve keys from `system.account`
-		let account_keys = api
+		let account_keys = self
+			.api
 			.get_storage_keys_paged(Some(prefix_key), query_size, start_at, None)
 			.await
-			.map_err(|e| anyhow!("{:?}", e))?;
+			.map_err(|e| anyhow!("Error fetching storage keys: {:?}", e))?;
 
-		// Decode each account key directly into SS58 address
 		account_keys
 			.into_iter()
 			.map(|key| {
@@ -285,65 +257,55 @@ impl SubstrateClient {
 	}
 
 	pub async fn get_all_accounts(&self) -> Result<Vec<String>> {
-		let mut account_addresses = Vec::new();
-		let mut start_key: Option<StorageKey> = None;
-		let page_size = 1000;
+        let mut accounts = Vec::new();
+        let mut start_key: Option<StorageKey> = None;
+        let page_size = 1000;
 
-		// Loop through pages and collect account addresses
-		loop {
-			let page_accounts = self.get_accounts(page_size, start_key.clone()).await?;
-			if page_accounts.is_empty() {
-				break;
-			}
+        loop {
+            let page_accounts = self.get_accounts(page_size, start_key.clone()).await?;
+            if page_accounts.is_empty() {
+                break;
+            }
+            accounts.extend(page_accounts);
 
-			account_addresses.extend(page_accounts);
+            start_key = self.api
+                .get_storage_keys_paged(None, page_size, start_key.clone(), None)
+                .await
+                .map_err(|_| anyhow!("Error fetching storage keys"))?
+                .last()
+                .cloned();
+        }
 
-			// Set start_key to the last key of the current page for the next iteration
-			start_key = self
-				.api
-				.as_ref()
-				.unwrap()
-				.get_storage_keys_paged(None, page_size, start_key.clone(), None)
-				.await
-				.map_err(|_| anyhow!("Failed to decode account ID"))?
-				.last()
-				.cloned();
-		}
+        Ok(accounts)
+    }
 
-		Ok(account_addresses)
-	}
-
-	async fn get_block_hash(
-		&self,
-		api: &Api<DefaultRuntimeConfig, JsonrpseeClient>,
-		block_number: u32,
-	) -> Result<Option<Hash>> {
-		api.get_block_hash(Some(block_number)).await.map_err(|e| {
-			anyhow!("Failed to fetch block hash for block number {}: {:?}", block_number, e)
-		})
+	async fn get_block_hash(&self, block_number: u32) -> Result<Option<Hash>> {
+		self.api
+			.get_block_hash(Some(block_number))
+			.await
+			.map_err(|e| anyhow!("Error fetching block hash: {:?}", e))
 	}
 
 	async fn process_extrinsics(
 		&self,
-		api: &Api<DefaultRuntimeConfig, JsonrpseeClient>,
-		block: Block<Header<u32, BlakeTwo256>, OpaqueExtrinsic>,
+		block: &Block<Header<u32, BlakeTwo256>, OpaqueExtrinsic>,
 		block_hash: Option<Hash>,
 	) -> Result<Vec<ExtrinsicDetail>> {
-		let mut block_extrinsics = Vec::new();
+		let mut extrinsics = Vec::new();
 
 		for (index, extrinsic) in block.extrinsics.iter().enumerate() {
 			let extrinsic_byte = extrinsic.encode();
 			let extrinsic_hash = format!("0x{}", hex::encode(blake2_256(&extrinsic_byte)));
-			let fee_details = api
+			let fee_details = self
+				.api
 				.get_fee_details(&Bytes(extrinsic_byte.clone()), block_hash)
 				.await
-				.map_err(|e| anyhow!("Fetching fee details failed: {:?}", e))?;
+				.map_err(|e| anyhow!("Error fetching fee details: {:?}", e))?;
 			let total_fee = fee_details.map_or(0, |fee| fee.final_fee());
 			let is_signed = total_fee > 0;
 
 			let processed_extrinsic = self.process_extrinsic(extrinsic_byte)?;
-
-			block_extrinsics.push(ExtrinsicDetail {
+			extrinsics.push(ExtrinsicDetail {
 				is_signed,
 				signer: processed_extrinsic.signer,
 				index: index as u8,
@@ -352,29 +314,24 @@ impl SubstrateClient {
 				runtime_call: format!("{:?}", processed_extrinsic.function),
 			});
 		}
-		Ok(block_extrinsics)
+		Ok(extrinsics)
 	}
 
 	fn process_extrinsic(&self, extrinsic_byte: Vec<u8>) -> Result<ProcessExtrinsic> {
-		let decoded_extrinsic: Result<
-			UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra>,
-			_,
-		> = Decode::decode(&mut &extrinsic_byte[..])
-			.map_err(|e| anyhow!("Decoding extrinsic failed: {:?}", e));
-
+		let decoded_extrinsic: UncheckedExtrinsic<Address, RuntimeCall, Signature, SignedExtra> =
+			Decode::decode(&mut &extrinsic_byte[..])
+				.map_err(|e| anyhow!("Error decoding extrinsic: {:?}", e))?;
 		let signer_address = decoded_extrinsic
+			.signature
 			.as_ref()
-			.ok()
-			.and_then(|extrinsic| {
-				extrinsic.signature.as_ref().map(|(signer, _, _)| signer.to_ss58check())
-			})
+			.map(|(signer, _, _)| signer.to_ss58check())
 			.unwrap_or_default();
 
-		Ok(ProcessExtrinsic { signer: signer_address, function: decoded_extrinsic?.function })
+		Ok(ProcessExtrinsic { signer: signer_address, function: decoded_extrinsic.function })
 	}
 
 	fn process_event(&self, events: Vec<SubstrateEventRecord>) -> Result<Vec<EventDetail>> {
-		Ok(events
+		events
 			.into_iter()
 			.enumerate()
 			.map(|(index, event)| {
@@ -382,18 +339,15 @@ impl SubstrateClient {
 					Phase::ApplyExtrinsic(index) => index,
 					_ => 0,
 				};
-
-				EventDetail {
+				Ok(EventDetail {
 					index: index as u32,
 					extrinsic_id: phase,
 					event: format!("{:?}", event.event),
-					slash_event: self.process_slash_event(event.event.clone()).unwrap_or(None),
-					transfer_event: self
-						.process_transfer_event(event.event.clone())
-						.unwrap_or(None),
-				}
+					slash_event: self.process_slash_event(event.event.clone())?,
+					transfer_event: self.process_transfer_event(event.event)?,
+				})
 			})
-			.collect())
+			.collect()
 	}
 
 	fn process_slash_event(&self, event: RuntimeEvent) -> Result<Option<StakingSlash>> {
@@ -427,7 +381,7 @@ impl SubstrateClient {
 
 	fn convert_ss58_to_account_id32(&self, ss58_address: &str) -> Result<AccountId32> {
 		AccountId32::from_ss58check(ss58_address)
-			.map_err(|e| anyhow!("Failed to convert SS58 to AccountId32: {:?}", e))
+			.map_err(|e| anyhow!("Error converting SS58 to AccountId32: {:?}", e))
 	}
 
 	fn data_to_string(&self, data: Data) -> Option<String> {
