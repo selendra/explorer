@@ -1,7 +1,7 @@
 use anyhow::Result;
-use ethers::types::transaction;
+// use ethers::types::transaction;
 // use selendra_rust_client::SubstrateClient;
-use selendra_rust_client::{EvmClient, SubstrateClient};
+use selendra_rust_client::EvmClient;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -30,10 +30,10 @@ async fn main() -> Result<()> {
 
 	for transaction in transactions {
 		let address = transaction.to;
-		let contract_type = evm_client.get_contract_types(&address).await;
+		// let contract_type = evm_client.get_contract_types(&address).await;
 
-		println!("{:#?}", block);
-		println!("{:#?}", contract_type);
+		println!("{:#?}", address);
+		// println!("{:#?}", contract_type);
 	}
 
 	// let contract_type= evm_client.get_contract_types()
