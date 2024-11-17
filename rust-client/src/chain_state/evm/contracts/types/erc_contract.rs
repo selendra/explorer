@@ -13,9 +13,6 @@ pub enum ContractType {
 
 #[derive(Debug, Clone)]
 pub struct TokenMetadata {
-    pub name: Option<String>,
-    pub symbol: Option<String>,
-    pub decimals: Option<u8>,
     pub contract_type: ContractType,
 }
 
@@ -44,9 +41,6 @@ impl ErcDetector {
 
         // If no known type detected, return Unknown
         Ok(Some(TokenMetadata {
-            name: None,
-            symbol: None,
-            decimals: None,
             contract_type: ContractType::Unknown,
         }))
     }
@@ -65,15 +59,7 @@ impl ErcDetector {
             return Ok(None); // Not an ERC20
         }
 
-        // Fetch ERC20 metadata
-        let name = self.fetch_optional_string(address, "name()").await;
-        let symbol = self.fetch_optional_string(address, "symbol()").await;
-        let decimals = self.fetch_optional_u8(address, "decimals()").await;
-
         Ok(Some(TokenMetadata {
-            name,
-            symbol,
-            decimals,
             contract_type: ContractType::ERC20,
         }))
     }
@@ -140,39 +126,6 @@ impl ErcDetector {
         Ok(!code.is_empty())
     }
 
-    /// Fetch optional string
-    async fn fetch_optional_string(&self, address: Address, method: &str) -> Option<String> {
-        self.fetch_string(address, method).await.ok()
-    }
-
-    /// Fetch optional u8
-    async fn fetch_optional_u8(&self, address: Address, method: &str) -> Option<u8> {
-        self.fetch_u8(address, method).await.ok()
-    }
-
-    /// Fetch string from contract
-    async fn fetch_string(&self, address: Address, method: &str) -> Result<String, ProviderError> {
-        let data = self.provider.call(&self.create_call(address, method, vec![], None), None).await?;
-        if data.len() >= 64 {
-            let offset = U256::from_big_endian(&data[0..32]).as_usize();
-            let length = U256::from_big_endian(&data[32..64]).as_usize();
-            if offset + 32 + length <= data.len() {
-                return Ok(String::from_utf8_lossy(&data[offset + 32..offset + 32 + length]).into_owned());
-            }
-        }
-        Err(ProviderError::CustomError("Invalid string data".to_string()))
-    }
-
-    /// Fetch u8 from contract
-    async fn fetch_u8(&self, address: Address, method: &str) -> Result<u8, ProviderError> {
-        let data = self.provider.call(&self.create_call(address, method, vec![], None), None).await?;
-        if data.len() == 32 {
-            Ok(U256::from_big_endian(&data).as_u32() as u8)
-        } else {
-            Err(ProviderError::CustomError("Invalid u8 data".to_string()))
-        }
-    }
-
     /// Create a call transaction
     fn create_call(&self, to: Address, func_sig: &str, params: Vec<Token>, gas: Option<u64>) -> TypedTransaction {
         let selector = &keccak256(func_sig.as_bytes())[0..4];
@@ -204,8 +157,6 @@ mod tests {
 			Ok(Some(metadata)) => {
 				println!("Token metadata: {:?}", metadata);
 				assert_eq!(metadata.contract_type, ContractType::ERC20);
-				assert!(metadata.name.is_some());
-				assert!(metadata.symbol.is_some());
 			},
 			Ok(None) => panic!("Address is not a valid ERC20 contract"),
 			Err(e) => panic!("Error: {:?}", e),
