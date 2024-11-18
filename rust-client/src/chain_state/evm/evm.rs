@@ -1,6 +1,6 @@
-use super::contracts::erc20::ERC20TransactionFetcher;
+use super::contracts::{erc20::ERC20TransactionFetcher, types::ContractDetector};
 use crate::models::{
-	block::EvmBlock,
+	block::{EvmBlock, LatestBlock},
 	extrinsic::{OtherTx, TransactionDetail},
 	gas::BlockGas,
 };
@@ -16,6 +16,7 @@ use ethers::{
 
 pub struct EvmClient {
 	pub provider: Provider<Http>,
+	pub contract_detector: ContractDetector,
 	pub erc20_fetcher: ERC20TransactionFetcher,
 }
 
@@ -23,7 +24,22 @@ impl EvmClient {
 	pub fn new(provider_url: &str) -> Result<Self> {
 		let provider = Provider::<Http>::try_from(provider_url.to_string())?;
 		let erc20_fetcher = ERC20TransactionFetcher::new(provider.clone());
-		Ok(Self { provider, erc20_fetcher })
+		let contract_detector = ContractDetector::new(provider.clone());
+		Ok(Self { provider, contract_detector, erc20_fetcher })
+	}
+
+	pub async fn get_lastet_block(&self) -> Result<Option<LatestBlock>> {
+		let last_block = self.provider.get_block_number().await?;
+		if let Some(block) = self.provider.get_block(last_block).await? {
+			let detail = LatestBlock {
+				block_number: block.number.unwrap_or_default().as_u64(),
+				timestamp: block.timestamp.as_u64(),
+				number_of_tx: u16::try_from(block.transactions.len()).unwrap_or(0),
+			};
+			Ok(Some(detail))
+		} else {
+			Ok(None)
+		}
 	}
 
 	pub async fn get_block(&self, block_number: u64) -> Result<Option<EvmBlock>> {
@@ -88,5 +104,9 @@ impl EvmClient {
 		let hash = H256::from_str(tx_hash)?;
 		let transaction = self.provider.get_transaction(hash).await?;
 		Ok(transaction)
+	}
+
+	pub fn addree_from_string(&self, address: String)-> Result<H160> {
+		H160::from_str(&address).map_err(|e| anyhow!("Error: {:?}", e))
 	}
 }

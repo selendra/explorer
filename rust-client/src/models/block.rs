@@ -45,3 +45,10 @@ pub struct EvmBlock {
 	pub nonce: String,
 	pub gas: BlockGas,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct LatestBlock {
+	pub block_number: u64,
+	pub timestamp: u64,
+	pub number_of_tx: u16
+}

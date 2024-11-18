@@ -26,13 +26,18 @@ async fn main() -> Result<()> {
 
 	let block = evm_client.get_block(8_255_966).await.unwrap();
 
+	let lastest = evm_client.get_lastet_block().await.unwrap();
+
+	println!("{:#?}", lastest);
+
 	let transactions = block.clone().unwrap().transactions;
 
 	for transaction in transactions {
 		let address = transaction.to;
-		// let contract_type = evm_client.get_contract_types(&address).await;
 
-		println!("{:#?}", address);
+		let contract_type = evm_client.contract_detector.detect(evm_client.addree_from_string(address).unwrap()).await;
+
+		println!("{:#?}", contract_type.unwrap());
 		// println!("{:#?}", contract_type);
 	}
 

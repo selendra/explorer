@@ -24,3 +24,10 @@ pub struct Erc20Info {
 	pub symbol: String,
 	pub decimals: u8,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ContractType {
+	ERC20,
+	ERC721,
+	Unknown,
+}
