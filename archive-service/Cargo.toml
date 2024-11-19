@@ -7,8 +7,9 @@ edition = "2021"
 tokio = { version = "1.24", features = ["rt-multi-thread", "macros", "time", "signal"] }
 tracing-subscriber = "0.3.18"
 tracing = "0.1.40"
-eyre = "0.6.12"
+dotenv = "0.15"
 anyhow = "1.0"
 rand = "0.8.5"
+
 
 selendra-rust-client = { path = "../rust-client"}
