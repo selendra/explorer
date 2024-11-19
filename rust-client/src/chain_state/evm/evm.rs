@@ -106,7 +106,7 @@ impl EvmClient {
 		Ok(transaction)
 	}
 
-	pub fn addree_from_string(&self, address: String)-> Result<H160> {
+	pub fn addree_from_string(&self, address: String) -> Result<H160> {
 		H160::from_str(&address).map_err(|e| anyhow!("Error: {:?}", e))
 	}
 }

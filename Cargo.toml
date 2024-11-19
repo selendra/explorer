@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "rust-client",
+    "archive-service"
+]
+
+resolver = "2"

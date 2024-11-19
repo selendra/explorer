@@ -35,7 +35,10 @@ async fn main() -> Result<()> {
 	for transaction in transactions {
 		let address = transaction.to;
 
-		let contract_type = evm_client.contract_detector.detect(evm_client.addree_from_string(address).unwrap()).await;
+		let contract_type = evm_client
+			.contract_detector
+			.detect(evm_client.addree_from_string(address).unwrap())
+			.await;
 
 		println!("{:#?}", contract_type.unwrap());
 		// println!("{:#?}", contract_type);

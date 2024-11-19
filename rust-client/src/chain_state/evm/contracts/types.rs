@@ -7,7 +7,6 @@ use ethers::{
 
 use crate::models::contract::ContractType;
 
-
 pub struct ContractDetector {
 	pub provider: Provider<Http>,
 }
@@ -31,8 +30,8 @@ impl ContractDetector {
 
 		if let Some(erc721) = self.detect_erc721(address).await? {
 			return Ok(Some(erc721));
-		} 
-		
+		}
+
 		Ok(Some(ContractType::Unknown))
 	}
 
@@ -123,17 +122,16 @@ impl ContractDetector {
 		Ok(!code.is_empty())
 	}
 
-
 	// /// Check if contract supports specific interface
-    // async fn check_interface_support(&self, address: Address, interface_id: &str) -> Result<bool, ProviderError> {
-    //     let interface_bytes = hex::decode(interface_id).unwrap_or_default();
-        
-    //     self.validate_function_call(
-    //         address,
-    //         "supportsInterface(bytes4)",
-    //         vec![Token::FixedBytes(interface_bytes)],
-    //     ).await
-    // }
+	// async fn check_interface_support(&self, address: Address, interface_id: &str) -> Result<bool, ProviderError> {
+	//     let interface_bytes = hex::decode(interface_id).unwrap_or_default();
+
+	//     self.validate_function_call(
+	//         address,
+	//         "supportsInterface(bytes4)",
+	//         vec![Token::FixedBytes(interface_bytes)],
+	//     ).await
+	// }
 
 	/// Create a call transaction
 	fn create_call(

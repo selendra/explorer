@@ -50,5 +50,5 @@ pub struct EvmBlock {
 pub struct LatestBlock {
 	pub block_number: u64,
 	pub timestamp: u64,
-	pub number_of_tx: u16
+	pub number_of_tx: u16,
 }
