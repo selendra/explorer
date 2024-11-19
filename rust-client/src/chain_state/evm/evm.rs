@@ -78,7 +78,7 @@ impl EvmClient {
 			}
 
 			Ok(Some(EvmBlock {
-				block_numer: block.number.unwrap_or_default().as_u64(),
+				block_number: block.number.unwrap_or_default().as_u64(),
 				block_hash: format!("0x{}", hex::encode(block.hash.unwrap_or_default().as_bytes())),
 				transactions: block_transactions,
 				timestamp: block.timestamp.as_u64(),

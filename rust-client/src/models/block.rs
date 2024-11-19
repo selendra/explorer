@@ -37,7 +37,7 @@ pub struct BlockDetail {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct EvmBlock {
-	pub block_numer: u64,
+	pub block_number: u64,
 	pub block_hash: String,
 	pub transactions: Vec<TransactionDetail>,
 	pub timestamp: u64,
