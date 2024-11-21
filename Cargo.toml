@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "rust-client",
-    "archive-service"
+    "archive-service",
+    "db"
 ]
 
 resolver = "2"

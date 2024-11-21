@@ -1,5 +1,5 @@
 [package]
-name = "archive-service"
+name = "selendra-db"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,9 +8,7 @@ tokio = { version = "1.24", features = ["rt-multi-thread", "macros", "time", "si
 serde = { version = "1.0.136", default-features = false, features = ["derive"] }
 surrealdb = { version = "2.0.4" }
 tracing-subscriber = "0.3.18"
+serde_json = "1.0.133"
 tracing = "0.1.40"
-dotenv = "0.15"
 anyhow = "1.0.93"
-rand = "0.8.5"
-
-selendra-rust-client = { path = "../rust-client"}
+uuid = "1.11.0"

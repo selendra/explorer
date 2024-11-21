@@ -5,15 +5,9 @@ use archive_state::ProcessingStats;
 use dotenv::dotenv;
 use selendra_rust_client::{models::block::EvmBlock, EvmClient};
 use serde::{Deserialize, Serialize};
-use std::{env, sync::Arc, time::Duration};
+use std::{env, time::Duration};
 use tokio::{sync::broadcast, time};
 use tracing::{error, info};
-
-use surrealdb::{
-	engine::remote::ws::{Client, Ws},
-	opt::auth::Root,
-	Surreal,
-};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct StoreBlock {
@@ -25,29 +19,11 @@ pub struct StoreBlock {
 pub struct BlockMonitorService {
 	evm_client: EvmClient,
 	shutdown: broadcast::Receiver<()>,
-	// db: Arc<Surreal<Client>>,
 }
 
 impl BlockMonitorService {
-	pub async fn new(
-		evm_client: EvmClient,
-		shutdown: broadcast::Receiver<()>,
-		db_url: &str,
-		db_user: &str,
-		db_pass: &str,
-	) -> Result<Self> {
-		// Initialize SurrealDB connection
-		let db = Surreal::new::<Ws>(db_url).await?;
-
-		println!("{:#?}", db);
-
-		// // Sign in as root
-		// db.signin(Root { username: db_user, password: db_pass }).await?;
-
-		// // Select namespace and database
-		// db.use_ns("blockchain").use_db("mainnet").await?;
-
-		Ok(Self { evm_client, shutdown })
+	pub fn new(evm_client: EvmClient, shutdown: broadcast::Receiver<()>) -> Self {
+		Self { evm_client, shutdown }
 	}
 
 	pub async fn process_block_range(
@@ -131,39 +107,12 @@ impl BlockMonitorService {
 	}
 
 	async fn store_block_data(&self, block: EvmBlock) -> Result<()> {
-		// let store_data = StoreBlock {
-		// 	block_number: block.block_number,
-		// 	block_hash: block.block_hash,
-		// 	timestamp: block.timestamp,
-		// };
-
-		// let record_id = format!("block:{}", store_data.block_number);
-
 		// Implement your storage logic here
 		info!(
 			block_number = block.block_number,
 			tx_count = block.transactions.len(),
 			"Storing block data"
 		);
-
-		// // Clone store_data for logging if needed
-		// let block_number = store_data.block_number;
-		// let block_hash = store_data.block_hash.clone();
-
-		// // Use Option<StoreBlock> directly without Created type
-		// let stored: Option<StoreBlock> =
-		// 	self.db.create(("blocks", record_id)).content(store_data).await?;
-
-		// match stored {
-		// 	Some(_) => {
-		// 		info!(block_number, block_hash, "Successfully stored block data");
-		// 		Ok(())
-		// 	},
-		// 	None => {
-		// 		error!(block_number, "Failed to store block data");
-		// 		Err(anyhow!("Failed to store block in SurrealDB"))
-		// 	},
-		// }
 
 		Ok(())
 	}
@@ -176,9 +125,9 @@ async fn main() -> Result<()> {
 
 	// Get EVM client URL from environment variables
 	let evm_url = env::var("EVM_RPC_URL").expect("EVM_RPC_URL must be set");
-	let db_url = env::var("SURREALDB_URL").expect("SURREALDB_URL must be set");
-	let db_user = env::var("SURREALDB_USER").expect("SURREALDB_USER must be set");
-	let db_pass = env::var("SURREALDB_PASS").expect("SURREALDB_PASS must be set");
+	// let db_url = env::var("SURREALDB_URL").expect("SURREALDB_URL must be set");
+	// let db_user = env::var("SURREALDB_USER").expect("SURREALDB_USER must be set");
+	// let db_pass = env::var("SURREALDB_PASS").expect("SURREALDB_PASS must be set");
 
 	// Initialize the EVM client
 	let evm_client = EvmClient::new(&evm_url)?;
@@ -188,8 +137,7 @@ async fn main() -> Result<()> {
 	let (_shutdown_tx, shutdown_rx) = broadcast::channel(1);
 
 	// Initialize service with SurrealDB
-	let mut service =
-		BlockMonitorService::new(evm_client, shutdown_rx, &db_url, &db_user, &db_pass).await?;
+	let mut service = BlockMonitorService::new(evm_client, shutdown_rx);
 
 	service.process_block_range(0, 100, Some(10)).await?;
 

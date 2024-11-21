@@ -1,52 +1,59 @@
-# Stop and remove everything
-docker-compose down -v
+# Check for required tools
+echo "Checking required tools..."
 
-# Remove any existing data
-sudo rm -rf data
-sudo rm -rf database
+MISSING_TOOLS=0
+for tool in docker curl; do
+    if ! command_exists $tool; then
+        echo "❌ $tool is not installed"
+        MISSING_TOOLS=1
+    else
+        echo "✅ $tool is installed"
+    fi
+done
 
-# Create database directory for schema
-mkdir -p database
+if [ $MISSING_TOOLS -eq 1 ]; then
+    echo "Installing missing tools..."
+    install_dependencies
+fi
 
-# Create init script
-cat > database/init.sh << 'EOF'
-#!/bin/sh
-echo "Waiting for SurrealDB to be ready..."
-sleep 5
-echo "Applying database schema..."
-surreal sql --conn http://surrealdb:8000 --user root --pass root --ns blockchain --db mainnet < /app/database/schema.surql
-echo "Schema initialization completed"
+# Create necessary directories
+echo "Creating directories..."
+mkdir -p data
+
+# Set correct permissions
+echo "Setting permissions..."
+chmod -R 777 data
+
+# Create .env file if it doesn't exist
+if [ ! -f .env ]; then
+    echo "Creating .env file..."
+    cat > .env << EOF
+SURREALDB_URL=ws://localhost:8000
+SURREALDB_USER=root
+SURREALDB_PASS=root
 EOF
+fi
 
-# Create schema file
-cat > database/schema.surql << 'EOF'
--- Define namespace and database
-DEFINE NAMESPACE blockchain;
-USE NS blockchain;
-
--- Define databases for different networks
-DEFINE DATABASE mainnet;
-USE NS blockchain DB mainnet;
-
--- Define the blocks table
-DEFINE TABLE blocks SCHEMAFULL;
-
--- Define fields with validations
-DEFINE FIELD block_number ON blocks TYPE number ASSERT $value >= 0;
-DEFINE FIELD block_hash ON blocks TYPE string ASSERT $value != NONE;
-DEFINE FIELD timestamp ON blocks TYPE number ASSERT $value > 0;
-
--- Define indexes for better query performance
-DEFINE INDEX block_number ON blocks FIELDS block_number UNIQUE;
-DEFINE INDEX block_timestamp ON blocks FIELDS timestamp;
-EOF
-
-# Set permissions
-chmod +x database/init.sh
-chmod 644 database/schema.surql
-
-# Start the containers
+# Start SurrealDB
+echo "Starting SurrealDB..."
+docker-compose down
 docker-compose up -d
 
-# Check logs
-docker-compose logs -f
+# Wait for container to start
+echo "Waiting for container to start..."
+sleep 5
+
+# Check container status
+if docker ps | grep -q surrealdb; then
+    echo "✅ SurrealDB container is running"
+else
+    echo "❌ SurrealDB container failed to start"
+    docker-compose logs
+    exit 1
+fi
+
+# Final health check
+echo "Performing health check..."
+./scripts/healthcheck.sh
+
+echo "Setup completed!"
