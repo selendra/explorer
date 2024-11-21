@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    container_name: surrealdb
+    user: root
+    command: start --log debug --user root --pass root --bind 0.0.0.0:8000 file:/data/database.db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      - SURREAL_USER=root
+      - SURREAL_PASS=root
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped

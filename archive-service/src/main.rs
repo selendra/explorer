@@ -1,57 +1,53 @@
+pub mod archive_state;
+
 use anyhow::{anyhow, Result};
+use archive_state::ProcessingStats;
 use dotenv::dotenv;
 use selendra_rust_client::{models::block::EvmBlock, EvmClient};
-use std::{
-	env,
-	time::{Duration, Instant},
-};
+use serde::{Deserialize, Serialize};
+use std::{env, sync::Arc, time::Duration};
 use tokio::{sync::broadcast, time};
 use tracing::{error, info};
 
-#[derive(Debug)]
-pub struct ProcessingStats {
-	processed_blocks: u64,
-	failed_blocks: u64,
-	start_time: Instant,
-	start_block: u64,
-}
+use surrealdb::{
+	engine::remote::ws::{Client, Ws},
+	opt::auth::Root,
+	Surreal,
+};
 
-impl ProcessingStats {
-	pub fn new(start_block: u64) -> Self {
-		Self { processed_blocks: 0, failed_blocks: 0, start_time: Instant::now(), start_block }
-	}
-
-	pub fn log_progress(&self, current_block: u64, end_block: u64) {
-		let elapsed = self.start_time.elapsed();
-		let blocks_per_second = if elapsed.as_secs() > 0 {
-			self.processed_blocks as f64 / elapsed.as_secs_f64()
-		} else {
-			0.0
-		};
-		let progress = ((current_block - self.start_block) as f64
-			/ (end_block - self.start_block) as f64
-			* 100.0)
-			.round();
-
-		info!(
-			progress_percentage = progress as u32,
-			processed_blocks = self.processed_blocks,
-			failed_blocks = self.failed_blocks,
-			blocks_per_second = blocks_per_second,
-			elapsed_secs = elapsed.as_secs(),
-			"Processing progress"
-		);
-	}
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct StoreBlock {
+	pub block_number: u64,
+	pub block_hash: String,
+	pub timestamp: u64,
 }
 
 pub struct BlockMonitorService {
 	evm_client: EvmClient,
 	shutdown: broadcast::Receiver<()>,
+	// db: Arc<Surreal<Client>>,
 }
 
 impl BlockMonitorService {
-	pub fn new(evm_client: EvmClient, shutdown: broadcast::Receiver<()>) -> Self {
-		Self { evm_client, shutdown }
+	pub async fn new(
+		evm_client: EvmClient,
+		shutdown: broadcast::Receiver<()>,
+		db_url: &str,
+		db_user: &str,
+		db_pass: &str,
+	) -> Result<Self> {
+		// Initialize SurrealDB connection
+		let db = Surreal::new::<Ws>(db_url).await?;
+
+		println!("{:#?}", db);
+
+		// // Sign in as root
+		// db.signin(Root { username: db_user, password: db_pass }).await?;
+
+		// // Select namespace and database
+		// db.use_ns("blockchain").use_db("mainnet").await?;
+
+		Ok(Self { evm_client, shutdown })
 	}
 
 	pub async fn process_block_range(
@@ -129,18 +125,46 @@ impl BlockMonitorService {
 	async fn process_block(&self, block_number: u64) -> Result<()> {
 		let block = self.evm_client.get_block(block_number).await?;
 		if let Some(block_data) = block {
-			self.store_block_data(block_data)?;
+			self.store_block_data(block_data).await?;
 		}
 		Ok(())
 	}
 
-	fn store_block_data(&self, block: EvmBlock) -> Result<()> {
+	async fn store_block_data(&self, block: EvmBlock) -> Result<()> {
+		// let store_data = StoreBlock {
+		// 	block_number: block.block_number,
+		// 	block_hash: block.block_hash,
+		// 	timestamp: block.timestamp,
+		// };
+
+		// let record_id = format!("block:{}", store_data.block_number);
+
 		// Implement your storage logic here
 		info!(
 			block_number = block.block_number,
 			tx_count = block.transactions.len(),
 			"Storing block data"
 		);
+
+		// // Clone store_data for logging if needed
+		// let block_number = store_data.block_number;
+		// let block_hash = store_data.block_hash.clone();
+
+		// // Use Option<StoreBlock> directly without Created type
+		// let stored: Option<StoreBlock> =
+		// 	self.db.create(("blocks", record_id)).content(store_data).await?;
+
+		// match stored {
+		// 	Some(_) => {
+		// 		info!(block_number, block_hash, "Successfully stored block data");
+		// 		Ok(())
+		// 	},
+		// 	None => {
+		// 		error!(block_number, "Failed to store block data");
+		// 		Err(anyhow!("Failed to store block in SurrealDB"))
+		// 	},
+		// }
+
 		Ok(())
 	}
 }
@@ -151,8 +175,10 @@ async fn main() -> Result<()> {
 	tracing_subscriber::fmt::init();
 
 	// Get EVM client URL from environment variables
-	let evm_url =
-		env::var("EVM_RPC_URL").expect("EVM_RPC_URL must be set in the .env file or environment");
+	let evm_url = env::var("EVM_RPC_URL").expect("EVM_RPC_URL must be set");
+	let db_url = env::var("SURREALDB_URL").expect("SURREALDB_URL must be set");
+	let db_user = env::var("SURREALDB_USER").expect("SURREALDB_USER must be set");
+	let db_pass = env::var("SURREALDB_PASS").expect("SURREALDB_PASS must be set");
 
 	// Initialize the EVM client
 	let evm_client = EvmClient::new(&evm_url)?;
@@ -161,7 +187,10 @@ async fn main() -> Result<()> {
 
 	let (_shutdown_tx, shutdown_rx) = broadcast::channel(1);
 
-	let mut service = BlockMonitorService::new(evm_client, shutdown_rx);
+	// Initialize service with SurrealDB
+	let mut service =
+		BlockMonitorService::new(evm_client, shutdown_rx, &db_url, &db_user, &db_pass).await?;
+
 	service.process_block_range(0, 100, Some(10)).await?;
 
 	Ok(())
