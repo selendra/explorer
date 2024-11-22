@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use surrealdb::{
 	engine::remote::ws::{Client, Ws},
@@ -6,6 +6,7 @@ use surrealdb::{
 	Surreal,
 };
 use tracing::info;
+
 #[derive(Debug, Clone, Copy)]
 pub enum SortOrder {
 	Asc,
@@ -63,12 +64,24 @@ where
 	}
 
 	pub async fn insert_item(&self, id: &str, item: T) -> Result<Option<T>> {
-		let created: Option<T> = self.db.create((self.table.as_str(), id)).content(item).await?;
-		info!("Inserted item with ID: {}", id);
-		Ok(created)
+		self.execute_with_content("CREATE", id, item, "Inserted").await
 	}
 
-	// Method 1: Insert multiple items using a transaction string
+	pub async fn update_item(&self, id: &str, item: T) -> Result<Option<T>> {
+		self.execute_with_content("UPDATE", id, item, "Updated").await
+	}
+
+	// Delete a single item by ID
+	pub async fn delete_item(&self, id: &str) -> Result<Option<T>> {
+		let deleted: Option<T> = self.db.delete((self.table.as_str(), id)).await?;
+
+		if deleted.is_some() {
+			info!("Deleted item with ID: {}", id);
+		}
+		Ok(deleted)
+	}
+
+
 	pub async fn insert_items(&self, items: Vec<BatchInsertItem<T>>) -> Result<Vec<T>> {
 		let mut query = String::from("BEGIN TRANSACTION;\n");
 
@@ -82,41 +95,10 @@ where
 		}
 
 		query.push_str("COMMIT TRANSACTION;\n");
-
-		// Execute the transaction
 		self.db.query(query).await?;
 
-		// Fetch the inserted items
 		let ids: Vec<String> = items.iter().map(|item| item.id.clone()).collect();
-		let inserted_items: Vec<T> = self
-			.db
-			.query(&format!("SELECT * FROM {} WHERE id IN $ids", self.table))
-			.bind(("ids", ids))
-			.await?
-			.take(0)?;
-
-		info!("Inserted {} items in transaction", inserted_items.len());
-		Ok(inserted_items)
-	}
-
-	// Delete a single item by ID
-	pub async fn delete_item(&self, id: &str) -> Result<Option<T>> {
-		let deleted: Option<T> = self.db.delete((self.table.as_str(), id)).await?;
-
-		if deleted.is_some() {
-			info!("Deleted item with ID: {}", id);
-		}
-		Ok(deleted)
-	}
-
-	// Update a single item by ID
-	pub async fn update_item(&self, id: &str, item: T) -> Result<Option<T>> {
-		let updated: Option<T> = self.db.update((self.table.as_str(), id)).content(item).await?;
-
-		if updated.is_some() {
-			info!("Updated item with ID: {}", id);
-		}
-		Ok(updated)
+		self.fetch_items_by_ids(ids).await
 	}
 
 	pub async fn get_item_by_field(
@@ -124,12 +106,16 @@ where
 		field: &str,
 		value: impl Serialize + 'static,
 	) -> Result<Option<T>> {
-		let query = format!("SELECT * FROM {} WHERE {} = $value LIMIT 1", self.table, field);
-		let item: Option<T> = self.db.query(&query).bind(("value", value)).await?.take(0)?;
-		Ok(item)
+		let query = format!("SELECT * FROM {} WHERE {} = $value LIMIT 1;", self.table, field);
+		self.db
+			.query(&query)
+			.bind(("value", value))
+			.await
+			.map_err(|e| anyhow!(e))?
+			.take(0)
+			.map_err(|e| anyhow!(e))
 	}
 
-	// Get last N items by field
 	pub async fn get_last_items(
 		&self,
 		limit: u64,
@@ -137,30 +123,31 @@ where
 		order: SortOrder,
 	) -> Result<Vec<T>> {
 		let query = format!(
-			"SELECT * FROM {} ORDER BY {} {} LIMIT $limit",
+			"SELECT * FROM {} ORDER BY {} {} LIMIT $limit;",
 			self.table,
 			field,
 			order.as_str()
 		);
 
-		let items: Vec<T> = self.db.query(&query).bind(("limit", limit)).await?.take(0)?;
-
-		Ok(items)
+		self.db
+			.query(&query)
+			.bind(("limit", limit))
+			.await
+			.map_err(|e| anyhow!(e))?
+			.take(0)
+			.map_err(|e| anyhow!(e))
 	}
 
 	pub async fn get_paginated(&self, page: u64, page_size: u64) -> Result<PaginatedResult<T>> {
 		let offset = (page - 1) * page_size;
 
-		// Get total count
-		let count_query = format!("SELECT VALUE count() FROM {} GROUP ALL;", self.table);
+		let total = self.get_total_count().await?;
+		let total_pages = (total + page_size - 1) / page_size;
 
-		let count_result: Vec<CountResult> = self.db.query(&count_query).await?.take(0)?;
-
-		let total = count_result.first().map(|r| r.count).unwrap_or(0);
-
-		// Get paginated items with explicit ORDER BY
-		let query =
-			format!("SELECT * FROM {} ORDER BY number DESC LIMIT $limit START $start", self.table);
+		let query = format!(
+			"SELECT * FROM {} ORDER BY number DESC LIMIT $limit START $start;",
+			self.table
+		);
 
 		let items: Vec<T> = self
 			.db
@@ -170,9 +157,41 @@ where
 			.await?
 			.take(0)?;
 
-		let total_pages = (total + page_size - 1) / page_size;
-
 		Ok(PaginatedResult { items, total, page, page_size, total_pages })
+	}
+
+	// Helper Methods
+	async fn get_total_count(&self) -> Result<u64> {
+		let query = format!("SELECT VALUE count() FROM {} GROUP ALL;", self.table);
+		let count_result: Vec<CountResult> = self.db.query(&query).await?.take(0)?;
+		Ok(count_result.first().map(|r| r.count).unwrap_or(0))
+	}
+
+	async fn fetch_items_by_ids(&self, ids: Vec<String>) -> Result<Vec<T>> {
+		let query = format!("SELECT * FROM {} WHERE id IN $ids;", self.table);
+		self.db
+			.query(&query)
+			.bind(("ids", ids))
+			.await
+			.map_err(|e| anyhow!(e))?
+			.take(0)
+			.map_err(|e| anyhow!(e))
+	}
+
+	async fn execute_with_content(
+		&self,
+		action: &str,
+		id: &str,
+		item: T,
+		log_message: &str,
+	) -> Result<Option<T>> {
+		let query = format!("{} {}:{} CONTENT $content RETURN *;", action, self.table, id);
+		let result: Option<T> = self.db.query(&query).bind(("content", item)).await?.take(0)?;
+
+		if result.is_some() {
+			info!("{} item with ID: {}", log_message, id);
+		}
+		Ok(result)
 	}
 }
 
