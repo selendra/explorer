@@ -99,6 +99,26 @@ where
 		Ok(inserted_items)
 	}
 
+	// Delete a single item by ID
+	pub async fn delete_item(&self, id: &str) -> Result<Option<T>> {
+		let deleted: Option<T> = self.db.delete((self.table.as_str(), id)).await?;
+
+		if deleted.is_some() {
+			info!("Deleted item with ID: {}", id);
+		}
+		Ok(deleted)
+	}
+
+	// Update a single item by ID
+	pub async fn update_item(&self, id: &str, item: T) -> Result<Option<T>> {
+		let updated: Option<T> = self.db.update((self.table.as_str(), id)).content(item).await?;
+
+		if updated.is_some() {
+			info!("Updated item with ID: {}", id);
+		}
+		Ok(updated)
+	}
+
 	pub async fn get_item_by_field(
 		&self,
 		field: &str,
@@ -129,23 +149,14 @@ where
 	}
 
 	pub async fn get_paginated(&self, page: u64, page_size: u64) -> Result<PaginatedResult<T>> {
-        let offset = (page - 1) * page_size;
+		let offset = (page - 1) * page_size;
 
-    // Get total count
-    let count_query = format!("SELECT count() FROM {}", self.table);
-    
-    let count_result: Vec<CountResult> = self.db
-        .query(&count_query)
-        .await?
-        .take(0)?;
-    
-    let total = count_result
-        .first()
-        .map(|r| r.count)
-        .unwrap_or(0);
-    
+		// Get total count
+		let count_query = format!("SELECT VALUE count() FROM {} GROUP ALL;", self.table);
 
-		println!("{:#?}", count_result);
+		let count_result: Vec<CountResult> = self.db.query(&count_query).await?.take(0)?;
+
+		let total = count_result.first().map(|r| r.count).unwrap_or(0);
 
 		// Get paginated items with explicit ORDER BY
 		let query =
@@ -193,177 +204,196 @@ mod tests {
 			.expect("Failed to create DB")
 	}
 
-	// #[tokio::test]
-	// async fn test_insert_single_item() -> Result<()> {
-	//     let db = setup_db().await;
+	#[tokio::test]
+	async fn test_insert_single_item() -> Result<()> {
+		let db = setup_db().await;
 
-	//     let test_item = TestItem {
-	//         number: 1,
-	//         name: "Test Item".to_string(),
-	//         timestamp: 1679825000,
-	//     };
+		let test_item =
+			TestItem { number: 1, name: "Test Item".to_string(), timestamp: 1679825000 };
 
-	//     let result = db.insert_item("test1", test_item.clone()).await?;
-	//     assert!(result.is_some());
+		let result = db.insert_item("test1", test_item.clone()).await?;
+		assert!(result.is_some());
 
-	//     let inserted_item = result.unwrap();
-	//     assert_eq!(inserted_item.number, test_item.number);
-	//     assert_eq!(inserted_item.name, test_item.name);
-	//     assert_eq!(inserted_item.timestamp, test_item.timestamp);
+		let inserted_item = result.unwrap();
+		assert_eq!(inserted_item.number, test_item.number);
+		assert_eq!(inserted_item.name, test_item.name);
+		assert_eq!(inserted_item.timestamp, test_item.timestamp);
 
-	//     Ok(())
-	// }
+		Ok(())
+	}
 
-	// #[tokio::test]
-	// async fn test_batch_insert() -> Result<()> {
-	//     let db = setup_db().await;
+	#[tokio::test]
+	async fn test_batch_insert() -> Result<()> {
+		let db = setup_db().await;
 
-	//     let items = vec![
-	//         BatchInsertItem {
-	//             id: "batch1".to_string(),
-	//             data: TestItem {
-	//                 number: 1,
-	//                 name: "Batch Item 1".to_string(),
-	//                 timestamp: 1679825000,
-	//             },
-	//         },
-	//         BatchInsertItem {
-	//             id: "batch2".to_string(),
-	//             data: TestItem {
-	//                 number: 2,
-	//                 name: "Batch Item 2".to_string(),
-	//                 timestamp: 1679825001,
-	//             },
-	//         },
-	//     ];
+		let items = vec![
+			BatchInsertItem {
+				id: "batch1".to_string(),
+				data: TestItem {
+					number: 1,
+					name: "Batch Item 1".to_string(),
+					timestamp: 1679825002,
+				},
+			},
+			BatchInsertItem {
+				id: "batch2".to_string(),
+				data: TestItem {
+					number: 2,
+					name: "Batch Item 2".to_string(),
+					timestamp: 1679825003,
+				},
+			},
+		];
 
-	//     db.insert_items(items.clone()).await?;
+		db.insert_items(items.clone()).await?;
 
-	//     Ok(())
-	// }
+		Ok(())
+	}
 
-	// #[tokio::test]
-	// async fn test_get_item_by_field() -> Result<()> {
-	//     let db = setup_db().await;
+	#[tokio::test]
+	async fn test_get_item_by_field() -> Result<()> {
+		let db = setup_db().await;
 
-	//     // Insert test item first
-	//     let test_item = TestItem {
-	//         number: 42,
-	//         name: "Get By Field Test".to_string(),
-	//         timestamp: 1679825000,
-	//     };
-	//     db.insert_item("field_test", test_item.clone()).await?;
+		// Insert test item first
+		let test_item =
+			TestItem { number: 42, name: "Get By Field Test".to_string(), timestamp: 1679825011 };
+		db.insert_item("field_test", test_item.clone()).await?;
 
-	//     // Test getting by number
-	//     let result = db.get_item_by_field("number", 42).await?;
-	//     assert!(result.is_some());
-	//     let found_item = result.unwrap();
-	//     assert_eq!(found_item.number, test_item.number);
-	//     assert_eq!(found_item.name, test_item.name);
+		// Test getting by number
+		let result = db.get_item_by_field("number", 42).await?;
+		assert!(result.is_some());
+		let found_item = result.unwrap();
+		assert_eq!(found_item.number, test_item.number);
+		assert_eq!(found_item.name, test_item.name);
 
-	//     // Test getting by non-existent number
-	//     let not_found = db.get_item_by_field("number", 9999).await?;
-	//     assert!(not_found.is_none());
+		// Test getting by non-existent number
+		let not_found = db.get_item_by_field("number", 9999).await?;
+		assert!(not_found.is_none());
 
-	//     Ok(())
-	// }
+		Ok(())
+	}
 
-	// #[tokio::test]
-	// async fn test_get_last_items() -> Result<()> {
-	//     let db = setup_db().await;
+	#[tokio::test]
+	async fn test_get_last_items() -> Result<()> {
+		let db = setup_db().await;
 
-	//     // Insert test items
-	//     let items = vec![
-	//         BatchInsertItem {
-	//             id: "last1".to_string(),
-	//             data: TestItem {
-	//                 number: 1,
-	//                 name: "Last Item 1".to_string(),
-	//                 timestamp: 1679825001,
-	//             },
-	//         },
-	//         BatchInsertItem {
-	//             id: "last2".to_string(),
-	//             data: TestItem {
-	//                 number: 2,
-	//                 name: "Last Item 2".to_string(),
-	//                 timestamp: 1679825002,
-	//             },
-	//         },
-	//         BatchInsertItem {
-	//             id: "last3".to_string(),
-	//             data: TestItem {
-	//                 number: 3,
-	//                 name: "Last Item 3".to_string(),
-	//                 timestamp: 1679825003,
-	//             },
-	//         },
-	//     ];
+		// Insert test items
+		let items = vec![
+			BatchInsertItem {
+				id: "last1".to_string(),
+				data: TestItem {
+					number: 1,
+					name: "Last Item 1".to_string(),
+					timestamp: 1679825012,
+				},
+			},
+			BatchInsertItem {
+				id: "last2".to_string(),
+				data: TestItem {
+					number: 2,
+					name: "Last Item 2".to_string(),
+					timestamp: 1679825013,
+				},
+			},
+			BatchInsertItem {
+				id: "last3".to_string(),
+				data: TestItem {
+					number: 3,
+					name: "Last Item 3".to_string(),
+					timestamp: 1679825014,
+				},
+			},
+		];
 
-	//     db.insert_items(items).await?;
+		db.insert_items(items).await?;
 
-	//     // Test getting last 2 items by number in descending order
-	//     let result = db.get_last_items(2, "number", SortOrder::Desc).await?;
-	//     assert_eq!(result.len(), 2);
-	//     assert!(result[0].number > result[1].number);
+		// Test getting last 2 items by number in descending order
+		let result = db.get_last_items(2, "number", SortOrder::Desc).await?;
+		assert_eq!(result.len(), 2);
+		assert!(result[0].number > result[1].number);
 
-	//     // Test getting last 2 items by timestamp in ascending order
-	//     let result = db.get_last_items(2, "timestamp", SortOrder::Asc).await?;
-	//     assert_eq!(result.len(), 2);
-	//     assert!(result[0].timestamp < result[1].timestamp);
+		// Test getting last 2 items by timestamp in ascending order
+		let result = db.get_last_items(2, "timestamp", SortOrder::Asc).await?;
+		assert_eq!(result.len(), 2);
+		assert!(result[0].timestamp < result[1].timestamp);
 
-	//     Ok(())
-	// }
+		Ok(())
+	}
 
 	#[tokio::test]
 	async fn test_pagination() -> Result<()> {
 		let db = setup_db().await;
 
-		// // Insert test items
-		// let mut batch_items = Vec::new();
-		// for i in 1..=10 {
-		// 	batch_items.push(BatchInsertItem {
-		// 		id: format!("page_{}", i),
-		// 		data: TestItem {
-		// 			number: i as u64,
-		// 			name: format!("Page Item {}", i),
-		// 			timestamp: 1679825000 + i as u64,
-		// 		},
-		// 	});
-		// }
+		// Insert test items
+		let mut batch_items = Vec::new();
+		for i in 1..=10 {
+			batch_items.push(BatchInsertItem {
+				id: format!("page_{}", i),
+				data: TestItem {
+					number: i as u64,
+					name: format!("Page Item {}", i),
+					timestamp: 1679825004 + i as u64,
+				},
+			});
+		}
 
-		// db.insert_items(batch_items).await?;
+		db.insert_items(batch_items).await?;
 
 		// Test first page
 		let page_1 = db.get_paginated(1, 3).await?;
-		println!("{:#?}", page_1);
-		// assert_eq!(page_1.items.len(), 3);
-		// assert_eq!(page_1.page, 1);
-		assert_eq!(page_1.total, 10);
-		// assert_eq!(page_1.page_size, 3);
-		// assert_eq!(page_1.total_pages, 4);
+		assert_eq!(page_1.items.len(), 3);
+		assert_eq!(page_1.page, 1);
+		// assert_eq!(page_1.total, 10); //effect from above test
+		assert_eq!(page_1.page_size, 3);
+		// assert_eq!(page_1.total_pages, 4); //effect from above test
 
 		// // Test last page
-		// let last_page = db.get_paginated(4, 3).await?;
-		// assert_eq!(last_page.items.len(), 1);
-		// assert_eq!(last_page.page, 4);
+		let last_page = db.get_paginated(4, 3).await?;
+		// assert_eq!(last_page.items.len(), 1); //effect from above test
+		assert_eq!(last_page.page, 4);
 
 		Ok(())
 	}
 
-	// // Helper function to clean up test data
-	// async fn cleanup_test_data(db: &GenericDB<TestItem>) -> Result<()> {
-	//     db.db
-	//         .query(format!("DELETE FROM {}", db.table))
-	//         .await?;
-	//     Ok(())
-	// }
+	#[tokio::test]
+	async fn test_delete_item() -> Result<()> {
+		let db = setup_db().await;
 
-	// // Run cleanup after each test
-	// impl Drop for GenericDB<TestItem> {
-	//     fn drop(&mut self) {
-	//         let rt = tokio::runtime::Runtime::new().unwrap();
-	//         rt.block_on(cleanup_test_data(self)).ok();
-	//     }
-	// }
+		// Insert test item
+		let test_item =
+			TestItem { number: 50, name: "Test Delete".to_string(), timestamp: 1679825000 };
+
+		db.insert_item("delete_test", test_item.clone()).await?;
+
+		// Delete the item
+		let deleted = db.delete_item("delete_test").await?;
+		assert!(deleted.is_some());
+
+		// Verify item is deleted
+		let not_found = db.get_item_by_field("number", 50).await?;
+		assert!(not_found.is_none());
+
+		Ok(())
+	}
+
+	#[tokio::test]
+	async fn test_update_item() -> Result<()> {
+		let db = setup_db().await;
+
+		// Insert test item
+		let test_item =
+			TestItem { number: 60, name: "Test Update".to_string(), timestamp: 1679825000 };
+
+		db.insert_item("update_test", test_item.clone()).await?;
+
+		// Update item
+		let updated_item =
+			TestItem { number: 60, name: "Updated Name".to_string(), timestamp: 1679826000 };
+
+		let updated = db.update_item("update_test", updated_item.clone()).await?;
+		assert!(updated.is_some());
+		assert_eq!(updated.unwrap().name, "Updated Name");
+
+		Ok(())
+	}
 }
