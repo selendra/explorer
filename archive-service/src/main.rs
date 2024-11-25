@@ -2,33 +2,38 @@ pub mod archive_state;
 pub mod models;
 pub mod setup_db;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 use dotenv::dotenv;
-use futures::future::join_all;
+use futures::StreamExt;
+use models::account::AccountModel;
 use rayon::prelude::*;
-use std::{env, time::Duration};
+use std::{env, sync::Arc, time::Duration};
 use tokio::{sync::broadcast, time};
 use tracing::{error, info};
+use uuid::Uuid;
 
 use archive_state::ProcessingStats;
 use selendra_rust_client::{models::block::EvmBlock, EvmClient, SubstrateClient};
 use setup_db::SurrealDb;
 
 pub struct BlockArciveService {
-	pub evm_client: EvmClient,
-	pub substrate_client: SubstrateClient,
+	pub evm_client: Option<EvmClient>,
+	pub substrate_client: Option<Arc<SubstrateClient>>,
 	pub surreal_db: SurrealDb,
 	pub shutdown: broadcast::Receiver<()>,
 }
 
 impl BlockArciveService {
 	pub fn new(
-		evm_client: EvmClient,
-		substrate_client: SubstrateClient,
+		evm_client: Option<EvmClient>,
+		substrate_client: Option<SubstrateClient>,
 		surreal_db: SurrealDb,
 		shutdown: broadcast::Receiver<()>,
 	) -> Self {
-		Self { evm_client, substrate_client, surreal_db, shutdown }
+		// Map Option<SubstrateClient> to Option<Arc<SubstrateClient>>
+		let arc_substrate_client = substrate_client.map(Arc::new);
+
+		Self { evm_client, substrate_client: arc_substrate_client, surreal_db, shutdown }
 	}
 
 	pub async fn process_block_range(
@@ -104,71 +109,60 @@ impl BlockArciveService {
 	}
 
 	pub async fn process_account_chunk(&self, chunk_size: usize) -> Result<()> {
-		// let accounts = self.substrate_client.get_all_accounts().await?;
-		// let evm_address = self.substrate_client.ss58_to_evm("5EufSSRkYMLJfjZ53ULaggJCn7Y68VNc1jM9w5sEp5gTSK9v").unwrap_or_else(|_| self.evm_client.address_zero());
-		let balance = self
+		let db = self.surreal_db.setup_account_db(None, None, Some("account")).await;
+
+		let substrate_client = self
 			.substrate_client
-			.check_balance("5E9gwgLwU7NxtAzLhxAhMswVLVM7ZSLP2UFEXWLvLjKXFdNm")
-			.await?;
-		println!("address: {:?}", balance);
+			.as_ref()
+			.ok_or_else(|| anyhow::anyhow!("Substrate client not initialized"))?;
 
-		// // First, convert all SS58 addresses to EVM addresses in parallel using rayon
-		// let account_addresses: Vec<_> = accounts
-		//     .par_chunks(chunk_size)
-		//     .flat_map(|chunk| {
-		//         chunk.iter().map(|account| {
-		//             let evm_address = self.substrate_client
-		//                 .ss58_to_evm(account)
-		//                 .unwrap_or_else(|_| self.evm_client.address_zero());
-		//             (account.clone(), evm_address)
-		//         }).collect::<Vec<_>>()
-		//     })
-		//     .collect();
+		let accounts = substrate_client.get_all_accounts().await?;
 
-		// // Then, process balance checks in async batches
-		// for batch in account_addresses.chunks(chunk_size) {
-		//     let futures: Vec<_> = batch.iter().map(|(account, address)| {
-		//         let evm_client = self.evm_client.clone();
-		//         let address_clone = address.clone();
-		//         let account_clone = account.clone();
+		// Process in asynchronous chunks
+		futures::stream::iter(accounts.chunks(chunk_size))
+			.for_each_concurrent(None, |batch| {
+				let db = db.clone();
+				let substrate_client = Arc::clone(&substrate_client);
 
-		//         tokio::spawn(async move {
-		//             match evm_client.check_balance(&address_clone, None).await {
-		//                 Ok(balance) => {
-		//                     info!("Account: {} Address: {} Balance: {}",
-		//                         account_clone, address_clone, balance);
-		//                     Ok((account_clone, address_clone, balance))
-		//                 },
-		//                 Err(e) => {
-		//                     info!("Error checking balance for {}: {}", address_clone, e);
-		//                     Err(e)
-		//                 }
-		//             }
-		//         })
-		//     }).collect();
+				async move {
+					for account in batch {
+						let account_str = account.to_string();
 
-		//     // Wait for the batch to complete
-		//     let results = join_all(futures).await;
-
-		//     // Process results
-		//     for result in results {
-		//         match result {
-		//             Ok(Ok((_account, _address, _balance))) => {},
-		//             Ok(Err(e)) => {
-		//                 println!("Balance check error: {}", e);
-		//             },
-		//             Err(e) => {
-		//                 println!("Task error: {}", e);
-		//             }
-		//         }
-		//     }
-		// }
+						match substrate_client.check_balance(&account_str, None).await {
+							Ok(Some(balance)) => {
+								let acount = AccountModel {
+									substrate_address: account_str.clone(),
+									total: balance.total,
+									free: balance.free,
+									reserved: balance.reserved,
+								};
+								let id = format!("account_{}", account_str);
+								if let Err(e) = db.insert_item(&id, acount).await {
+									info!("Failed to insert account {}: {}", account_str, e);
+								}
+							}
+							Ok(None) => {
+								info!("Account {} has no balance", account_str);
+							}
+							Err(e) => {
+								info!("Error checking balance for {}: {}", account_str, e);
+							}
+						}
+					}
+				}
+			})
+			.await;
 
 		Ok(())
 	}
 
 	async fn process_block(&self, block_number: u64) -> Result<()> {
-		let block = self.evm_client.get_block(block_number).await?;
+		let evm_client = self
+			.evm_client
+			.as_ref()
+			.ok_or_else(|| anyhow::anyhow!("EVM client not initialized"))?;
+
+		let block = evm_client.get_block(block_number).await?;
 		if let Some(block_data) = block {
 			self.store_block_data(block_data).await?;
 		}
@@ -209,10 +203,11 @@ async fn main() -> Result<()> {
 	let (_shutdown_tx, shutdown_rx) = broadcast::channel(1);
 
 	// Initialize service with SurrealDB
-	let service = BlockArciveService::new(evm_client, substrate_client, surrealdb, shutdown_rx);
+	let service =
+		BlockArciveService::new(Some(evm_client), Some(substrate_client), surrealdb, shutdown_rx);
 
-	// service.process_block_range(0, 100, Some(10)).await?;
-	service.process_account_chunk(50).await?;
+	// Basic processing with progress
+	service.process_account_chunk(100).await?;
 
 	Ok(())
 }

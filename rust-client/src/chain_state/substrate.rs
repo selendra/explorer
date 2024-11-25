@@ -33,7 +33,7 @@ use sp_runtime::{
 };
 use sp_staking::PagedExposureMetadata;
 
-use pallet_balances::{AccountData, BalanceLock};
+use pallet_balances::AccountData;
 use pallet_identity::{legacy::IdentityInfo, Data, Judgement, Registration};
 use pallet_staking::{ActiveEraInfo, EraRewardPoints, ValidatorPrefs};
 
@@ -282,7 +282,17 @@ impl SubstrateClient {
 		Ok(accounts)
 	}
 
-	pub async fn check_balance(&self, account_ss58: &str) -> Result<Option<SubstrateAccount>> {
+	pub async fn check_balance(
+		&self,
+		account_ss58: &str,
+		block_number: Option<u32>,
+	) -> Result<Option<SubstrateAccount>> {
+		let block_hash = if let Some(number) = block_number {
+			self.get_block_hash(number).await.map_err(|_| anyhow!("Error block hash"))?
+		} else {
+			None
+		};
+
 		let account_id: AccountId32 = AccountId32::from_ss58check(account_ss58)?;
 
 		let account_data = self
@@ -291,7 +301,7 @@ impl SubstrateClient {
 				"System",
 				"Account",
 				account_id.clone(),
-				None,
+				block_hash,
 			)
 			.await
 			.map_err(|e| anyhow!("Failed to get account identity: {:?}", e))?;
