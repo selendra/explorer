@@ -1,6 +1,6 @@
-use crate::models::account::AccountModel;
-use selendra_db::GenericDB;
 use serde::{Deserialize, Serialize};
+
+use crate::{db::GenericDB, models::account::AccountModel};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SurrealDb {

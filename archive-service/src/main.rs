@@ -1,20 +1,15 @@
 pub mod archive_state;
-pub mod models;
-pub mod setup_db;
 
-use anyhow::{anyhow, Error, Result};
+use anyhow::{anyhow, Result};
 use dotenv::dotenv;
 use futures::StreamExt;
-use models::account::AccountModel;
-use rayon::prelude::*;
+use selendra_db::{models::account::AccountModel, setup_db::SurrealDb};
 use std::{env, sync::Arc, time::Duration};
 use tokio::{sync::broadcast, time};
 use tracing::{error, info};
-use uuid::Uuid;
 
 use archive_state::ProcessingStats;
 use selendra_rust_client::{models::block::EvmBlock, EvmClient, SubstrateClient};
-use setup_db::SurrealDb;
 
 pub struct BlockArciveService {
 	pub evm_client: Option<EvmClient>,
@@ -140,13 +135,13 @@ impl BlockArciveService {
 								if let Err(e) = db.insert_item(&id, acount).await {
 									info!("Failed to insert account {}: {}", account_str, e);
 								}
-							}
+							},
 							Ok(None) => {
 								info!("Account {} has no balance", account_str);
-							}
+							},
 							Err(e) => {
 								info!("Error checking balance for {}: {}", account_str, e);
-							}
+							},
 						}
 					}
 				}
