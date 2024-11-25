@@ -2,7 +2,8 @@
 members = [
     "rust-client",
     "archive-service",
-    "db"
+    "db",
+    "api"
 ]
 
 resolver = "2"
