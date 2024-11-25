@@ -104,7 +104,7 @@ impl BlockArciveService {
 	}
 
 	pub async fn process_account_chunk(&self, chunk_size: usize) -> Result<()> {
-		let db = self.surreal_db.setup_account_db(None, None, Some("account")).await;
+		let db = self.surreal_db.setup_account_db().await;
 
 		let substrate_client = self
 			.substrate_client

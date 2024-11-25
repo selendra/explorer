@@ -1,6 +1,9 @@
-use serde::{Deserialize, Serialize};
+use std::env;
 
 use crate::{db::GenericDB, models::account::AccountModel};
+
+use dotenv::dotenv;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SurrealDb {
@@ -18,23 +21,25 @@ impl SurrealDb {
 		}
 	}
 
-	pub async fn setup_account_db(
-		&self,
-		name_space: Option<&str>,
-		database: Option<&str>,
-		table: Option<&str>,
-	) -> GenericDB<AccountModel> {
-		let name_space = name_space.unwrap_or("blockchain");
-		let database = database.unwrap_or("selendra_explorer");
-		let table = table.unwrap_or("account");
+	pub async fn setup_account_db(&self) -> GenericDB<AccountModel> {
+		dotenv().ok();
+
+		let name_space =
+			env::var("SURREALDB_NAMESPACE").ok().unwrap_or_else(|| "blockchain".to_string());
+		let database = env::var("SURREALDB_DATABASE")
+			.ok()
+			.unwrap_or_else(|| "selendra_explorer".to_string());
+		let table = env::var("SURREALDB_ACCOUNT_TABLE")
+			.ok()
+			.unwrap_or_else(|| "account".to_string());
 
 		GenericDB::new(
 			&self.surreal_db_url,
 			&self.surreal_db_user,
 			&self.surreal_db_pass,
-			name_space,
-			database,
-			table,
+			&name_space,
+			&database,
+			&table,
 		)
 		.await
 		.expect("Failed to create DB")
