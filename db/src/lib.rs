@@ -1,4 +1,4 @@
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use surrealdb::{
 	engine::remote::ws::{Client, Ws},
@@ -81,7 +81,6 @@ where
 		Ok(deleted)
 	}
 
-
 	pub async fn insert_items(&self, items: Vec<BatchInsertItem<T>>) -> Result<Vec<T>> {
 		let mut query = String::from("BEGIN TRANSACTION;\n");
 
@@ -144,10 +143,8 @@ where
 		let total = self.get_total_count().await?;
 		let total_pages = (total + page_size - 1) / page_size;
 
-		let query = format!(
-			"SELECT * FROM {} ORDER BY number DESC LIMIT $limit START $start;",
-			self.table
-		);
+		let query =
+			format!("SELECT * FROM {} ORDER BY number DESC LIMIT $limit START $start;", self.table);
 
 		let items: Vec<T> = self
 			.db

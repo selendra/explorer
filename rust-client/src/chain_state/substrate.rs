@@ -1,4 +1,5 @@
 use crate::models::{
+	account::SubstrateAccount,
 	block::{BlockDetail, SubstrateRuntimeVersion},
 	event::{BlockEvent, EventDetail, StakingSlash, SubstrateEventRecord, TransferEvent},
 	extrinsic::{BlockExtrinsic, ExtrinsicDetail, ProcessExtrinsic},
@@ -32,6 +33,7 @@ use sp_runtime::{
 };
 use sp_staking::PagedExposureMetadata;
 
+use pallet_balances::{AccountData, BalanceLock};
 use pallet_identity::{legacy::IdentityInfo, Data, Judgement, Registration};
 use pallet_staking::{ActiveEraInfo, EraRewardPoints, ValidatorPrefs};
 
@@ -278,6 +280,41 @@ impl SubstrateClient {
 		}
 
 		Ok(accounts)
+	}
+
+	pub async fn check_balance(&self, account_ss58: &str) -> Result<Option<SubstrateAccount>> {
+		let account_id: AccountId32 = AccountId32::from_ss58check(account_ss58)?;
+
+		let account_data = self
+			.api
+			.get_storage_map::<AccountId32, AccountData<u128>>(
+				"System",
+				"Account",
+				account_id.clone(),
+				None,
+			)
+			.await
+			.map_err(|e| anyhow!("Failed to get account identity: {:?}", e))?;
+
+		if let Some(account_data) = account_data {
+			Ok(Some(SubstrateAccount {
+				total: account_data.free + account_data.reserved,
+				free: account_data.free,
+				reserved: account_data.reserved,
+			}))
+		} else {
+			Ok(None)
+		}
+	}
+
+	/// Convert SS58 address to EVM address (H160)
+	pub fn ss58_to_evm(&self, ss58_address: &str) -> Result<String> {
+		let account = AccountId32::from_ss58check(ss58_address)?;
+
+		let bytes: &[u8; 32] = <AccountId32 as AsRef<[u8; 32]>>::as_ref(&account);
+
+		// Take first 20 bytes for EVM address
+		Ok(format!("0x{}", hex::encode(&bytes[..20])))
 	}
 
 	async fn get_block_hash(&self, block_number: u32) -> Result<Option<Hash>> {

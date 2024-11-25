@@ -10,10 +10,12 @@ use futures::try_join;
 use std::{convert::TryFrom, str::FromStr};
 
 use ethers::{
+	abi::Address,
 	providers::{Http, Middleware, Provider},
 	types::{BlockId, Transaction, H160, H256},
 };
 
+#[derive(Debug, Clone)]
 pub struct EvmClient {
 	pub provider: Provider<Http>,
 	pub contract_detector: ContractDetector,
@@ -95,6 +97,13 @@ impl EvmClient {
 		}
 	}
 
+	pub async fn check_balance(&self, address: &str, block: Option<BlockId>) -> Result<u128> {
+		let address = Address::from_str(address)?;
+		let balance = self.provider.get_balance(address, block).await?;
+
+		Ok(balance.as_u128())
+	}
+
 	pub async fn is_contract(&self, address: H160, block_number: Option<BlockId>) -> Result<bool> {
 		let code = self.provider.get_code(address, block_number).await?;
 		Ok(!code.0.is_empty())
@@ -108,5 +117,9 @@ impl EvmClient {
 
 	pub fn addree_from_string(&self, address: String) -> Result<H160> {
 		H160::from_str(&address).map_err(|e| anyhow!("Error: {:?}", e))
+	}
+
+	pub fn address_zero(&self) -> String {
+		format!("0x{:0>40x}", Address::zero())
 	}
 }

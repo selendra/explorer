@@ -259,7 +259,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "dotenv",
+ "futures",
  "rand",
+ "rayon",
+ "selendra-db",
  "selendra-rust-client",
  "serde",
  "surrealdb",

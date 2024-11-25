@@ -7,6 +7,7 @@ use ethers::{
 
 use crate::models::contract::ContractType;
 
+#[derive(Debug, Clone)]
 pub struct ContractDetector {
 	pub provider: Provider<Http>,
 }

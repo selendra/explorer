@@ -15,6 +15,7 @@ use crate::models::{
 
 use super::abi::ERC20_ABI;
 
+#[derive(Debug, Clone)]
 pub struct ERC20TransactionFetcher {
 	pub provider: Provider<Http>,
 	pub function_signatures: HashMap<[u8; 4], String>,
