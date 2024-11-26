@@ -4,32 +4,29 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ethers = "2.0.14"
-codec = { package = "parity-scale-codec", version = "3.6.1", features = ['derive'] }
-anyhow = "1.0"
-serde_json = { version = "1.0.79" }
-serde = { version = "1.0.136", default-features = false, features = ["derive"] }
-tokio-util = "0.7.8"
-futures = "0.3.28"
-tokio = { version = "1.24", features = ["rt-multi-thread", "macros", "time"] }
-hex = { version = "0.4.3" }
-lazy_static = "1.5.0"
-once_cell = "1.20.2"
+ethers = { workspace = true }
+codec = { workspace = true }
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+serde = { workspace = true }
+tokio-util = { workspace = true }
+futures = { workspace = true }
+tokio = { workspace = true }
+hex = { workspace = true }
+lazy_static = { workspace = true }
+once_cell = { workspace = true }
 
-sp-core = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
-sp-runtime = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
-sp-staking = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
-
-frame-support = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
-frame-system = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
-
-pallet-balances = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
-pallet-staking = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
-pallet-session = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
-pallet-identity = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
-
-substrate-api-client = { git = "https://github.com/selendra/substrate-api-client.git", branch = "selendra", default-features = false, features = ["jsonrpsee-client"] }
-selendra-runtime = { git = "https://github.com/selendra/selendra", tag = "v2.0.0" }
-selendra-primitives = { git = "https://github.com/selendra/selendra", tag = "v2.0.0" }
+sp-core = { workspace = true }
+sp-runtime = { workspace = true }
+sp-staking = { workspace = true }
+frame-support = { workspace = true }
+frame-system = { workspace = true }
+pallet-balances = { workspace = true }
+pallet-staking = { workspace = true }
+pallet-session = { workspace = true }
+pallet-identity = { workspace = true }
+substrate-api-client = { workspace = true }
+selendra-runtime = { workspace = true }
+selendra-primitives = { workspace = true }
 
 
