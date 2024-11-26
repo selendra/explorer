@@ -35,7 +35,7 @@ pub struct BatchInsertItem<T> {
 
 #[derive(Debug, Clone)]
 pub struct GenericDB<T> {
-	db: Surreal<Client>,
+	pub db: Surreal<Client>,
 	table: String,
 	_marker: std::marker::PhantomData<T>,
 }

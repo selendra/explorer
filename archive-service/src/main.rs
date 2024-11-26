@@ -125,7 +125,7 @@ impl BlockArciveService {
 				Ok(Some(balance)) => {
 					return Ok(Some(SubstrateAccount {
 						substrate_address: account.to_string(),
-						total: balance.free + balance.reserved,
+						total: balance.free.checked_add(balance.reserved).unwrap_or(0),
 						free: balance.free,
 						reserved: balance.reserved,
 						lock: balance.lock,

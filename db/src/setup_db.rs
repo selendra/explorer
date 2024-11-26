@@ -33,7 +33,7 @@ impl SurrealDb {
 			.ok()
 			.unwrap_or_else(|| "account".to_string());
 
-		GenericDB::new(
+		let db = GenericDB::new(
 			&self.surreal_db_url,
 			&self.surreal_db_user,
 			&self.surreal_db_pass,
@@ -42,6 +42,24 @@ impl SurrealDb {
 			&table,
 		)
 		.await
-		.expect("Failed to create DB")
+		.expect("Failed to create DB");
+
+		// Define the schema with string type for u128 fields
+        let schema = format!(
+            r#"
+            DEFINE TABLE {} SCHEMAFULL;
+            DEFINE FIELD substrate_address ON {} TYPE string;
+            DEFINE FIELD total ON {} TYPE string ASSERT $value != NONE;
+            DEFINE FIELD free ON {} TYPE string ASSERT $value != NONE;
+            DEFINE FIELD reserved ON {} TYPE string ASSERT $value != NONE;
+            DEFINE FIELD lock ON {} TYPE string ASSERT $value != NONE;
+            "#,
+            table, table, table, table, table, table
+        );
+
+        // Execute the schema definition
+        db.db.query(schema).await.expect("Failed to define schema");
+
+		db
 	}
 }
