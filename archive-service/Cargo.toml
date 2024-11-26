@@ -14,7 +14,9 @@ anyhow = { workspace = true }
 dotenv = { workspace = true }
 rayon = { workspace = true }
 rand = { workspace = true }
+rust_decimal = { workspace = true } 
 
 selendra-rust-client = { workspace = true }
 substrate-api-client = { workspace = true }
 selendra-db = { workspace = true }
+selendra-config = { workspace = true }

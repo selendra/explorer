@@ -509,6 +509,8 @@ dependencies = [
  "futures",
  "rand",
  "rayon",
+ "rust_decimal",
+ "selendra-config",
  "selendra-db",
  "selendra-rust-client",
  "serde",
@@ -2755,6 +2757,7 @@ dependencies = [
  "dotenv",
  "env_logger",
  "log",
+ "selendra-config",
  "selendra-db",
  "serde",
  "validator",
@@ -7106,11 +7109,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "selendra-config"
+version = "0.1.0"
+dependencies = [
+ "dotenv",
+ "once_cell",
+]
+
+[[package]]
 name = "selendra-db"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "dotenv",
+ "selendra-config",
  "serde",
  "serde_json",
  "surrealdb",

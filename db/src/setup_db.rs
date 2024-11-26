@@ -1,9 +1,8 @@
-use std::env;
+use serde::{Deserialize, Serialize};
 
 use crate::{db::GenericDB, models::account::SubstrateAccount};
 
-use dotenv::dotenv;
-use serde::{Deserialize, Serialize};
+use selendra_config::CONFIG;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SurrealDb {
@@ -22,16 +21,9 @@ impl SurrealDb {
 	}
 
 	pub async fn setup_account_db(&self) -> GenericDB<SubstrateAccount> {
-		dotenv().ok();
-
-		let name_space =
-			env::var("SURREALDB_NAMESPACE").ok().unwrap_or_else(|| "blockchain".to_string());
-		let database = env::var("SURREALDB_DATABASE")
-			.ok()
-			.unwrap_or_else(|| "selendra_explorer".to_string());
-		let table = env::var("SURREALDB_ACCOUNT_TABLE")
-			.ok()
-			.unwrap_or_else(|| "account".to_string());
+		let name_space = &CONFIG.surreal_db.namespace;
+		let database = &CONFIG.surreal_db.database;
+		let table = &CONFIG.surreal_db.account_table;
 
 		let db = GenericDB::new(
 			&self.surreal_db_url,
@@ -44,21 +36,21 @@ impl SurrealDb {
 		.await
 		.expect("Failed to create DB");
 
-		// Define the schema with string type for u128 fields
-        let schema = format!(
-            r#"
+		// Define the schema with float type for balance fields
+		let schema = format!(
+			r#"
             DEFINE TABLE {} SCHEMAFULL;
             DEFINE FIELD substrate_address ON {} TYPE string;
-            DEFINE FIELD total ON {} TYPE string ASSERT $value != NONE;
-            DEFINE FIELD free ON {} TYPE string ASSERT $value != NONE;
-            DEFINE FIELD reserved ON {} TYPE string ASSERT $value != NONE;
-            DEFINE FIELD lock ON {} TYPE string ASSERT $value != NONE;
+            DEFINE FIELD total ON {} TYPE float;
+            DEFINE FIELD free ON {} TYPE float;
+            DEFINE FIELD reserved ON {} TYPE float;
+            DEFINE FIELD lock ON {} TYPE float;
             "#,
-            table, table, table, table, table, table
-        );
+			table, table, table, table, table, table
+		);
 
-        // Execute the schema definition
-        db.db.query(schema).await.expect("Failed to define schema");
+		// Execute the schema definition
+		db.db.query(schema).await.expect("Failed to define schema");
 
 		db
 	}

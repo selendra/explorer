@@ -1,10 +1,10 @@
 pub mod archive_state;
 
 use anyhow::{anyhow, Result};
-use dotenv::dotenv;
 use futures::StreamExt;
+use selendra_config::CONFIG;
 use selendra_db::{models::account::SubstrateAccount, setup_db::SurrealDb};
-use std::{collections::HashSet, env, sync::Arc};
+use std::{collections::HashSet, sync::Arc};
 use tokio::{
 	sync::broadcast,
 	time,
@@ -123,12 +123,19 @@ impl BlockArciveService {
 		loop {
 			match client.check_balance(account, None).await {
 				Ok(Some(balance)) => {
+					let free =
+						self.convert_balance_to_float(balance.free, CONFIG.chain_decimal.into());
+					let reserved = self
+						.convert_balance_to_float(balance.reserved, CONFIG.chain_decimal.into());
+					let lock =
+						self.convert_balance_to_float(balance.lock, CONFIG.chain_decimal.into());
+					let total = free + reserved;
 					return Ok(Some(SubstrateAccount {
 						substrate_address: account.to_string(),
-						total: balance.free.checked_add(balance.reserved).unwrap_or(0),
-						free: balance.free,
-						reserved: balance.reserved,
-						lock: balance.lock,
+						total,
+						free,
+						reserved,
+						lock,
 					}));
 				},
 				Ok(None) => return Ok(None),
@@ -160,43 +167,46 @@ impl BlockArciveService {
 
 	pub async fn process_account(&self) -> Result<()> {
 		let db = self.surreal_db.setup_account_db().await;
-	
+
 		let substrate_client = self
 			.substrate_client
 			.as_ref()
 			.ok_or_else(|| anyhow::anyhow!("Substrate client not initialized"))?;
-	
+
 		let mut accounts = substrate_client.get_all_accounts().await?;
 		accounts = self.remove_duplicates(accounts);
 
 		futures::stream::iter(accounts)
-        .map(|account| {
-			let db = db.clone();
-			let substrate_client = Arc::clone(&substrate_client);
-            
-            async move {
-                match self.check_balance_with_retry(substrate_client, &account, MAX_RETRIES).await {
-                    Ok(Some(balance)) => {
-                        let id = format!("account_{}", account);
-                        if let Err(e) = db.insert_item(&id, balance).await {
-                            info!("Failed to insert account {}: {:?}", account, e);
-                        }
-                    }
-                    Ok(None) => {
-                        info!("Account {} has no balance", account);
-                    }
-                    Err(e) => {
-                        // Here we can convert the error to anyhow::Error if needed
-                        info!("Error checking balance for {}: {:?}", account, e);
-                    }
-                }
-            }
-        })
-        .buffer_unordered(MAX_CONCURRENT_REQUESTS)
-        .collect::<Vec<_>>()
-        .await;
+			.map(|account| {
+				let db = db.clone();
+				let substrate_client = Arc::clone(&substrate_client);
 
-    Ok(())
+				async move {
+					match self
+						.check_balance_with_retry(substrate_client, &account, MAX_RETRIES)
+						.await
+					{
+						Ok(Some(balance)) => {
+							let id = format!("account_{}", account);
+							if let Err(e) = db.insert_item(&id, balance).await {
+								info!("Failed to insert account {}: {:?}", account, e);
+							}
+						},
+						Ok(None) => {
+							info!("Account {} has no balance", account);
+						},
+						Err(e) => {
+							// Here we can convert the error to anyhow::Error if needed
+							info!("Error checking balance for {}: {:?}", account, e);
+						},
+					}
+				}
+			})
+			.buffer_unordered(MAX_CONCURRENT_REQUESTS)
+			.collect::<Vec<_>>()
+			.await;
+
+		Ok(())
 	}
 
 	async fn process_block(&self, block_number: u64) -> Result<()> {
@@ -226,32 +236,33 @@ impl BlockArciveService {
 	fn remove_duplicates(&self, mut data: Vec<String>) -> Vec<String> {
 		// Convert Vec to HashSet to remove duplicates
 		let set: HashSet<_> = data.drain(..).collect();
-		
+
 		// Convert HashSet back to Vec
 		let deduped: Vec<String> = set.into_iter().collect();
-		
+
 		deduped
+	}
+
+	fn convert_balance_to_float(&self, balance: u128, decimals: u32) -> f64 {
+		let divisor = 10u128.pow(decimals) as f64;
+		(balance as f64) / divisor
 	}
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-	dotenv().ok();
 	tracing_subscriber::fmt::init();
 
-	// Get EVM client URL from environment variables
-	let evm_url = env::var("RPC_URL").expect("RPC_URL must be set");
-	let substrate_url = env::var("WS_URL").expect("WS_URL must be set");
-	let surreal_db_url = env::var("SURREALDB_URL").expect("SURREALDB_URL must be set");
-	let surreal_db_user = env::var("SURREALDB_USER").expect("SURREALDB_USER must be set");
-	let surreal_db_pass = env::var("SURREALDB_PASS").expect("SURREALDB_PASS must be set");
-
 	// Initialize the EVM client
-	let evm_client = EvmClient::new(&evm_url)?;
-	let substrate_client = SubstrateClient::new(&substrate_url).await?;
-	let surrealdb = SurrealDb { surreal_db_url, surreal_db_user, surreal_db_pass };
+	let evm_client = EvmClient::new(&CONFIG.evm_url)?;
+	let substrate_client = SubstrateClient::new(&CONFIG.substrate_url).await?;
+	let surrealdb = SurrealDb {
+		surreal_db_url: CONFIG.surreal_db.url.clone(),
+		surreal_db_user: CONFIG.surreal_db.user.clone(),
+		surreal_db_pass: CONFIG.surreal_db.pass.clone(),
+	};
 
-	info!("Connected to EVM client at {}", evm_url);
+	info!("Connected to EVM client at {}", CONFIG.evm_url);
 
 	let (_shutdown_tx, shutdown_rx) = broadcast::channel(1);
 

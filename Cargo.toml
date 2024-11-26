@@ -3,7 +3,8 @@ members = [
     "rust-client",
     "archive-service",
     "db",
-    "api"
+    "api",
+    "config"
 ]
 
 resolver = "2"
@@ -22,6 +23,7 @@ serde = { version = "1.0.136", default-features = false, features = ["derive"] }
 validator = { version = "0.19.0", features = ["derive"] }
 surrealdb = { version = "2.0.4" }
 tracing-subscriber = "0.3.18"
+rust_decimal = "1.36.0"
 serde_json = "1.0.133"
 env_logger = "0.11.5"
 lazy_static = "1.5.0"
@@ -36,7 +38,8 @@ ethers = "2.0.14"
 rayon= "1.10.0"
 rand = "0.8.5"
 log = "0.4.22"
-hex = "0.4.3" 
+hex = "0.4.3"
+
 
 # Selendra dependencies
 sp-core = { git = "https://github.com/selendra/polkadot-sdk", branch = "selendra-1.6.0" }
@@ -55,6 +58,8 @@ selendra-primitives = { git = "https://github.com/selendra/selendra", tag = "v2.
 # Local dependencies
 selendra-rust-client = { path = "rust-client"}
 selendra-db = { path = "db"}
+selendra-config = { path = "config"}
+
 
 
 

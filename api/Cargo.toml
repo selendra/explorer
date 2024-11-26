@@ -8,7 +8,8 @@ serde = { workspace = true }
 actix-web = { workspace = true }
 validator = { workspace = true }
 dotenv = { workspace = true }
-env_logger = { workspace = true }
+env_logger = { workspace = true } 
 log = { workspace = true }
 
 selendra-db = { workspace = true }
+selendra-config = { workspace = true }
