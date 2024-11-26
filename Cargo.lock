@@ -2759,6 +2759,7 @@ dependencies = [
  "log",
  "selendra-config",
  "selendra-db",
+ "selendra-rust-client",
  "serde",
  "validator",
 ]

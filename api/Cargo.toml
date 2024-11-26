@@ -12,4 +12,5 @@ env_logger = { workspace = true }
 log = { workspace = true }
 
 selendra-db = { workspace = true }
+selendra-rust-client = { workspace = true }
 selendra-config = { workspace = true }

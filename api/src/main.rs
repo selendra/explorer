@@ -2,7 +2,7 @@ use selendra_db::setup_db::SurrealDb;
 
 use actix_web::{web, App, HttpServer};
 
-use handlers::account_handler::{get_accounts, get_last_accounts};
+use handlers::account_handler::{get_account_by_address, get_accounts};
 use state::app_state::AppState;
 
 use selendra_config::CONFIG;
@@ -25,7 +25,7 @@ async fn main() -> std::io::Result<()> {
 	HttpServer::new(move || {
 		App::new()
 			.app_data(app_state.clone())
-			.route("/latest_accounts", web::get().to(get_last_accounts))
+			.route("/account", web::get().to(get_account_by_address))
 			.route("/accounts", web::get().to(get_accounts))
 	})
 	.bind((CONFIG.rest_api.url.clone(), CONFIG.rest_api.port))?

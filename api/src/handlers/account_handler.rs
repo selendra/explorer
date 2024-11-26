@@ -1,8 +1,12 @@
 use crate::{
 	state::app_state::AppState,
-	utils::pagination::{PaginatedResponse, PaginationLinks, PaginationParams},
+	utils::{
+		address::AddressQuery,
+		pagination::{PaginatedResponse, PaginationLinks, PaginationParams},
+	},
 };
 use selendra_db::db::SortOrder;
+use selendra_rust_client::utils::validate_ss58_address;
 
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
@@ -14,16 +18,29 @@ pub struct ErrorResponse {
 	pub message: String,
 }
 
-pub async fn get_last_accounts(data: web::Data<AppState>) -> impl Responder {
-	let db = data.surreal_db.setup_account_db().await;
-	let account = db.get_last_items(10, "id", SortOrder::Desc).await;
+pub async fn get_account_by_address(
+	data: web::Data<AppState>,
+	query: web::Query<AddressQuery>,
+) -> impl Responder {
+	let address = query.address.clone();
 
-	match account {
-		Ok(response) => HttpResponse::Ok().json(response),
+	// Validate address format
+	if !validate_ss58_address(&address) {
+		return HttpResponse::BadRequest()
+			.json(ErrorResponse { message: "Invalid substrate address format".to_string() });
+	}
+
+	let db = data.surreal_db.setup_account_db().await;
+
+	// Query the account
+	match db.get_item_by_field("substrate_address", address.clone()).await {
+		Ok(Some(account)) => HttpResponse::Ok().json(account),
+		Ok(None) => HttpResponse::NotFound()
+			.json(ErrorResponse { message: format!("Account not found for address: {}", address) }),
 		Err(err) => {
-			log::error!("Database error: {:?}", err);
+			log::error!("Database query error: {:?}", err);
 			HttpResponse::InternalServerError()
-				.json(ErrorResponse { message: "Error retrieving accounts".to_string() })
+				.json(ErrorResponse { message: "Error retrieving account data".to_string() })
 		},
 	}
 }
