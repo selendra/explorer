@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use dotenv::dotenv;
 use futures::StreamExt;
 use selendra_db::{models::account::SubstrateAccount, setup_db::SurrealDb};
-use std::{env, sync::Arc};
+use std::{collections::HashSet, env, sync::Arc};
 use tokio::{
 	sync::broadcast,
 	time,
@@ -158,7 +158,7 @@ impl BlockArciveService {
 		}
 	}
 
-	pub async fn process_account_chunk(&self) -> Result<()> {
+	pub async fn process_account(&self) -> Result<()> {
 		let db = self.surreal_db.setup_account_db().await;
 	
 		let substrate_client = self
@@ -166,66 +166,37 @@ impl BlockArciveService {
 			.as_ref()
 			.ok_or_else(|| anyhow::anyhow!("Substrate client not initialized"))?;
 	
-		let accounts = substrate_client.get_all_accounts().await?;
-	
-		// Create chunks of accounts
-		let chunks: Vec<_> = accounts.chunks(10).map(|c| c.to_vec()).collect();
-	
-		futures::stream::iter(chunks)
-			.map(|chunk| {
-				let db = db.clone();
-				let substrate_client = Arc::clone(&substrate_client);
-	
-				async move {
-					for account in chunk {
-						match self
-							.check_balance_with_retry(
-								substrate_client.clone(),
-								&account,
-								MAX_RETRIES,
-							)
-							.await
-						{
-							Ok(Some(balance)) => {
-								let account_data = SubstrateAccount {
-									substrate_address: account.clone(),
-									total: balance.free + balance.reserved,
-									free: balance.free,
-									reserved: balance.reserved,
-									lock: balance.lock,
-								};
-	
-								info!(
-									"Processing account {}: total={}, free={}, reserved={}",
-									account,
-									account_data.total,
-									account_data.free,
-									account_data.reserved
-								);
-	
-								let id = format!("account_{}", account);
-								if let Err(e) = db.insert_item(&id, account_data).await {
-									error!("Failed to insert account {}: {:?}", account, e);
-								}
-							},
-							Ok(None) => {
-								info!("Account {} has no balance", account);
-							},
-							Err(e) => {
-								error!("Error checking balance for {}: {:?}", account, e);
-							},
-						}
-					}
-	
-					// Sleep after processing the chunk
-					sleep(Duration::from_millis(2000)).await; // Adjust delay as needed
-				}
-			})
-			.buffer_unordered(MAX_CONCURRENT_REQUESTS)
-			.collect::<Vec<_>>()
-			.await;
-	
-		Ok(())
+		let mut accounts = substrate_client.get_all_accounts().await?;
+		accounts = self.remove_duplicates(accounts);
+
+		futures::stream::iter(accounts)
+        .map(|account| {
+			let db = db.clone();
+			let substrate_client = Arc::clone(&substrate_client);
+            
+            async move {
+                match self.check_balance_with_retry(substrate_client, &account, MAX_RETRIES).await {
+                    Ok(Some(balance)) => {
+                        let id = format!("account_{}", account);
+                        if let Err(e) = db.insert_item(&id, balance).await {
+                            info!("Failed to insert account {}: {:?}", account, e);
+                        }
+                    }
+                    Ok(None) => {
+                        info!("Account {} has no balance", account);
+                    }
+                    Err(e) => {
+                        // Here we can convert the error to anyhow::Error if needed
+                        info!("Error checking balance for {}: {:?}", account, e);
+                    }
+                }
+            }
+        })
+        .buffer_unordered(MAX_CONCURRENT_REQUESTS)
+        .collect::<Vec<_>>()
+        .await;
+
+    Ok(())
 	}
 
 	async fn process_block(&self, block_number: u64) -> Result<()> {
@@ -250,6 +221,16 @@ impl BlockArciveService {
 		);
 
 		Ok(())
+	}
+
+	fn remove_duplicates(&self, mut data: Vec<String>) -> Vec<String> {
+		// Convert Vec to HashSet to remove duplicates
+		let set: HashSet<_> = data.drain(..).collect();
+		
+		// Convert HashSet back to Vec
+		let deduped: Vec<String> = set.into_iter().collect();
+		
+		deduped
 	}
 }
 
@@ -279,7 +260,7 @@ async fn main() -> Result<()> {
 		BlockArciveService::new(Some(evm_client), Some(substrate_client), surrealdb, shutdown_rx);
 
 	// Basic processing with progress
-	service.process_account_chunk().await?;
+	service.process_account().await?;
 
 	Ok(())
 }
