@@ -1,21 +1,3 @@
-# Check for required tools
-echo "Checking required tools..."
-
-MISSING_TOOLS=0
-for tool in docker curl; do
-    if ! command_exists $tool; then
-        echo "❌ $tool is not installed"
-        MISSING_TOOLS=1
-    else
-        echo "✅ $tool is installed"
-    fi
-done
-
-if [ $MISSING_TOOLS -eq 1 ]; then
-    echo "Installing missing tools..."
-    install_dependencies
-fi
-
 # Create necessary directories
 echo "Creating directories..."
 mkdir -p data

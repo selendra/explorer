@@ -16,4 +16,5 @@ rayon = { workspace = true }
 rand = { workspace = true }
 
 selendra-rust-client = { workspace = true }
+substrate-api-client = { workspace = true }
 selendra-db = { workspace = true }

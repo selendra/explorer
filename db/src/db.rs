@@ -157,6 +157,38 @@ where
 		Ok(PaginatedResult { items, total, page, page_size, total_pages })
 	}
 
+	pub async fn get_paginated_by_sort(
+		&self,
+		page: u64,
+		page_size: u64,
+		sort_by: &str,
+		sort_order: SortOrder,
+	) -> Result<PaginatedResult<T>> {
+		let offset = (page - 1) * page_size;
+		let total = self.get_total_count().await?;
+		let total_pages = (total + page_size - 1) / page_size;
+
+		let order = match sort_order {
+			SortOrder::Asc => "ASC",
+			SortOrder::Desc => "DESC",
+		};
+
+		let query = format!(
+			"SELECT * FROM {} ORDER BY {} {} LIMIT $limit START $start;",
+			self.table, sort_by, order
+		);
+
+		let items: Vec<T> = self
+			.db
+			.query(&query)
+			.bind(("limit", page_size))
+			.bind(("start", offset))
+			.await?
+			.take(0)?;
+
+		Ok(PaginatedResult { items, total, page, page_size, total_pages })
+	}
+
 	// Helper Methods
 	async fn get_total_count(&self) -> Result<u64> {
 		let query = format!("SELECT VALUE count() FROM {} GROUP ALL;", self.table);

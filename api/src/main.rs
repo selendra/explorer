@@ -4,11 +4,12 @@ use std::env;
 
 use actix_web::{web, App, HttpServer};
 
-use handlers::account_handler::get_accounts;
+use handlers::account_handler::{get_accounts, get_last_accounts};
 use state::app_state::AppState;
 
 mod handlers;
 mod state;
+mod utils;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -32,6 +33,7 @@ async fn main() -> std::io::Result<()> {
 	HttpServer::new(move || {
 		App::new()
 			.app_data(app_state.clone())
+			.route("/latest_accounts", web::get().to(get_last_accounts))
 			.route("/accounts", web::get().to(get_accounts))
 	})
 	.bind(("127.0.0.1", port))?

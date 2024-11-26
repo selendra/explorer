@@ -3,13 +3,21 @@ pub mod archive_state;
 use anyhow::{anyhow, Result};
 use dotenv::dotenv;
 use futures::StreamExt;
-use selendra_db::{models::account::AccountModel, setup_db::SurrealDb};
-use std::{env, sync::Arc, time::Duration};
-use tokio::{sync::broadcast, time};
+use selendra_db::{models::account::SubstrateAccount, setup_db::SurrealDb};
+use std::{env, sync::Arc};
+use tokio::{
+	sync::broadcast,
+	time,
+	time::{sleep, Duration},
+};
 use tracing::{error, info};
 
 use archive_state::ProcessingStats;
 use selendra_rust_client::{models::block::EvmBlock, EvmClient, SubstrateClient};
+
+const MAX_RETRIES: u32 = 3;
+const INITIAL_BACKOFF_MS: u64 = 1000; // 1 second
+const MAX_CONCURRENT_REQUESTS: usize = 5; // Limit concurrent request
 
 pub struct BlockArciveService {
 	pub evm_client: Option<EvmClient>,
@@ -103,51 +111,120 @@ impl BlockArciveService {
 		Ok(())
 	}
 
-	pub async fn process_account_chunk(&self, chunk_size: usize) -> Result<()> {
-		let db = self.surreal_db.setup_account_db().await;
+	async fn check_balance_with_retry(
+		&self,
+		client: Arc<SubstrateClient>,
+		account: &str,
+		retry_count: u32,
+	) -> Result<Option<SubstrateAccount>> {
+		// Keep the original error type
+		let mut current_retry = 0;
 
+		loop {
+			match client.check_balance(account, None).await {
+				Ok(Some(balance)) => {
+					return Ok(Some(SubstrateAccount {
+						substrate_address: account.to_string(),
+						total: balance.free + balance.reserved,
+						free: balance.free,
+						reserved: balance.reserved,
+						lock: balance.lock,
+					}));
+				},
+				Ok(None) => return Ok(None),
+				Err(e) => {
+					if current_retry >= retry_count {
+						return Err(e); // Return the original error
+					}
+
+					// Check if error is MaxSlotsExceeded
+					let error_debug = format!("{:?}", e);
+					if error_debug.contains("MaxSlotsExceeded") {
+						let backoff = INITIAL_BACKOFF_MS * (2_u64.pow(current_retry));
+						info!(
+							"MaxSlotsExceeded error for account {}, retry {} in {}ms",
+							account,
+							current_retry + 1,
+							backoff
+						);
+						sleep(Duration::from_millis(backoff)).await;
+						current_retry += 1;
+						continue;
+					}
+
+					return Err(e); // Return the original error
+				},
+			}
+		}
+	}
+
+	pub async fn process_account_chunk(&self) -> Result<()> {
+		let db = self.surreal_db.setup_account_db().await;
+	
 		let substrate_client = self
 			.substrate_client
 			.as_ref()
 			.ok_or_else(|| anyhow::anyhow!("Substrate client not initialized"))?;
-
+	
 		let accounts = substrate_client.get_all_accounts().await?;
-
-		// Process in asynchronous chunks
-		futures::stream::iter(accounts.chunks(chunk_size))
-			.for_each_concurrent(None, |batch| {
+	
+		// Create chunks of accounts
+		let chunks: Vec<_> = accounts.chunks(10).map(|c| c.to_vec()).collect();
+	
+		futures::stream::iter(chunks)
+			.map(|chunk| {
 				let db = db.clone();
 				let substrate_client = Arc::clone(&substrate_client);
-
+	
 				async move {
-					for account in batch {
-						let account_str = account.to_string();
-
-						match substrate_client.check_balance(&account_str, None).await {
+					for account in chunk {
+						match self
+							.check_balance_with_retry(
+								substrate_client.clone(),
+								&account,
+								MAX_RETRIES,
+							)
+							.await
+						{
 							Ok(Some(balance)) => {
-								let acount = AccountModel {
-									substrate_address: account_str.clone(),
-									total: balance.total,
+								let account_data = SubstrateAccount {
+									substrate_address: account.clone(),
+									total: balance.free + balance.reserved,
 									free: balance.free,
 									reserved: balance.reserved,
+									lock: balance.lock,
 								};
-								let id = format!("account_{}", account_str);
-								if let Err(e) = db.insert_item(&id, acount).await {
-									info!("Failed to insert account {}: {}", account_str, e);
+	
+								info!(
+									"Processing account {}: total={}, free={}, reserved={}",
+									account,
+									account_data.total,
+									account_data.free,
+									account_data.reserved
+								);
+	
+								let id = format!("account_{}", account);
+								if let Err(e) = db.insert_item(&id, account_data).await {
+									error!("Failed to insert account {}: {:?}", account, e);
 								}
 							},
 							Ok(None) => {
-								info!("Account {} has no balance", account_str);
+								info!("Account {} has no balance", account);
 							},
 							Err(e) => {
-								info!("Error checking balance for {}: {}", account_str, e);
+								error!("Error checking balance for {}: {:?}", account, e);
 							},
 						}
 					}
+	
+					// Sleep after processing the chunk
+					sleep(Duration::from_millis(2000)).await; // Adjust delay as needed
 				}
 			})
+			.buffer_unordered(MAX_CONCURRENT_REQUESTS)
+			.collect::<Vec<_>>()
 			.await;
-
+	
 		Ok(())
 	}
 
@@ -202,7 +279,7 @@ async fn main() -> Result<()> {
 		BlockArciveService::new(Some(evm_client), Some(substrate_client), surrealdb, shutdown_rx);
 
 	// Basic processing with progress
-	service.process_account_chunk(100).await?;
+	service.process_account_chunk().await?;
 
 	Ok(())
 }

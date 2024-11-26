@@ -21,7 +21,7 @@ use substrate_api_client::{
 	Api, GetChainInfo, GetStorage, GetTransactionPayment,
 };
 
-use selendra_primitives::{Hash, Signature};
+use selendra_primitives::{Hash, Nonce, Signature};
 use selendra_runtime::{Address, RuntimeCall, RuntimeEvent, SignedExtra};
 
 use frame_system::Phase;
@@ -37,6 +37,14 @@ use pallet_balances::AccountData;
 use pallet_identity::{legacy::IdentityInfo, Data, Judgement, Registration};
 use pallet_staking::{ActiveEraInfo, EraRewardPoints, ValidatorPrefs};
 
+#[derive(Debug, Decode)]
+pub struct AccountInfo<Index, Balance> {
+	pub nonce: Index,
+	pub consumers: u32,
+	pub providers: u32,
+	pub sufficients: u32,
+	pub data: AccountData<Balance>,
+}
 pub struct SubstrateClient {
 	pub api: Api<DefaultRuntimeConfig, JsonrpseeClient>,
 }
@@ -297,7 +305,7 @@ impl SubstrateClient {
 
 		let account_data = self
 			.api
-			.get_storage_map::<AccountId32, AccountData<u128>>(
+			.get_storage_map::<AccountId32, AccountInfo<Nonce, Balance>>(
 				"System",
 				"Account",
 				account_id.clone(),
@@ -308,9 +316,9 @@ impl SubstrateClient {
 
 		if let Some(account_data) = account_data {
 			Ok(Some(SubstrateAccount {
-				total: account_data.free + account_data.reserved,
-				free: account_data.free,
-				reserved: account_data.reserved,
+				free: account_data.data.free,
+				reserved: account_data.data.reserved,
+				lock: account_data.data.frozen,
 			}))
 		} else {
 			Ok(None)

@@ -1,6 +1,6 @@
 use std::env;
 
-use crate::{db::GenericDB, models::account::AccountModel};
+use crate::{db::GenericDB, models::account::SubstrateAccount};
 
 use dotenv::dotenv;
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ impl SurrealDb {
 		}
 	}
 
-	pub async fn setup_account_db(&self) -> GenericDB<AccountModel> {
+	pub async fn setup_account_db(&self) -> GenericDB<SubstrateAccount> {
 		dotenv().ok();
 
 		let name_space =
