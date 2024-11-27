@@ -1,145 +1,98 @@
 # Selendra Explorer
-
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-Selendra Explorer is an open-source block explorer for the Selendra Network, providing a comprehensive interface for blockchain data exploration and analysis. It features a robust backend powered by SurrealDB and offers both archive services and REST API endpoints.
-
-## Table of Contents
-
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Architecture](#architecture)
-  - [Database Setup](#database-setup)
-  - [Archive Service](#archive-service)
-  - [Explorer API](#explorer-api)
-- [API Documentation](#api-documentation)
-- [Development Guide](#development-guide)
-- [Contributing](#contributing)
-- [License](#license)
-
-## Prerequisites
-
-- **Rust** (latest stable version)
-- **Docker** and Docker Compose
-- **Git**
+Block explorer for the Selendra Network featuring a SurrealDB backend, archive services, and REST API endpoints.
 
 ## Quick Start
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/selendra/explorer.git
-   cd explorer
-   ```
+### Prerequisites
+- Rust (latest stable)
+- Docker and Docker Compose
+- Git
 
-2. Configure environment:
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Start SurrealDB and services:
-   ```bash
-   ./scripts/init.sh              # Initialize database
-   cargo run -p archive-service   # Start archive service
-   cargo run -p explorer-api      # Start API server
-   ```
-
-## Architecture
-
-### Database Setup
-
-The explorer uses SurrealDB as its primary database. Initialize it using Docker:
-
+### Installation
 ```bash
-./scripts/init.sh
+# Clone and setup
+git clone https://github.com/selendra/explorer.git
+cd explorer
+cp .env.example .env
+
+# Initialize and start services
+./scripts/init.sh            # Setup database
+cargo run -p archive-service -- evm --block # Start archive service
+cargo run -p explorer-api    # Start API server
 ```
 
-This script sets up the necessary database containers and configurations.
+## Core Components
 
 ### Archive Service
+Indexes blockchain data into SurrealDB.
 
-The Archive Service indexes and stores blockchain data in SurrealDB.
-
-**Development Mode:**
 ```bash
-cargo run -p archive-service
-```
+# Development
+cargo run -p archive-service -- <command>
 
-**Production Mode:**
-```bash
+# EVM Services
+cargo run -p archive-service -- evm --account  # Archive EVM accounts
+cargo run -p archive-service -- evm --block    # Archive EVM blocks
+
+# Substrate Services
+cargo run -p archive-service -- substrate --account  # Archive Substrate accounts
+cargo run -p archive-service -- substrate --block    # Archive Substrate blocks
+
+# Production
 cargo build --release
-./target/release/archive-service
+./target/release/archive-service <command>
 ```
 
 ### Explorer API
+REST API built with Actix-web.
 
-REST API service built with Actix-web for accessing blockchain data.
-
-**Development Mode:**
 ```bash
+# Development
 cargo run -p explorer-api
-```
 
-**Production Mode:**
-```bash
+# Production
 cargo build --release
 ./target/release/explorer-api
 ```
 
-## API Documentation
+### API Documentation
+- Swagger UI: http://localhost:8080/swagger-ui/index.html
+- OpenAPI Spec: http://localhost:8080/api-docs/openapi.json
 
-Access the API documentation through:
-
-- **Swagger UI:** [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-  - Interactive API testing and documentation interface
-  
-- **OpenAPI Spec:** [http://localhost:8080/api-docs/openapi.json](http://localhost:8080/api-docs/openapi.json)
-  - OpenAPI specification for integrations
-
-## Development Guide
+## Development
 
 ### Project Structure
-
 ```
 selendra-explorer/
-├── archive-service/  # Blockchain data indexing service
-├── api/             # REST API implementation
-├── scripts/         # Utility and deployment scripts
-├── docker/          # Docker configurations
-├── db/              # SurrealDB implementation
-├── rust-client/     # Substrate & EVM clients
-├── config/          # Project configuration
-└── data/            # Persistent data storage
+├── archive-service/ # Indexing service
+├── api/            # REST API
+├── scripts/        # Utilities
+├── docker/         # Docker configs
+├── db/             # Database
+├── rust-client/    # Blockchain clients
+├── config/         # Configuration
+└── data/           # Storage
 ```
 
-### Building and Testing
-
-**Build the Project:**
+### Build & Test
 ```bash
-cargo build         # Debug build
-cargo build --release  # Production build
-```
+# Build
+cargo build            # Debug
+cargo build --release  # Production
 
-**Run Tests:**
-```bash
-cargo test         # Run all tests
-cargo test -p api  # Test specific package
+# Test
+cargo test            # All tests
+cargo test -p api     # Package specific
 ```
 
 ## Contributing
+See [Contributing Guide](CONTRIBUTING.md) for guidelines and best practices.
 
-We welcome contributions to Selendra Explorer! Please see our [Contributing Guide](CONTRIBUTING.md) for:
-
-- Code submission guidelines
-- Pull request process
-- Development practices
-- Bug reporting
+## Resources
+- [Website](https://selendra.org)
+- [GitHub](https://github.com/selendra/explorer)
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-**Resources:**
-- [Official Website](https://selendra.org)
-- [GitHub Repository](https://github.com/selendra/explorer)
+[Apache License 2.0](LICENSE)

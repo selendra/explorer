@@ -12,6 +12,6 @@ serde_json = { workspace = true }
 tracing = { workspace = true }
 anyhow = { workspace = true }
 dotenv = { workspace = true }
-utoipa = "5.2.0"
+utoipa = { workspace = true }
 
 selendra-config = { workspace = true }

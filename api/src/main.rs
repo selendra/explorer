@@ -6,7 +6,10 @@ use handlers::account_handler::{get_account_by_address, get_accounts, ErrorRespo
 use state::app_state::AppState;
 
 use selendra_config::CONFIG;
-use utils::{address::AddressQuery, pagination::{PaginatedResponse, PaginationParams}};
+use utils::{
+	address::AddressQuery,
+	pagination::{PaginatedResponse, PaginationParams},
+};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -52,9 +55,9 @@ async fn main() -> std::io::Result<()> {
 		App::new()
 			.app_data(app_state.clone())
 			.service(
-                SwaggerUi::new("/swagger-ui/{_:.*}")
-                    .url("/api-docs/openapi.json", ApiDoc::openapi())
-            )
+				SwaggerUi::new("/swagger-ui/{_:.*}")
+					.url("/api-docs/openapi.json", ApiDoc::openapi()),
+			)
 			.route("/account", web::get().to(get_account_by_address))
 			.route("/accounts", web::get().to(get_accounts))
 	})

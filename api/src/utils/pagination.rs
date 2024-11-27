@@ -46,15 +46,15 @@ pub struct PaginationLinks {
 
 #[derive(Serialize, ToSchema)]
 pub struct PaginatedResponse<T> {
-	 /// List of items in the current page
+	/// List of items in the current page
 	pub items: Vec<T>,
-	 /// Total number of items
+	/// Total number of items
 	pub total: u64,
 	/// Current page number
 	pub page: u64,
 	/// Number of items per page
 	pub page_size: u64,
-	 /// Total number of pages
+	/// Total number of pages
 	pub total_pages: u64,
 	/// Links for pagination
 	pub links: PaginationLinks,
