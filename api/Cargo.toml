@@ -10,7 +10,12 @@ validator = { workspace = true }
 dotenv = { workspace = true }
 env_logger = { workspace = true } 
 log = { workspace = true }
+serde_json = { workspace = true }
+tracing-subscriber = { workspace = true }
 
 selendra-db = { workspace = true }
 selendra-rust-client = { workspace = true }
 selendra-config = { workspace = true }
+
+utoipa = "5.2.0"
+utoipa-swagger-ui = { version = "8.0.3", features = ["actix-web"] }

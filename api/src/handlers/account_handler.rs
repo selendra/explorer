@@ -5,19 +5,35 @@ use crate::{
 		pagination::{PaginatedResponse, PaginationLinks, PaginationParams},
 	},
 };
-use selendra_db::db::SortOrder;
+use selendra_db::{db::SortOrder, models::account::SubstrateAccount};
 use selendra_rust_client::utils::validate_ss58_address;
 
 use actix_web::{web, HttpRequest, HttpResponse, Responder};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use validator::Validate;
 
-// Error response model
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, ToSchema)]
 pub struct ErrorResponse {
+	/// Error message
 	pub message: String,
 }
 
+/// Get account by substrate address
+#[utoipa::path(
+    get,
+    path = "/account",
+    params(
+        ("address" = String, Query, description = "Substrate address to query", example = "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY")
+    ),
+    responses(
+        (status = 200, description = "Account found successfully", body = SubstrateAccount),
+        (status = 400, description = "Invalid address format", body = ErrorResponse),
+        (status = 404, description = "Account not found", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse),
+    ),
+    tag = "accounts"
+)]
 pub async fn get_account_by_address(
 	data: web::Data<AppState>,
 	query: web::Query<AddressQuery>,
@@ -45,6 +61,23 @@ pub async fn get_account_by_address(
 	}
 }
 
+/// Get paginated list of accounts
+#[utoipa::path(
+    get,
+    path = "/accounts",
+    params(
+        ("page" = usize, Query, description = "Page number", example = 1),
+        ("page_size" = usize, Query, description = "Number of items per page", example = 10),
+        ("sort_by" = String, Query, description = "Field to sort by", example = "total"),
+        ("sort_order" = String, Query, description = "Sort order (asc/desc)", example = "desc")
+    ),
+    responses(
+        (status = 200, description = "Accounts retrieved successfully", body = PaginatedResponse<SubstrateAccount>),
+        (status = 400, description = "Invalid pagination parameters", body = ErrorResponse),
+        (status = 500, description = "Internal server error", body = ErrorResponse),
+    ),
+    tag = "accounts"
+)]
 pub async fn get_accounts(
 	data: web::Data<AppState>,
 	query: web::Query<PaginationParams>,

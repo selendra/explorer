@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use validator::Validate;
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct PaginationParams {
 	#[validate(range(min = 1))]
 	#[serde(default = "default_page")]
@@ -31,21 +32,31 @@ fn default_sort_order() -> String {
 	"desc".to_string()
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct PaginationLinks {
+	/// First page
 	pub first: String,
+	/// Previous page
 	pub prev: Option<String>,
+	/// Next page
 	pub next: Option<String>,
+	/// Last page
 	pub last: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, ToSchema)]
 pub struct PaginatedResponse<T> {
+	 /// List of items in the current page
 	pub items: Vec<T>,
+	 /// Total number of items
 	pub total: u64,
+	/// Current page number
 	pub page: u64,
+	/// Number of items per page
 	pub page_size: u64,
+	 /// Total number of pages
 	pub total_pages: u64,
+	/// Links for pagination
 	pub links: PaginationLinks,
 }
 
