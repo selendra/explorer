@@ -9,8 +9,8 @@ services:
     volumes:
       - ./data:/data
     environment:
-      - SURREAL_USER=root
-      - SURREAL_PASS=root
+      - SURREAL_USER=${SURREALDB_USER}
+      - SURREAL_PASS=${SURREALDB_PASS}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
